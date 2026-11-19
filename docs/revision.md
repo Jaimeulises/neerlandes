@@ -257,7 +257,7 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 
 - Presente: ik kom, jij komt, hij komt, wij, jullie, zij komen. «Ik kom morgen.» «Kom jij morgen?»
 - Perfectum: is gekomen. «Ze zijn te laat gekomen.» Han llegado tarde.
-- Pasado: kwam, kwamen. «Hij kwam om negen uur thuis.» Él llegó a casa a las nueve. También: «Om negen uur kwam hij thuis.»
+- Pasado: kwam, kwamen. «Hij kwam om negen uur thuis.» Él llegó a casa a las nueve. También: «Om negen uur kwam hij thuis.», «Hij kwam thuis om negen uur.»
 
 **V22. doen**: hacer (una actividad)
 
@@ -476,7 +476,7 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 
 **S2. opstaan**: levantarse
 
-- Presente: «Ik sta elke dag om zeven uur op.» Me levanto todos los días a las siete. También: «Elke dag sta ik om zeven uur op.», «Ik sta iedere dag om zeven uur op.», «Iedere dag sta ik om zeven uur op.», «Ik sta elke dag op om zeven uur.», «Ik sta iedere dag op om zeven uur.»
+- Presente: «Ik sta elke dag om zeven uur op.» Me levanto todos los días a las siete. También: «Elke dag sta ik om zeven uur op.», «Ik sta iedere dag om zeven uur op.», «Iedere dag sta ik om zeven uur op.», «Ik sta elke dag op om zeven uur.», «Ik sta iedere dag op om zeven uur.», «Elke dag sta ik op om zeven uur.», «Iedere dag sta ik op om zeven uur.», «Om zeven uur sta ik elke dag op.», «Om zeven uur sta ik iedere dag op.»
 - Perfectum: is opgestaan. «Ik ben vandaag laat opgestaan.» Hoy me he levantado tarde.
 
 **S3. meenemen**: llevar consigo, traer

@@ -39,6 +39,8 @@ Después, cuatro revisores repasaron estos mismos cambios (rondas y guardado, pa
 
 Se refutaron 4: que la previsión de Hoy pueda ir hasta un minuto por detrás (solo puede faltar un repaso que acaba de vencer), que el dictado quede como única forma elegida al quitar la voz (sale lo de siempre, como dice la pantalla), gezellig y lekker como opciones la una de la otra (sus significados no se solapan) y la nota de volgens mij (no dice todo, pero no enseña nada falso).
 
+Una última pasada sobre esos arreglos, también con un escéptico por hallazgo, confirmó 3 más, ya arreglados: faltaban «elke dag sta ik op om zeven uur» y las formas de opstaan con «om zeven uur» delante, faltaba «hij kwam thuis om negen uur», y la prueba de las formas tónicas podía fallar sin motivo cuando un pronombre sale dos veces con papeles distintos («heb je je sleutels?»). Una prueba vigila ya que, en los separables, el complemento con preposición valga delante y detrás de la partícula.
+
 ## Lo que queda abierto: los ids salen del texto
 
 Los ids de las frases y las palabras salen de su texto (las seis primeras palabras). Corregir una frase cambia su id: su tarjeta de repaso queda huérfana, la frase vuelve como nueva y, hasta que se vea otra vez, su grupo puede contar como no empezado. De momento se deja así, porque hoy no hay progreso que perder. Cuando llegue la revisión nativa, antes de aplicarla hay que elegir entre ids fijos en los datos o una tabla de ids viejos a nuevos que se aplique al cargar el progreso.

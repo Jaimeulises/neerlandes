@@ -304,6 +304,9 @@ describe('lo que se da por bueno al responder', () => {
         const palabras = r.split(' ');
         palabras.forEach((p, i) => {
           const [, base = '', resto = ''] = /^(\p{L}+)(.*)$/u.exec(p) ?? [];
+          // Con el mismo pronombre dos veces («ze zegt dat ze…», «heb je je sleutels?»), «orden» puede ser
+          // solo que la tónica va en el otro, que tiene otro papel: esas frases se miran a mano.
+          if (palabras.filter((x) => /^\p{L}+/u.exec(x)?.[0]?.toLowerCase() === base.toLowerCase()).length > 1) return;
           for (const t of TONICAS[base.toLowerCase()] ?? []) {
             const tonica = base[0] === base[0]?.toUpperCase() ? `${t[0]?.toUpperCase() ?? ''}${t.slice(1)}` : t;
             const cambiada = palabras.map((x, j) => (j === i ? `${tonica}${resto}` : x)).join(' ');
@@ -320,6 +323,8 @@ describe('lo que se da por bueno al responder', () => {
         const palabras = r.split(' ');
         palabras.forEach((p, i) => {
           const [, base = '', resto = ''] = /^(\p{L}+)(.*)$/u.exec(p) ?? [];
+          // Un je reflexivo («hoe voel je je?») no tiene forma tónica: si alguna frase lo trae, se salta aquí
+          // diciendo por qué, en vez de apuntar una forma que no existe.
           if (base.toLowerCase() !== 'je') return;
           const valen = ['jij', 'jou', 'jouw'].some((t) => {
             const tonica = base === 'Je' ? `${t[0]?.toUpperCase() ?? ''}${t.slice(1)}` : t;
@@ -327,6 +332,26 @@ describe('lo que se da por bueno al responder', () => {
           });
           expect(valen, `${donde}: ${r} (palabra ${String(i + 1)})`).toBe(true);
         });
+      }
+    }
+  });
+
+  it('en los separables, un complemento con preposición delante de la partícula también vale detrás', () => {
+    // «ik sta om zeven uur op» y «ik sta op om zeven uur»: si una forma buena lo trae delante, la otra también vale.
+    const PREPOSICION = /^(om|na|voor|met|in|op|naar|bij|tot|tijdens|van|uit|aan|over|sinds|vanaf|zonder|door|onder|achter|naast|tegen|rond) /;
+    const frases = [
+      ...ELEMENTOS_ORDEN.filter((f) => f.grupo === 'separables').map((f) => ({ donde: f.id, fichas: f.fichas, validas: f.validas })),
+      ...SEPARABLES.map((s) => ({ donde: s.inf, fichas: s.presente.split('|'), validas: [s.presente.replaceAll('|', ' '), ...(s.otras ?? [])] })),
+    ];
+    for (const { donde, fichas, validas } of frases) {
+      const buenas = new Set(validas.map(normalizar));
+      const particula = normalizar(fichas.at(-1) ?? '');
+      for (const complemento of fichas.map(normalizar).filter((f) => PREPOSICION.test(f))) {
+        for (const v of buenas) {
+          if (!v.endsWith(` ${complemento} ${particula}`)) continue;
+          const detras = `${v.slice(0, -(complemento.length + particula.length + 1))}${particula} ${complemento}`;
+          expect(buenas.has(detras), `${donde}: ${detras}`).toBe(true);
+        }
       }
     }
   });
