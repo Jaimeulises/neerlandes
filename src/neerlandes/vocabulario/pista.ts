@@ -1,0 +1,139 @@
+// La pista del vocabulario. Primero se reconoce (elegir el significado), luego
+// se elige en neerlandés y a partir de ahí se escribe con su artículo, que es
+// lo que de verdad cuesta.
+
+import type { ContextoEjercicio, Ejercicio, Elemento, Pista, Presentacion } from '../../motor';
+import { elegirForma, idDe, opcionesCon } from '../comun';
+import { GRUPOS_VOCABULARIO, NOMBRES_GRUPO_VOCABULARIO, PALABRAS, type DatosPalabra, type GrupoVocabulario } from './datos';
+
+export interface Palabra extends Elemento {
+  readonly grupo: GrupoVocabulario;
+  readonly nl: string;
+  readonly es: string;
+  readonly otras: readonly string[];
+  /** de o het, si es un sustantivo en singular. */
+  readonly articulo: 'de' | 'het' | null;
+  readonly nota: string | null;
+}
+
+export function crearPalabra(d: DatosPalabra): Palabra {
+  const articulo = d.plural ? null : d.nl.startsWith('de ') ? 'de' : d.nl.startsWith('het ') ? 'het' : null;
+  return {
+    id: `${d.grupo}:${idDe(d.nl)}`,
+    grupo: d.grupo,
+    nl: d.nl,
+    es: d.es,
+    otras: d.otras ?? [],
+    articulo,
+    nota: d.nota ?? null,
+  };
+}
+
+export const ELEMENTOS_VOCABULARIO: readonly Palabra[] = PALABRAS.map(crearPalabra);
+
+/** Distractores: primero los del mismo tema que ya se han visto, luego los del tema, luego cualquiera. */
+function distractores(e: Palabra, contexto: ContextoEjercicio, campo: (p: Palabra) => string): string[] {
+  const otras = ELEMENTOS_VOCABULARIO.filter((p) => p.id !== e.id);
+  const tema = otras.filter((p) => p.grupo === e.grupo);
+  const vistosTema = tema.filter((p) => contexto.vistos.has(p.id));
+  const orden = [...contexto.azar.barajar(vistosTema), ...contexto.azar.barajar(tema), ...contexto.azar.barajar(otras)];
+  return [...new Set(orden.map(campo))];
+}
+
+function sinArticulo(nl: string): string {
+  return nl.replace(/^(de|het) /, '');
+}
+
+function aclaracionDe(e: Palabra): string | undefined {
+  const partes = [`${e.nl}: ${e.es}.`];
+  if (e.nota) partes.push(e.nota);
+  return partes.join(' ');
+}
+
+export const vocabulario: Pista<Palabra> = {
+  id: 'vocabulario',
+  nombre: 'Vocabulario',
+  descripcion: 'Palabras y expresiones de la vida diaria, siempre con su de o het.',
+  grupos: GRUPOS_VOCABULARIO,
+  nombresDeGrupo: NOMBRES_GRUPO_VOCABULARIO,
+  elementos: ELEMENTOS_VOCABULARIO,
+  crearEjercicio(e, contexto): Ejercicio {
+    const { azar } = contexto;
+    const aclaracion = aclaracionDe(e);
+    const base = { elementoId: e.id, audio: e.nl, ...(aclaracion ? { aclaracion } : {}) };
+
+    if (contexto.repeticiones === 0) {
+      return {
+        ...base,
+        forma: 'opcion',
+        tipo: 'vocabulario.significado',
+        instruccion: '¿Qué significa?',
+        enunciado: e.nl,
+        enunciadoEnIdioma: true,
+        opciones: opcionesCon(e.es, distractores(e, contexto, (p) => p.es), azar),
+        opcionesEnIdioma: false,
+        respuestaCorrecta: e.es,
+      };
+    }
+    if (contexto.repeticiones === 1) {
+      return {
+        ...base,
+        forma: 'opcion',
+        tipo: 'vocabulario.elegir',
+        instruccion: '¿Cómo se dice en neerlandés?',
+        enunciado: e.es,
+        enunciadoEnIdioma: false,
+        opciones: opcionesCon(e.nl, distractores(e, contexto, (p) => p.nl), azar),
+        opcionesEnIdioma: true,
+        respuestaCorrecta: e.nl,
+      };
+    }
+
+    const forma = elegirForma(
+      azar,
+      contexto.formas,
+      [
+        ['traducir', 5],
+        ['opcion', e.articulo ? 2 : 0],
+        ['dictado', 1],
+      ],
+      'traducir',
+    );
+    if (forma === 'opcion' && e.articulo) {
+      return {
+        ...base,
+        forma: 'opcion',
+        tipo: 'vocabulario.articulo',
+        instruccion: `¿De o het? (${e.es})`,
+        enunciado: sinArticulo(e.nl),
+        enunciadoEnIdioma: true,
+        opciones: ['de', 'het'],
+        opcionesEnIdioma: true,
+        respuestaCorrecta: e.articulo,
+      };
+    }
+    if (forma === 'dictado') {
+      return {
+        ...base,
+        forma: 'dictado',
+        tipo: 'vocabulario.dictado',
+        instruccion: 'Escucha y escríbela',
+        dictar: e.nl,
+        significado: e.es,
+        respuestas: [e.nl, ...e.otras],
+      };
+    }
+    return {
+      ...base,
+      forma: 'traducir',
+      tipo: 'vocabulario.escribir',
+      instruccion: 'Escríbela en neerlandés',
+      significado: e.es,
+      ...(e.articulo || e.nl.startsWith('de ') ? { pista: 'Con su artículo (de o het).' } : {}),
+      respuestas: [e.nl, ...e.otras],
+    };
+  },
+  presentar(e): Presentacion {
+    return { principal: e.nl, significado: e.es, nota: e.nota, audio: e.nl };
+  },
+};
