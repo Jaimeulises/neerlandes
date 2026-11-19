@@ -7,8 +7,8 @@ Stap (nombre provisional) es una app personal para practicar neerlandés hablado
 - Español directo, sin rayas (ni raya larga ni media) en código, textos, documentación ni commits: comas, dos puntos, paréntesis o puntos.
 - Antes de un commit, en verde: `npm run check` (tipos, lint, pruebas y compilación).
 - Cambios pequeños y commits que expliquen el porqué. Nunca un push forzado a `main`.
-- Lo que entra en `main` se publica solo en GitHub Pages (`.github/workflows/pages.yml`): main tiene que estar siempre lista para usarse.
-- El repositorio es público: nada personal (nombres, familia, datos de contacto) en código, contenido, documentos ni commits.
+- No está publicada en ninguna web: se usa en el móvil servida desde el ordenador (`npm run movil`, ver `docs/decisiones/0002-movil-sin-publicar.md`).
+- Nada personal (nombres, familia, datos de contacto) en código, contenido, documentos ni commits: el repositorio ha sido público.
 
 ## Lo que no se hace nunca
 

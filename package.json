@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Stap: neerlandés para hispanohablantes, centrado en construir frases.",
   "scripts": {
-    "dev": "vite --port 5181",
+    "dev": "vite",
+    "movil": "vite build && vite preview --host",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

@@ -16,7 +16,14 @@ Sin cuentas, sin anuncios y sin enviar nada fuera del dispositivo: el progreso s
 
 ## Usarla en el móvil
 
-Está publicada en https://jaimeulises.github.io/neerlandes/ y se actualiza sola cada vez que algo entra en `main`. Para tenerla como una app, añádela a la pantalla de inicio (en Safari: Compartir, Añadir a pantalla de inicio): así el navegador no borra el progreso aunque pases unos días sin abrirla.
+De momento no está publicada: se sirve desde el ordenador por la wifi de casa.
+
+```sh
+npm ci          # la primera vez
+npm run movil   # compila y la sirve en el puerto 5181 para toda la red de casa
+```
+
+En el móvil, ábrela siempre con el nombre del ordenador en la red, por ejemplo `http://mi-mac.local:5181` (en un Mac está en Ajustes del Sistema, General, Compartir, «Nombre del host local»). El progreso se guarda por dirección: si un día entras por la IP, el móvil empezaría de cero. Después, en Safari: Compartir, Añadir a pantalla de inicio. Saca una copia desde Ajustes de vez en cuando.
 
 ## Probarla en local
 
@@ -24,8 +31,7 @@ Hace falta Node 22.
 
 ```sh
 npm ci
-npm run dev            # http://localhost:5181
-npm run dev -- --host  # para abrirla desde el móvil, en la misma wifi
+npm run dev   # http://localhost:5181, se recarga al cambiar el código
 ```
 
 Para que lea las frases en voz alta, el dispositivo necesita una voz neerlandesa (en iPhone: Ajustes, Accesibilidad, Contenido leído, Voces, Neerlandés). Sin voz no hay dictado; lo demás funciona igual.

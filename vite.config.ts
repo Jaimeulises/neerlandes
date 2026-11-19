@@ -10,6 +10,11 @@ export default defineConfig({
     target: 'es2022',
     sourcemap: false,
   },
+  // En el móvil se abre desde el ordenador por la wifi de casa, con su nombre en la red
+  // (http://nombre-del-ordenador.local:5181). Siempre el mismo puerto y el mismo nombre: el progreso
+  // se guarda por dirección, y con otra dirección el móvil empezaría de cero.
+  server: { port: 5181, strictPort: true, allowedHosts: ['.local'] },
+  preview: { port: 5181, strictPort: true, allowedHosts: ['.local'] },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'scripts/**/*.test.ts'],
