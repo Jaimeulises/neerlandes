@@ -61,6 +61,20 @@ describe('la ronda de hoy', () => {
     expect(preverRonda(PISTAS, progreso, AHORA, OPCIONES)).toEqual({ repasos: 0, nuevos: 4 });
   });
 
+  it('si los repasos dejan poco sitio, lo nuevo que cabe no es siempre de las mismas pistas', () => {
+    let progreso: Progreso = PROGRESO_VACIO;
+    const haceDias = new Date(2026, 10, 10, 12);
+    for (const p of vocabulario.elementos.slice(0, 10)) progreso = registrarRespuesta(progreso, 'vocabulario', p.id, 'bien', haceDias);
+    const primeros = [0, 1, 2].map((dia) => {
+      const ahora = new Date(2026, 10, 19 + dia, 12);
+      const nuevos = construirRondaDe(PISTAS, progreso, ahora, crearAzar(3), OPCIONES).filter(esNuevoEn(progreso));
+      // 10 repasos en una ronda de 12: solo caben 2 cosas nuevas.
+      expect(nuevos.length, String(dia)).toBe(2);
+      return nuevos[0]?.pistaId;
+    });
+    expect(new Set(primeros).size).toBe(3);
+  });
+
   it('la previsión cuenta lo que trae la ronda', () => {
     expect(preverRonda(PISTAS, PROGRESO_VACIO, AHORA, OPCIONES)).toEqual({ repasos: 0, nuevos: 4 });
     expect(preverRonda(PISTAS, PROGRESO_VACIO, AHORA, { ...OPCIONES, nuevosMaximo: 0 })).toEqual({ repasos: 0, nuevos: 0 });

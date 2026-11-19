@@ -16,11 +16,11 @@ interface Props {
 }
 
 /** Lo que trae la ronda de hoy, dicho como se dice: «3 repasos y 4 cosas nuevas». */
-function textoDeRonda(repasos: number, nuevos: number, pendientes: number): string {
+export function textoDeRonda(repasos: number, nuevos: number, pendientes: number): string {
   if (repasos + nuevos === 0) return 'Nada pendiente por hoy.';
   const partes = [repasos > 0 ? `${String(repasos)} ${repasos === 1 ? 'repaso' : 'repasos'}` : '', nuevos > 0 ? `${String(nuevos)} ${nuevos === 1 ? 'cosa nueva' : 'cosas nuevas'}` : ''];
   const quedan = pendientes - repasos;
-  return `${partes.filter((p) => p !== '').join(' y ')}.${quedan > 0 ? ` Quedan ${String(quedan)} por repasar para otra ronda.` : ''}`;
+  return `${partes.filter((p) => p !== '').join(' y ')}.${quedan > 0 ? ` ${quedan === 1 ? 'Queda' : 'Quedan'} ${String(quedan)} por repasar para otra ronda.` : ''}`;
 }
 
 export function Hoy({ pistas, datos, opciones, onEmpezar }: Props): ReactElement {

@@ -85,7 +85,8 @@ export function construirRondaDe(
   const vistos = vistosPorPista(pistas, progreso);
   // Lo nuevo se reparte entre las pistas que tienen algo que dar: lo que no puede usar una pasa a otra.
   const disponibles = pistas.map((p) => resumirPista(p, progreso, ahora, vistos).nuevosDisponibles);
-  const nuevos = repartir(opciones.nuevosMaximo, disponibles, inicioDelDia(ahora, pistas.length));
+  const inicio = inicioDelDia(ahora, pistas.length);
+  const nuevos = repartir(opciones.nuevosMaximo, disponibles, inicio);
   const porPista = pistas.map((pista, i) =>
     construirRonda(pista, progreso, ahora, azar, { ...opciones, nuevosMaximo: nuevos[i] ?? 0 }, vistos).map((paso) => ({ pistaId: pista.id, paso })),
   );
@@ -93,7 +94,10 @@ export function construirRondaDe(
   // tiene que ir detrás de la que abre su grupo, que es la que presenta la regla.
   const esNuevo = (p: PasoMixto): boolean => !progreso.has(clave(p.pistaId, p.paso.ejercicio.elementoId));
   const repasos = intercalar(porPista.map((l) => l.filter((p) => !esNuevo(p))));
-  const nuevosPasos = intercalar(porPista.map((l) => l.filter(esNuevo)));
+  // Lo nuevo se intercala empezando por la pista del día: si los repasos dejan poco sitio, lo que se queda
+  // fuera al recortar no es siempre de las mismas pistas. Dentro de cada pista se mantiene el orden.
+  const desdeHoy = [...porPista.slice(inicio), ...porPista.slice(0, inicio)];
+  const nuevosPasos = intercalar(desdeHoy.map((l) => l.filter(esNuevo)));
   return [...repasos, ...nuevosPasos].slice(0, opciones.tamano);
 }
 

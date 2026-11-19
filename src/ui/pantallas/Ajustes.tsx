@@ -74,10 +74,13 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
   const importar = async (lista: FileList | null): Promise<void> => {
     const elegido = lista?.[0];
     if (!elegido) return;
+    // Otro archivo retira la confirmación del anterior: si este no vale, no debe quedar a mano un
+    // «Restaurar» que restauraría el otro.
+    setPorRestaurar(null);
+    setMensaje(null);
     try {
       // Se lee y se enseña antes de restaurar: elegir el archivo equivocado no debe borrar nada.
       setPorRestaurar(leerCopia(await elegido.text()));
-      setMensaje(null);
     } catch (e) {
       setMensaje(e instanceof CopiaIlegible ? `Esa copia no vale: ${e.message}.` : 'No se ha podido leer el archivo.');
     }
@@ -163,7 +166,7 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
       <section className="tarjeta">
         <h2>Ejercicios en los repasos</h2>
         <p className="texto-2 pequeno" style={{ marginTop: 8 }}>
-          Lo nuevo empieza siempre igual: las frases y los separables con fichas, las palabras con opciones y los verbos eligiendo o completando la forma. Aquí eliges qué más sale en los repasos; si ninguna de las elegidas sirve para un ejercicio, sale el de siempre.
+          Lo nuevo empieza siempre igual: las frases y los separables con fichas, las palabras con opciones y los verbos eligiendo o completando la forma. Aquí eliges qué más sale en los repasos. Si ninguna de las elegidas sirve para un ejercicio, sale el de siempre: fichas en las frases y los separables, completar en los verbos y escribir la palabra en el vocabulario.
         </p>
         {ORDEN_FORMAS.map((forma) => (
           <label key={forma} className="ajuste">

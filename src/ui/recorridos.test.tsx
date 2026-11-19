@@ -139,7 +139,15 @@ describe('lo guardado', () => {
     expect(enPantalla()).not.toContain('Copia del');
     expect(await almacen.leer(CLAVE_PROGRESO)).toBeNull();
 
+    // Si con una confirmación abierta se elige otro archivo y ese no vale, la confirmación de antes se va.
     await elegirArchivo(copia, 'stap-copia-2026-11-02.json');
+    await elegirArchivo('no soy una copia', 'otra.json');
+    expect(enPantalla()).toContain('Esa copia no vale');
+    expect(enPantalla()).not.toContain('Copia del');
+    expect(buscarBoton(/^\s*Restaurar$/)).toBeNull();
+
+    await elegirArchivo(copia, 'stap-copia-2026-11-02.json');
+    expect(enPantalla()).not.toContain('Esa copia no vale');
     await pulsar(boton(/^\s*Restaurar$/));
     expect(enPantalla()).toContain('Copia restaurada.');
     expect(await almacen.leer(CLAVE_PROGRESO)).not.toBeNull();
