@@ -6,7 +6,7 @@ import { alternativas, comoFrase, primera } from './comun';
 import { GRUPOS_ORDEN, NOMBRES_GRUPO_ORDEN, REGLAS_ORDEN } from './orden/datos';
 import { ELEMENTOS_ORDEN } from './orden/pista';
 import { SEPARABLES, VERBOS, type DatosVerbo } from './verbos/datos';
-import { formaConJij, formasPresente } from './verbos/pista';
+import { formaConJij, formasPresente, REGLAS_VERBOS } from './verbos/pista';
 import { GRUPOS_VOCABULARIO, NOMBRES_GRUPO_VOCABULARIO } from './vocabulario/datos';
 import { ELEMENTOS_VOCABULARIO } from './vocabulario/pista';
 
@@ -82,15 +82,31 @@ export function documentoDeRevision(): string {
       n++;
       const otras = f.validas.slice(1);
       const nl = otras.length > 0 ? `${f.frase}<br>*También:* ${otras.join(' / ')}` : f.frase;
-      l.push(`| O${String(n)} | ${celda(nl)} | ${celda(f.es)} |`);
+      // La pista sale al traducir y a veces trae neerlandés: también se revisa.
+      const es = f.pista ? `${f.es}<br>*Pista:* ${f.pista}` : f.es;
+      l.push(`| O${String(n)} | ${celda(nl)} | ${celda(es)} |`);
     }
     l.push('');
   }
 
-  l.push(`## Verbos (V1 a V${String(VERBOS.length)})`, '');
+  // Las reglas salen al presentar cada grupo y al corregir cada ejercicio de verbos.
+  l.push(
+    `## Verbos (V1 a V${String(VERBOS.length)})`,
+    '',
+    `> **Presente.** ${REGLAS_VERBOS.presente}`,
+    '>',
+    `> **Perfectum regular.** ${REGLAS_VERBOS.perfectum}`,
+    '>',
+    `> **Perfectum irregular.** ${REGLAS_VERBOS['perfectum-irregular']}`,
+    '>',
+    `> **Perfectum con zijn.** ${REGLAS_VERBOS.zijn}`,
+    '>',
+    `> **Pasado simple.** ${REGLAS_VERBOS.pasado}`,
+    '',
+  );
   VERBOS.forEach((v, i) => l.push(...bloqueVerbo(v, i + 1)));
 
-  l.push(`## Verbos separables (S1 a S${String(SEPARABLES.length)})`, '');
+  l.push(`## Verbos separables (S1 a S${String(SEPARABLES.length)})`, '', `> ${REGLAS_VERBOS.separables}`, '');
   SEPARABLES.forEach((s, i) => {
     const otras = (s.otras ?? []).map((o) => `«${comoFrase(o)}»`);
     l.push(

@@ -11,7 +11,7 @@ import { FRASES, GRUPOS_ORDEN, REGLAS_ORDEN } from './orden/datos';
 import { ejercicioDeFrase, ELEMENTOS_ORDEN, orden } from './orden/pista';
 import { PISTAS } from './paquete';
 import { SEPARABLES, VERBOS } from './verbos/datos';
-import { ELEMENTOS_VERBOS, formasPresente, verbos } from './verbos/pista';
+import { EJEMPLO_DE_REGLA, ELEMENTOS_VERBOS, formasPresente, REGLAS_VERBOS, verbos } from './verbos/pista';
 import { ELEMENTOS_VOCABULARIO, vocabulario } from './vocabulario/pista';
 
 const AUX_HEBBEN = new Set(['heb', 'hebt', 'heeft', 'hebben']);
@@ -194,6 +194,25 @@ describe('qué se enseña antes de preguntarlo', () => {
       expect(presentado, e.id).toBe(!regular || abre);
     }
   });
+
+  it('la regla de lo regular se enseña con otro verbo del grupo: ni el que la abre ni los demás que salen de ella', () => {
+    for (const grupo of ['presente', 'perfectum'] as const) {
+      const abre = ELEMENTOS_VERBOS.find((e) => e.grupo === grupo);
+      if (!abre?.verbo) throw new Error(grupo);
+      const ejemplo = EJEMPLO_DE_REGLA[grupo];
+      expect(ejemplo, grupo).not.toBe(abre.verbo.inf);
+      expect(ELEMENTOS_VERBOS.some((e) => e.grupo === grupo && e.verbo?.inf === ejemplo), grupo).toBe(true);
+      const p = verbos.presentar?.(abre);
+      expect(p?.etiqueta, grupo).toMatch(/^Regla nueva/);
+      const palabras = new Set(normalizar([p?.principal, p?.audio, p?.detalle, ...(p?.tabla ?? []).flat()].join(' ')).split(' '));
+      for (const e of ELEMENTOS_VERBOS.filter((x) => x.grupo === grupo && x.verbo?.inf !== ejemplo)) {
+        const v = e.verbo;
+        if (!v || (grupo === 'presente' && v.presente !== undefined)) continue;
+        const formas = grupo === 'presente' ? formasPresente(v).flatMap(alternativas) : [v.participio ?? ''];
+        for (const f of formas) expect(palabras.has(normalizar(f)), `${grupo}: ${v.inf} (${f})`).toBe(false);
+      }
+    }
+  });
 });
 
 describe('todos los ejercicios tienen una respuesta buena alcanzable', () => {
@@ -219,6 +238,23 @@ describe('todos los ejercicios tienen una respuesta buena alcanzable', () => {
     });
   }
 });
+
+/**
+ * Las respuestas buenas de cada ejercicio de traducir, con dónde sale. Con `conVocabulario`, también las
+ * palabras, que traen expresiones fijas («dank je wel») donde je no cambia.
+ */
+function respuestasAlTraducir(conVocabulario: boolean): [string, readonly string[]][] {
+  const soloTraducir = new Set<Ejercicio['forma']>(['traducir']);
+  const salida: [string, readonly string[]][] = [];
+  for (const pista of PISTAS) {
+    if (pista.id === 'vocabulario' && !conVocabulario) continue;
+    for (const e of pista.elementos) {
+      const ej = pista.crearEjercicio(e, contextoDe(1, 3, soloTraducir));
+      if (ej.forma === 'traducir') salida.push([`${pista.id}/${e.id}`, ej.respuestas]);
+    }
+  }
+  return salida;
+}
 
 /** Un contexto de ejercicio con lo justo: semilla, repeticiones y formas activas. */
 function contextoDe(semilla: number, repeticiones: number, formas: ReadonlySet<Ejercicio['forma']>, vistos: ReadonlySet<string> = new Set()): ContextoEjercicio {
@@ -257,6 +293,41 @@ describe('lo que se da por bueno al responder', () => {
       const ej = vocabulario.crearEjercicio(p, contextoDe(1, 3, new Set(['dictado'])));
       if (ej.forma !== 'dictado') throw new Error(p.id);
       expect(ej.respuestas, p.id).toEqual([p.nl]);
+    }
+  });
+
+  it('al traducir, poner un pronombre en su forma tónica nunca sale como fallo de orden', () => {
+    // Si sale «orden», hay otra forma buena con las mismas palabras: falta apuntar esta.
+    const TONICAS: Readonly<Record<string, readonly string[]>> = { ze: ['zij'], je: ['jij', 'jou', 'jouw'], we: ['wij'], me: ['mij'] };
+    for (const [donde, respuestas] of respuestasAlTraducir(true)) {
+      for (const r of respuestas) {
+        const palabras = r.split(' ');
+        palabras.forEach((p, i) => {
+          const [, base = '', resto = ''] = /^(\p{L}+)(.*)$/u.exec(p) ?? [];
+          for (const t of TONICAS[base.toLowerCase()] ?? []) {
+            const tonica = base[0] === base[0]?.toUpperCase() ? `${t[0]?.toUpperCase() ?? ''}${t.slice(1)}` : t;
+            const cambiada = palabras.map((x, j) => (j === i ? `${tonica}${resto}` : x)).join(' ');
+            expect(corregir(cambiada, respuestas).veredicto, `${donde}: ${cambiada}`).not.toBe('orden');
+          }
+        });
+      }
+    }
+  });
+
+  it('al traducir una frase, cada je tiene apuntada su forma tónica: jij, jou o jouw', () => {
+    for (const [donde, respuestas] of respuestasAlTraducir(false)) {
+      for (const r of respuestas) {
+        const palabras = r.split(' ');
+        palabras.forEach((p, i) => {
+          const [, base = '', resto = ''] = /^(\p{L}+)(.*)$/u.exec(p) ?? [];
+          if (base.toLowerCase() !== 'je') return;
+          const valen = ['jij', 'jou', 'jouw'].some((t) => {
+            const tonica = base === 'Je' ? `${t[0]?.toUpperCase() ?? ''}${t.slice(1)}` : t;
+            return corregir(palabras.map((x, j) => (j === i ? `${tonica}${resto}` : x)).join(' '), respuestas).veredicto === 'exacta';
+          });
+          expect(valen, `${donde}: ${r} (palabra ${String(i + 1)})`).toBe(true);
+        });
+      }
     }
   });
 
@@ -359,9 +430,15 @@ describe('lo que se ofrece como opción', () => {
 });
 
 describe('las reglas', () => {
-  it('los ejemplos de las reglas del orden no son frases que la app pregunta', () => {
-    const preguntadas = new Set(ELEMENTOS_ORDEN.flatMap((f) => f.validas.map(normalizar)));
-    for (const [grupo, regla] of Object.entries(REGLAS_ORDEN)) {
+  it('los ejemplos de las reglas no son frases que la app pregunta', () => {
+    const preguntadas = new Set(
+      [
+        ...ELEMENTOS_ORDEN.flatMap((f) => f.validas),
+        ...SEPARABLES.flatMap((s) => [s.presente.replaceAll('|', ' '), ...(s.otras ?? []), s.perf[0]]),
+        ...VERBOS.flatMap((v) => [...(v.perf ? [v.perf[0]] : []), ...(v.perfOtras ?? []), ...(v.pasadoEj ? [v.pasadoEj[0]] : []), ...(v.pasadoOtras ?? [])]),
+      ].map(normalizar),
+    );
+    for (const [grupo, regla] of [...Object.entries(REGLAS_ORDEN), ...Object.entries(REGLAS_VERBOS)]) {
       for (const [, ejemplo = ''] of regla.matchAll(/«([^»]+)»/g)) {
         expect(preguntadas.has(normalizar(ejemplo)), `${grupo}: ${ejemplo}`).toBe(false);
       }

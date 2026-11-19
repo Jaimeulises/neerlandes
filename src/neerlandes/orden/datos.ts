@@ -11,9 +11,16 @@
 //   también al ordenar; todas valen al traducir. Al dictar solo vale la que suena.
 //   Las formas tónicas del sujeto (wij por we, mij por me, zij por ze al principio)
 //   no hace falta apuntarlas: al traducir se añaden solas (conFormasTonicas).
+//   jij, jou y jouw por je sí hay que apuntarlas, porque je es sujeto, objeto o
+//   posesivo según la frase.
 // - pista: lo que se enseña al traducir para que salga la estructura.
 //
 // Pendiente de revisión por una persona nativa (ver docs/revision.md).
+
+/** Todas las combinaciones de unas partes: combinar(['kun', 'kan'], ['je', 'jij'], ['helpen']) da «kun je helpen», «kun jij helpen», «kan je helpen» y «kan jij helpen». Una parte vacía no deja hueco. */
+function combinar(...partes: readonly (readonly string[])[]): string[] {
+  return partes.reduce<string[]>((frases, opciones) => frases.flatMap((f) => opciones.map((o) => [f, o].filter((x) => x !== '').join(' '))), ['']);
+}
 
 export const GRUPOS_ORDEN = ['inversion', 'modal', 'perfectum', 'separables', 'niet', 'preguntas', 'subordinada', 'subordinada-delante'] as const;
 
@@ -39,7 +46,7 @@ export const REGLAS_ORDEN: Readonly<Record<GrupoOrden, string>> = {
   perfectum:
     'En el perfectum, hebben o zijn van en segunda posición (en primera si es una pregunta de sí o no: «Heb je al gegeten?») y el participio se va al final de la frase.',
   separables:
-    'En los verbos separables (opbellen, opstaan, meenemen…), cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y se va al final. Con un modal o en una subordinada va pegada al verbo: «Ik wil je opbellen», «omdat ik je opbel».',
+    'En los verbos separables (opbellen, opstaan, meenemen…), cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y se va al final. Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Con un modal o en una subordinada va pegada al verbo: «Ik wil je opbellen», «omdat ik je opbel».',
   niet: 'Niet va detrás del verbo, de las palabras que dicen cuándo (morgen, vandaag, vanavond…) y del objeto definido (de film, mijn fiets, het, hem), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar. Con un sustantivo sin artículo o con een, se usa geen.',
   preguntas:
     'En las preguntas el verbo va primero, o justo detrás de la palabra interrogativa (wat, waar, hoe…). Si el sujeto es jij o je y va detrás del verbo, el verbo pierde la -t: «Drink jij koffie?». Si je es «tu», la -t se queda: «Waar werkt je vriend?».',
@@ -94,20 +101,8 @@ export const FRASES: readonly DatosFrase[] = [
     fichas: 'kun|je|het zout|even|aangeven',
     es: '¿Puedes pasarme la sal?',
     final: '?',
-    otras: [
-      'kun je even het zout aangeven',
-      'kan je het zout even aangeven',
-      'kan je even het zout aangeven',
-      'kun jij het zout even aangeven',
-      'kun je me het zout even aangeven',
-      'kun je me even het zout aangeven',
-      'kan je me het zout even aangeven',
-      'kan je me even het zout aangeven',
-      'kun je het zout aangeven',
-      'kan je het zout aangeven',
-      'kun je me het zout aangeven',
-      'kan je me het zout aangeven',
-    ],
+    // Kun o kan, je o jij, con me o sin él y con even en un sitio u otro o sin él: todas valen.
+    otras: combinar(['kun', 'kan'], ['je', 'jij'], ['', 'me'], ['het zout even', 'even het zout', 'het zout'], ['aangeven']).filter((f) => f !== 'kun je het zout even aangeven'),
     pista: 'Empieza por «Kun je»; usa «aangeven».',
   },
   { grupo: 'modal', fichas: 'we|moeten|om acht uur|bij mijn ouders|zijn', es: 'Tenemos que estar en casa de mis padres a las ocho.', otras: ['om acht uur moeten we bij mijn ouders zijn'], pista: 'Con «moeten».' },
@@ -125,13 +120,13 @@ export const FRASES: readonly DatosFrase[] = [
   { grupo: 'perfectum', fichas: 'mijn schoonmoeder|heeft|een taart|gebakken', es: 'Mi suegra ha hecho una tarta.', pista: 'En perfectum, con «bakken».' },
   { grupo: 'perfectum', fichas: 'ze|zijn|vorig jaar|naar Spanje|verhuisd', es: 'Se mudaron a España el año pasado.', otras: ['vorig jaar zijn ze naar Spanje verhuisd', 'vorig jaar zijn zij naar Spanje verhuisd'], pista: 'En perfectum, con «verhuizen».' },
   { grupo: 'perfectum', fichas: 'we|hebben|veel|gelachen', es: 'Nos hemos reído mucho.', pista: 'En perfectum, con «lachen».' },
-  { grupo: 'perfectum', fichas: 'hij|is|om tien uur|thuisgekomen', es: 'Llegó a casa a las diez.', otras: ['om tien uur is hij thuisgekomen'], pista: 'En perfectum, con «thuiskomen».' },
+  { grupo: 'perfectum', fichas: 'hij|is|om tien uur|thuisgekomen', es: 'Llegó a casa a las diez.', otras: ['om tien uur is hij thuisgekomen'], pista: 'En perfectum, con «thuiskomen»; él es «hij».' },
 
   // Verbos separables
-  { grupo: 'separables', fichas: 'ik|bel|je|morgen|op', es: 'Te llamo mañana.', otras: ['morgen bel ik je op'], pista: 'Con «opbellen».' },
+  { grupo: 'separables', fichas: 'ik|bel|je|morgen|op', es: 'Te llamo mañana.', otras: ['morgen bel ik je op', 'ik bel jou morgen op', 'morgen bel ik jou op'], pista: 'Con «opbellen».' },
   { grupo: 'separables', fichas: 'hoe laat|sta|je|op', es: '¿A qué hora te levantas?', final: '?', otras: ['hoe laat sta jij op'], pista: 'Con «opstaan».' },
   { grupo: 'separables', fichas: 'neem|jij|de wijn|mee', es: '¿Traes tú el vino?', final: '?', otras: ['neem je de wijn mee'], pista: 'Con «meenemen».' },
-  { grupo: 'separables', fichas: 'de trein|komt|om vijf uur|aan', es: 'El tren llega a las cinco.', otras: ['om vijf uur komt de trein aan'], pista: 'Con «aankomen».' },
+  { grupo: 'separables', fichas: 'de trein|komt|om vijf uur|aan', es: 'El tren llega a las cinco.', otras: ['om vijf uur komt de trein aan', 'de trein komt aan om vijf uur'], pista: 'Con «aankomen».' },
   { grupo: 'separables', fichas: 'we|ruimen|na het eten|de keuken|op', es: 'Después de comer recogemos la cocina.', otras: ['na het eten ruimen we de keuken op', 'we ruimen de keuken na het eten op', 'we ruimen de keuken op na het eten'], pista: 'Con «opruimen».' },
   { grupo: 'separables', fichas: 'ik|nodig|mijn vrienden|voor zaterdag|uit', es: 'Invito a mis amigos para el sábado.', otras: ['ik nodig mijn vrienden uit voor zaterdag'], pista: 'Con «uitnodigen».' },
   { grupo: 'separables', fichas: 'wanneer|kom|je|terug', es: '¿Cuándo vuelves?', final: '?', otras: ['wanneer kom jij terug'], pista: 'Con «terugkomen».' },
@@ -160,9 +155,17 @@ export const FRASES: readonly DatosFrase[] = [
   // Subordinadas
   { grupo: 'subordinada', fichas: 'ik blijf thuis|omdat|ik|niet lekker|ben', es: 'Me quedo en casa porque no me encuentro bien.', pista: 'Con «omdat» y «niet lekker zijn».' },
   { grupo: 'subordinada', fichas: 'ik denk|dat|het|morgen|gaat regenen', es: 'Creo que mañana va a llover.', pista: 'Con «dat».' },
-  { grupo: 'subordinada', fichas: 'weet je|of|ze|vanavond|komt', es: '¿Sabes si viene esta noche?', final: '?', otras: ['weet jij of ze vanavond komt', 'weet je of zij vanavond komt'], pista: 'Con «of»; ella es «ze».' },
-  { grupo: 'subordinada', fichas: 'ze zegt|dat|ze|geen tijd|heeft', es: 'Dice que no tiene tiempo.', otras: ['zij zegt dat ze geen tijd heeft'], pista: 'Con «dat»; ella es «ze».' },
-  { grupo: 'subordinada', fichas: 'ik bel je|als|ik|thuis|ben', es: 'Te llamo cuando esté en casa.', otras: ['als ik thuis ben, bel ik je', 'ik bel je op als ik thuis ben', 'als ik thuis ben, bel ik je op'], pista: 'Con «als».' },
+  { grupo: 'subordinada', fichas: 'weet je|of|ze|vanavond|komt', es: '¿Sabes si viene esta noche?', final: '?', otras: ['weet jij of ze vanavond komt', 'weet je of zij vanavond komt', 'weet jij of zij vanavond komt'], pista: 'Con «of»; ella es «ze».' },
+  { grupo: 'subordinada', fichas: 'ze zegt|dat|ze|geen tijd|heeft', es: 'Dice que no tiene tiempo.', otras: ['zij zegt dat ze geen tijd heeft', 'ze zegt dat zij geen tijd heeft'], pista: 'Con «dat»; ella es «ze».' },
+  { grupo: 'subordinada', fichas: 'ik bel je|als|ik|thuis|ben', es: 'Te llamo cuando esté en casa.', otras: [
+      'als ik thuis ben, bel ik je',
+      'ik bel je op als ik thuis ben',
+      'als ik thuis ben, bel ik je op',
+      'ik bel jou als ik thuis ben',
+      'als ik thuis ben, bel ik jou',
+      'ik bel jou op als ik thuis ben',
+      'als ik thuis ben, bel ik jou op',
+    ], pista: 'Con «als».' },
   { grupo: 'subordinada', fichas: 'hij weet niet|waar|de sleutels|liggen', es: 'No sabe dónde están las llaves.', pista: 'Con «waar»; él es «hij»; las llaves «liggen».' },
   { grupo: 'subordinada', fichas: 'ik ben blij|dat|jullie|er|zijn', es: 'Me alegro de que estéis aquí.', pista: 'Con «dat» y «er zijn».' },
   { grupo: 'subordinada', fichas: 'we gaan naar binnen|omdat|het|koud|is', es: 'Entramos porque hace frío.', pista: 'Con «omdat».' },
@@ -190,7 +193,15 @@ export const FRASES: readonly DatosFrase[] = [
     pista: 'Empieza por «Als».',
   },
   { grupo: 'subordinada-delante', fichas: 'omdat het regent,|blijven|we|binnen', es: 'Como llueve, nos quedamos dentro.', otras: ['we blijven binnen omdat het regent'], pista: 'Empieza por «Omdat».' },
-  { grupo: 'subordinada-delante', fichas: 'als je wilt,|kunnen|we|samen|koken', es: 'Si quieres, podemos cocinar juntos.', otras: ['we kunnen samen koken als je wilt', 'als je wil, kunnen we samen koken', 'we kunnen samen koken als je wil'], pista: 'Empieza por «Als».' },
+  { grupo: 'subordinada-delante', fichas: 'als je wilt,|kunnen|we|samen|koken', es: 'Si quieres, podemos cocinar juntos.', otras: [
+      'we kunnen samen koken als je wilt',
+      'als je wil, kunnen we samen koken',
+      'we kunnen samen koken als je wil',
+      'als jij wilt, kunnen we samen koken',
+      'we kunnen samen koken als jij wilt',
+      'als jij wil, kunnen we samen koken',
+      'we kunnen samen koken als jij wil',
+    ], pista: 'Empieza por «Als».' },
   {
     grupo: 'subordinada-delante',
     fichas: 'nadat we gegeten hebben,|gaan|we|wandelen',
@@ -209,7 +220,15 @@ export const FRASES: readonly DatosFrase[] = [
     grupo: 'subordinada-delante',
     fichas: 'zodra ik thuis ben,|stuur|ik|je|een berichtje',
     es: 'En cuanto esté en casa, te mando un mensaje.',
-    otras: ['ik stuur je een berichtje zodra ik thuis ben', 'zodra ik thuis ben, stuur ik je een bericht', 'ik stuur je een bericht zodra ik thuis ben'],
+    otras: [
+      'ik stuur je een berichtje zodra ik thuis ben',
+      'zodra ik thuis ben, stuur ik je een bericht',
+      'ik stuur je een bericht zodra ik thuis ben',
+      'zodra ik thuis ben, stuur ik jou een berichtje',
+      'ik stuur jou een berichtje zodra ik thuis ben',
+      'zodra ik thuis ben, stuur ik jou een bericht',
+      'ik stuur jou een bericht zodra ik thuis ben',
+    ],
     pista: 'Empieza por «Zodra».',
   },
 ];

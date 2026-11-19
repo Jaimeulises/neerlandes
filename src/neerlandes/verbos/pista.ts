@@ -22,7 +22,7 @@ export const NOMBRES_GRUPO_VERBOS: Readonly<Record<GrupoVerbos, string>> = {
 // Los ejemplos de las reglas no son frases ni formas que la app pregunte antes de enseñarlas: la regla
 // se presenta al abrir el grupo y no debe dar la respuesta del ejercicio que viene detrás.
 const REGLA_PRESENTE =
-  'En los regulares: ik + raíz; jij, hij y zij + raíz + t (si la raíz ya acaba en t, no se añade otra: hij zet); en plural, el infinitivo. Si el sujeto jij o je va detrás del verbo, sin -t: «werk jij?». Los irregulares (zijn, hebben, kunnen, mogen…) tienen formas propias.';
+  'En los regulares: ik + raíz; jij, hij y zij + raíz + t (si la raíz ya acaba en t, no se añade otra: hij zet); en plural, el infinitivo. Si el sujeto jij o je va detrás del verbo, sin -t: «speel jij?». Los irregulares (zijn, hebben, kunnen, mogen…) tienen formas propias.';
 const REGLA_PERFECTUM =
   'Participio regular: ge + raíz + t si en el infinitivo va t, k, f, s, ch o p delante de -en (’t kofschip); si no, ge + raíz + d. Se mira el infinitivo, no la raíz: leven da geleefd aunque se diga ik leef. Si la raíz ya acaba en t o d, no se añade otra (zetten da gezet). Sin ge- con los prefijos átonos be-, ver-, ge-, her-, ont- y er- (beloven da beloofd); si esas letras no son prefijo, sí lo lleva (verven da geverfd).';
 const REGLA_IRREGULAR =
@@ -30,8 +30,24 @@ const REGLA_IRREGULAR =
 const REGLA_ZIJN =
   'Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, worden, verhuizen…), y además zijn y blijven, que no son ni lo uno ni lo otro (ik ben geweest, ik ben gebleven).';
 const REGLA_SEPARABLES =
-  'Cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y va al final: «ik bel je op». Va pegada en el infinitivo («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio, delante de ge- (opgebeld, meegenomen).';
+  'Cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y va al final: «ik bel je op». Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Va pegada en el infinitivo («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio, delante de ge- (opgebeld, meegenomen). Con te + infinitivo, el te va entre las dos partes: «om je op te bellen».';
 const REGLA_PASADO = 'El pasado simple se usa sobre todo para contar y describir: «toen woonde ik…», «het was koud».';
+
+/** Las reglas de los verbos, para que salgan también en docs/revision.md. */
+export const REGLAS_VERBOS = {
+  presente: REGLA_PRESENTE,
+  perfectum: REGLA_PERFECTUM,
+  'perfectum-irregular': REGLA_IRREGULAR,
+  zijn: REGLA_ZIJN,
+  separables: REGLA_SEPARABLES,
+  pasado: REGLA_PASADO,
+} as const;
+
+/**
+ * El verbo con que se enseña la regla de lo regular al abrir su grupo. No es el que lo abre, que es lo que
+ * se pregunta justo después, sino uno de la mitad del grupo: sale bastante más tarde.
+ */
+export const EJEMPLO_DE_REGLA: Readonly<Partial<Record<GrupoVerbos, string>>> = { presente: 'spelen', perfectum: 'spelen' };
 
 export interface Verbo extends Elemento {
   readonly grupo: GrupoVerbos;
@@ -405,7 +421,9 @@ export const verbos: Pista<Verbo> = {
   presentar(e): Presentacion | null {
     if (!saleDeLaRegla(e)) return presentacionDe(e);
     if (!ABRE_GRUPO.has(e.id)) return null;
-    return { ...presentacionDe(e), etiqueta: `Regla nueva: ${NOMBRES_GRUPO_VERBOS[e.grupo]}` };
+    // La regla se enseña con otro verbo del grupo: el que la abre se intenta sin verlo, como los demás.
+    const ejemplo = ELEMENTOS_VERBOS.find((x) => x.grupo === e.grupo && x.verbo?.inf === EJEMPLO_DE_REGLA[e.grupo]) ?? e;
+    return { ...presentacionDe(ejemplo), nota: null, etiqueta: `Regla nueva: ${NOMBRES_GRUPO_VERBOS[e.grupo]}` };
   },
 };
 
