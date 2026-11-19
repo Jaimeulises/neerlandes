@@ -4,9 +4,9 @@
 
 import { useState, type ReactElement } from 'react';
 import type { Ajustes, Forma } from '../../estado/ajustes';
-import { construirRondaDe, type PasoMixto } from '../../estado/ronda';
+import { construirRondaDe, opcionesDeRonda, type PasoMixto } from '../../estado/ronda';
 import type { Voz } from '../../estado/voz';
-import { crearAzar, repetirTrasFallo, RONDA_POR_DEFECTO, semillaNueva, type Calificacion, type OpcionesRonda, type Pista, type Progreso } from '../../motor';
+import { crearAzar, repetirTrasFallo, semillaNueva, type Calificacion, type Pista, type Progreso } from '../../motor';
 import { Boton } from '../componentes/Boton';
 import { Decir } from '../ejercicios/Decir';
 import { Escrito } from '../ejercicios/Escrito';
@@ -35,18 +35,8 @@ interface Estado {
   readonly extra: boolean;
 }
 
-function opcionesDe(ajustes: Ajustes, formas: ReadonlySet<Forma>, extra: boolean): OpcionesRonda {
-  return {
-    ...RONDA_POR_DEFECTO,
-    tamano: ajustes.tamanoRonda,
-    nuevosMaximo: extra ? 0 : ajustes.nuevosPorRonda,
-    formas,
-    ...(extra ? { incluirNoVencidos: true } : {}),
-  };
-}
-
 function empezar(pistas: readonly Pista[], progreso: Progreso, ajustes: Ajustes, formas: ReadonlySet<Forma>, extra: boolean): Estado {
-  const pasos = construirRondaDe(pistas, progreso, new Date(), crearAzar(semillaNueva()), opcionesDe(ajustes, formas, extra));
+  const pasos = construirRondaDe(pistas, progreso, new Date(), crearAzar(semillaNueva()), opcionesDeRonda(ajustes, formas, extra));
   return { pasos, indice: 0, presentado: false, aciertos: 0, fallos: 0, repetidos: new Map(), extra };
 }
 
@@ -68,7 +58,7 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, onRespuesta, onS
         const clave = `${pista.id}/${ejercicio.elementoId}`;
         const veces = e.repetidos.get(clave) ?? 0;
         const elemento = pista.elementos.find((x) => x.id === ejercicio.elementoId);
-        const vuelta = elemento ? repetirTrasFallo(pista, elemento, progreso, azar, veces, opcionesDe(ajustes, formas, e.extra)) : null;
+        const vuelta = elemento ? repetirTrasFallo(pista, elemento, progreso, azar, veces, opcionesDeRonda(ajustes, formas, e.extra)) : null;
         if (vuelta) {
           pasos = [...pasos, { pistaId: pista.id, paso: vuelta }];
           repetidos = new Map(repetidos).set(clave, veces + 1);

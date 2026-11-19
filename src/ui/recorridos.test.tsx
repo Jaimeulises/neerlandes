@@ -1,14 +1,31 @@
 // @vitest-environment jsdom
 // Recorridos de verdad por la app en jsdom: una ronda entera de punta a punta
-// pasando por todas las formas de ejercicio que salgan, y la corrección de una
-// frase escrita con el orden del inglés.
+// pasando por todas las formas de ejercicio que salgan, la corrección de una
+// frase escrita o de unas fichas con el orden del inglés, y lo que pasa con lo
+// guardado: restaurar una copia, no poder abrirlo y volver a la app otro día.
 
-import { afterEach, describe, expect, it } from 'vitest';
-import { almacenEnMemoria, CLAVE_HISTORIAL, type EjercicioTraducir } from '../motor';
-import { boton, buscarBoton, enPantalla, escribirEn, limpiar, montar, prepararNavegador, pulsar } from '../pruebas/pantalla';
+import { act } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { NOMBRE_APP } from '../estado/app';
+import {
+  almacenEnMemoria,
+  anotar,
+  CLAVE_HISTORIAL,
+  CLAVE_PROGRESO,
+  guardarDatos,
+  HISTORIAL_VACIO,
+  PROGRESO_VACIO,
+  registrarRespuesta,
+  serializarCopia,
+  type Almacen,
+  type EjercicioOrdenar,
+  type EjercicioTraducir,
+} from '../motor';
+import { boton, buscarBoton, enPantalla, escribirEn, esperar, limpiar, montar, prepararNavegador, pulsar } from '../pruebas/pantalla';
 import type { Voz } from '../estado/voz';
 import { App } from './App';
 import { Escrito } from './ejercicios/Escrito';
+import { Ordenar } from './ejercicios/Ordenar';
 
 const SIN_VOZ: Voz = { disponible: false, nombre: null, decir: () => undefined };
 
@@ -88,6 +105,130 @@ describe('la app de punta a punta', () => {
     await pulsar(boton('Ajustes'));
     expect(enPantalla()).toContain('Copia de seguridad');
     expect(enPantalla()).toContain('no tiene voz neerlandesa');
+    expect(enPantalla()).toContain('Ejercicios en los repasos');
+    expect(enPantalla()).toContain('Dictado (necesita la voz)');
+  });
+});
+
+/** Elige un archivo en el campo de la copia, como si el alumno lo hubiera escogido en el móvil. */
+async function elegirArchivo(contenido: string, nombre: string): Promise<void> {
+  const entrada = document.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!entrada) throw new Error('falta el campo de archivo');
+  Object.defineProperty(entrada, 'files', { value: [new File([contenido], nombre, { type: 'application/json' })], configurable: true });
+  act(() => {
+    entrada.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await esperar();
+  await esperar();
+}
+
+describe('lo guardado', () => {
+  it('restaurar una copia pide confirmación y dice de cuándo es y qué trae', async () => {
+    prepararNavegador();
+    const almacen = almacenEnMemoria();
+    await montar(<App almacen={almacen} />);
+    await pulsar(boton('Ajustes'));
+    const progreso = registrarRespuesta(PROGRESO_VACIO, 'vocabulario', 'gente:de-moeder', 'bien', new Date(2026, 10, 2, 10));
+    const copia = serializarCopia({ progreso, historial: HISTORIAL_VACIO }, NOMBRE_APP, new Date(2026, 10, 2, 10));
+
+    await elegirArchivo(copia, 'stap-copia-2026-11-02.json');
+    expect(enPantalla()).toContain('Copia del 2 de noviembre de 2026: 1 cosa vista y 0 respuestas');
+    expect(enPantalla()).toContain('Ahora en este dispositivo: 0 cosas vistas y 0 respuestas');
+    expect(await almacen.leer(CLAVE_PROGRESO)).toBeNull();
+    await pulsar(boton('Cancelar'));
+    expect(enPantalla()).not.toContain('Copia del');
+    expect(await almacen.leer(CLAVE_PROGRESO)).toBeNull();
+
+    await elegirArchivo(copia, 'stap-copia-2026-11-02.json');
+    await pulsar(boton(/^\s*Restaurar$/));
+    expect(enPantalla()).toContain('Copia restaurada.');
+    expect(await almacen.leer(CLAVE_PROGRESO)).not.toBeNull();
+  });
+
+  it('si no se puede abrir lo guardado, se puede seguir sin guardar, y se avisa también durante la ronda', async () => {
+    prepararNavegador();
+    let escrituras = 0;
+    const cerrado: Almacen = {
+      leer: () => Promise.reject(new DOMException('sin acceso', 'UnknownError')),
+      guardar: () => {
+        escrituras++;
+        return Promise.resolve();
+      },
+      borrar: () => Promise.resolve(),
+    };
+    await montar(<App almacen={cerrado} />);
+    expect(enPantalla()).toContain('No se puede leer tu progreso');
+    await pulsar(boton('Seguir sin guardar'));
+    expect(enPantalla()).toContain('Esta sesión no se guarda');
+    await pulsar(boton('Empezar'));
+    expect(enPantalla()).toContain('Esta sesión no se guarda');
+    await darUnPaso();
+    await darUnPaso();
+    expect(escrituras).toBe(0);
+  });
+
+  it('Hoy se pone al día al volver a la app otro día, sin recargarla', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date(2026, 10, 19, 12));
+      prepararNavegador();
+      const almacen = almacenEnMemoria();
+      await guardarDatos(almacen, { progreso: PROGRESO_VACIO, historial: anotar(HISTORIAL_VACIO, { t: Date.now(), k: 'orden/x', c: 'bien', f: 'ordenar' }) });
+      await montar(<App almacen={almacen} />);
+      expect(enPantalla()).toContain('Hoy, 19/11/2026');
+      vi.setSystemTime(new Date(2026, 10, 22, 12));
+      act(() => {
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      await esperar();
+      expect(enPantalla()).toContain('Hoy, 22/11/2026');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+/** La ficha suelta que dice exactamente eso. */
+function ficha(texto: string): HTMLButtonElement {
+  const encontrada = [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Fichas sueltas"] button')].find((b) => b.textContent === texto);
+  if (!encontrada) throw new Error(`falta la ficha ${texto}`);
+  return encontrada;
+}
+
+describe('ordenar las fichas en pantalla', () => {
+  it('un orden bueno que no está en la lista se puede dar por bueno', async () => {
+    prepararNavegador();
+    const calificaciones: string[] = [];
+    const ejercicio: EjercicioOrdenar = {
+      forma: 'ordenar',
+      tipo: 'prueba',
+      elementoId: 'x',
+      instruccion: 'Ordena la frase',
+      significado: 'Después de comer tomamos café.',
+      fichas: [
+        { id: 0, texto: 'na het eten' },
+        { id: 1, texto: 'drinken' },
+        { id: 2, texto: 'we' },
+        { id: 3, texto: 'koffie' },
+      ],
+      validas: ['Na het eten drinken we koffie.'],
+      frase: 'Na het eten drinken we koffie.',
+    };
+    await montar(
+      <Ordenar
+        ejercicio={ejercicio}
+        repeticion={false}
+        voz={SIN_VOZ}
+        onTerminar={(c) => {
+          calificaciones.push(c);
+        }}
+      />,
+    );
+    for (const texto of ['we', 'drinken', 'koffie', 'na het eten']) await pulsar(ficha(texto));
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('No va en ese orden');
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(calificaciones).toEqual(['bien']);
   });
 });
 

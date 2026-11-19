@@ -11,23 +11,46 @@ const TABLA = 'datos';
 export function almacenIndexedDB(): Almacen {
   let abierta: Promise<IDBPDatabase> | null = null;
   const bd = (): Promise<IDBPDatabase> => {
-    abierta ??= openDB(BASE, 1, {
+    if (abierta) return abierta;
+    const intento = openDB(BASE, 1, {
       upgrade(db) {
         if (!db.objectStoreNames.contains(TABLA)) db.createObjectStore(TABLA);
       },
+      // El navegador puede cerrar la conexión con la app abierta (Safari lo hace en segundo plano): la
+      // siguiente operación abre otra.
+      terminated() {
+        if (abierta === intento) abierta = null;
+      },
     });
-    return abierta;
+    abierta = intento;
+    // Si no se pudo abrir, el siguiente intento («Reintentar», el reintento del guardado) vuelve a probar.
+    intento.catch(() => {
+      if (abierta === intento) abierta = null;
+    });
+    return intento;
+  };
+  /** Hace la operación y, si la conexión ya estaba cerrada, abre otra y la repite una vez. */
+  const conBase = async <T>(operacion: (db: IDBPDatabase) => Promise<T>): Promise<T> => {
+    const actual = bd();
+    const db = await actual;
+    try {
+      return await operacion(db);
+    } catch (e) {
+      if (!(e instanceof DOMException && e.name === 'InvalidStateError')) throw e;
+      if (abierta === actual) abierta = null;
+      return operacion(await bd());
+    }
   };
   return {
     async leer(clave) {
-      const valor: unknown = await (await bd()).get(TABLA, clave);
+      const valor: unknown = await conBase((db) => db.get(TABLA, clave));
       return typeof valor === 'string' ? valor : null;
     },
     async guardar(clave, valor) {
-      await (await bd()).put(TABLA, valor, clave);
+      await conBase((db) => db.put(TABLA, valor, clave));
     },
     async borrar(clave) {
-      await (await bd()).delete(TABLA, clave);
+      await conBase((db) => db.delete(TABLA, clave));
     },
   };
 }

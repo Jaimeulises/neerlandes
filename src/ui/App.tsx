@@ -4,6 +4,7 @@
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { almacenDelDispositivo } from '../almacen/indexeddb';
 import { formasActivas, guardarAjustes, leerAjustes, type Ajustes as DatosAjustes } from '../estado/ajustes';
+import { opcionesDeRonda } from '../estado/ronda';
 import { useDatos } from '../estado/useDatos';
 import { useVoz } from '../estado/voz';
 import { HISTORIAL_VACIO, PROGRESO_VACIO, type Almacen, type Pista } from '../motor';
@@ -36,11 +37,20 @@ export function App({ almacen }: Props): ReactElement {
   const vozDelDispositivo = useVoz(true, ajustes.vozLenta);
   const voz = useVoz(ajustes.voz, ajustes.vozLenta);
   const formas = useMemo(() => formasActivas(ajustes, vozDelDispositivo.disponible), [ajustes, vozDelDispositivo.disponible]);
+  const opciones = useMemo(() => opcionesDeRonda(ajustes, formas), [ajustes, formas]);
 
   const cambiarAjustes = useCallback((nuevos: DatosAjustes) => {
     setAjustes(nuevos);
     guardarAjustes(nuevos);
   }, []);
+
+  // Lo que pasa con el guardado se dice en todas las pantallas, también durante la ronda.
+  const aviso =
+    datos.guardado === 'fallo' ? (
+      <p className="aviso">No se ha podido guardar el último avance. Se reintentará solo.</p>
+    ) : datos.guardado === 'sin-guardar' ? (
+      <p className="aviso">Esta sesión no se guarda en el dispositivo, porque no se pudo abrir lo guardado. Antes de cerrar la app, saca una copia en Ajustes.</p>
+    ) : null;
 
   if (datos.estado === 'cargando') {
     return (
@@ -55,6 +65,7 @@ export function App({ almacen }: Props): ReactElement {
       <main className="app columna">
         <h1>No se puede leer tu progreso</h1>
         <p className="texto-2">{datos.error ?? 'Error desconocido.'}</p>
+        {datos.estado === 'inaccesible' ? <p className="texto-2">Prueba antes a reintentar o a cerrar la app del todo y volver a abrirla.</p> : null}
         <Boton ancho onClick={datos.reintentar}>
           Reintentar
         </Boton>
@@ -65,7 +76,7 @@ export function App({ almacen }: Props): ReactElement {
             void datos.reemplazar({ progreso: PROGRESO_VACIO, historial: HISTORIAL_VACIO });
           }}
         >
-          Empezar de cero (lo guardado se aparta, no se borra)
+          {datos.estado === 'danado' ? 'Empezar de cero (lo guardado se aparta, no se borra)' : 'Seguir sin guardar (lo guardado no se toca)'}
         </Boton>
       </main>
     );
@@ -74,6 +85,7 @@ export function App({ almacen }: Props): ReactElement {
   if (ronda) {
     return (
       <main className="app app--ronda">
+        {aviso}
         <Ronda
           pistas={ronda}
           progreso={datos.datos.progreso}
@@ -92,8 +104,8 @@ export function App({ almacen }: Props): ReactElement {
   return (
     <>
       <main className="app">
-        {datos.guardado === 'fallo' ? <p className="aviso">No se ha podido guardar el último avance. Se reintentará solo.</p> : null}
-        {pestana === 'hoy' ? <Hoy pistas={PISTAS} datos={datos.datos} onEmpezar={setRonda} /> : null}
+        {aviso}
+        {pestana === 'hoy' ? <Hoy pistas={PISTAS} datos={datos.datos} opciones={opciones} onEmpezar={setRonda} /> : null}
         {pestana === 'progreso' ? <Progreso pistas={PISTAS} datos={datos.datos} /> : null}
         {pestana === 'ajustes' ? (
           <Ajustes

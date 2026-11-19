@@ -71,10 +71,17 @@ export function gruposCompletados<E extends Elemento>(pista: Pista<E>, progreso:
   );
 }
 
-function contexto<E extends Elemento>(pista: Pista<E>, progreso: Progreso, elemento: E, azar: Azar, opciones: OpcionesRonda): ContextoEjercicio {
+function contexto<E extends Elemento>(
+  pista: Pista<E>,
+  progreso: Progreso,
+  elemento: E,
+  azar: Azar,
+  opciones: OpcionesRonda,
+  vistos: ReadonlySet<string> = vistosDe(progreso, pista.id),
+): ContextoEjercicio {
   return {
     azar,
-    vistos: vistosDe(progreso, pista.id),
+    vistos,
     repeticiones: progreso.get(clave(pista.id, elemento.id))?.reps ?? 0,
     formas: opciones.formas,
     ...(opciones.variante !== undefined ? { variante: opciones.variante } : {}),
@@ -106,11 +113,12 @@ export function construirRonda<E extends Elemento>(
   const abiertos = new Set(gruposDesbloqueados(pista, progreso, vistosOtras));
   const nuevos = candidatos.filter((e) => abiertos.has(e.grupo) && !progreso.has(clave(pista.id, e.id))).slice(0, huecos);
 
-  // Los nuevos se presentan y se preguntan con un progreso que ya los conoce,
-  // para que sus distractores puedan incluir a los demás nuevos de la ronda.
-  const vistosConNuevos: Progreso = new Map(progreso);
+  // Los ejercicios se crean como si los nuevos de la ronda ya se conocieran, para que sus distractores
+  // puedan incluir a los demás nuevos, que se presentan en la misma ronda. Las repeticiones de cada
+  // elemento siguen saliendo del progreso.
+  const vistosConNuevos = new Set([...vistosDe(progreso, pista.id), ...nuevos.map((e) => e.id)]);
   const crear = (e: E, repeticion: boolean): PasoRonda => ({
-    ejercicio: pista.crearEjercicio(e, contexto(pista, vistosConNuevos, e, azar, opciones)),
+    ejercicio: pista.crearEjercicio(e, contexto(pista, progreso, e, azar, opciones, vistosConNuevos)),
     presentacion: null,
     repeticion,
   });

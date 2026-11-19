@@ -43,7 +43,17 @@ export function exportarCopia(datos: Datos, ahora: Date): Promise<Entrega> {
   return entregarArchivo(serializarCopia(datos, NOMBRE_APP, ahora), `stap-copia-${ahora.toISOString().slice(0, 10)}.json`, 'Copia de Stap');
 }
 
-/** Lee una copia. Lanza CopiaIlegible si no es una copia de esta app. */
-export function leerCopia(texto: string): Datos {
-  return deserializarCopia(texto, NOMBRE_APP);
+export interface CopiaLeida {
+  readonly datos: Datos;
+  /** Cuándo se sacó, o null si la copia no lo dice bien. */
+  readonly creadaEl: Date | null;
+}
+
+/** Lee una copia y cuándo se sacó. Lanza CopiaIlegible si no es una copia de esta app. */
+export function leerCopia(texto: string): CopiaLeida {
+  const datos = deserializarCopia(texto, NOMBRE_APP);
+  // Si deserializarCopia no ha lanzado, el texto es JSON y es un objeto.
+  const { creadaEl } = JSON.parse(texto) as { creadaEl?: unknown };
+  const fecha = typeof creadaEl === 'string' ? new Date(creadaEl) : null;
+  return { datos, creadaEl: fecha && !Number.isNaN(fecha.getTime()) ? fecha : null };
 }

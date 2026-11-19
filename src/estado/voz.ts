@@ -1,6 +1,7 @@
-// La voz neerlandesa del propio dispositivo (síntesis del navegador). Se
-// prefiere una voz local de nl-NL: así nada sale del dispositivo. Si no hay
-// ninguna voz neerlandesa, la app funciona igual sin audio ni dictado.
+// La voz neerlandesa del propio dispositivo (síntesis del navegador). Solo
+// voces locales: las de red (las «Google» de Chrome, las «Online» de Edge)
+// mandan cada frase a un servidor. Si no hay ninguna voz neerlandesa local, la
+// app funciona igual sin audio ni dictado.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -15,11 +16,11 @@ function sintesis(): SpeechSynthesis | null {
   return typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
 }
 
-/** La mejor voz neerlandesa: primero local y de nl-NL, luego cualquier nl-NL, luego cualquier nl. */
+/** La mejor voz neerlandesa del dispositivo: de nl-NL si la hay, si no cualquier nl. Nunca una voz de red. */
 export function elegirVoz(voces: readonly SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
-  const nl = voces.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith('nl'));
-  const puntos = (v: SpeechSynthesisVoice): number => (v.lang.toLowerCase().replace('_', '-') === 'nl-nl' ? 2 : 0) + (v.localService ? 1 : 0);
-  return [...nl].sort((a, b) => puntos(b) - puntos(a))[0] ?? null;
+  const idioma = (v: SpeechSynthesisVoice): string => v.lang.toLowerCase().replace('_', '-');
+  const nl = voces.filter((v) => v.localService && idioma(v).startsWith('nl'));
+  return nl.find((v) => idioma(v) === 'nl-nl') ?? nl[0] ?? null;
 }
 
 export function useVoz(activa: boolean, lenta: boolean): Voz {

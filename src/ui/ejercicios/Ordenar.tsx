@@ -1,6 +1,6 @@
 // Ordenar las fichas de una frase: se toca cada ficha en el orden en que va y
 // se devuelve tocándola otra vez. Si el orden no es bueno, se marca qué está
-// fuera de sitio.
+// fuera de sitio, y si el alumno sabe que el suyo también vale, lo da por bueno.
 
 import { useState, type ReactElement } from 'react';
 import type { Voz } from '../../estado/voz';
@@ -85,6 +85,19 @@ export function Ordenar({ ejercicio, repeticion, voz, onTerminar }: Props): Reac
           onSiguiente={() => {
             onTerminar(bien ? 'bien' : 'otra_vez');
           }}
+          extra={
+            // Ninguna lista de órdenes buenos está completa: como al escribir, el alumno puede dar el suyo por bueno.
+            bien ? null : (
+              <Boton
+                variante="texto"
+                onClick={() => {
+                  onTerminar('bien');
+                }}
+              >
+                Mi respuesta también vale
+              </Boton>
+            )
+          }
         >
           {bien ? (
             <p className="marcas" lang="nl">

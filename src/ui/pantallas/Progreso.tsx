@@ -2,6 +2,7 @@
 // distintos) y la actividad de las dos últimas semanas.
 
 import type { ReactElement } from 'react';
+import { useAhora } from '../../estado/useAhora';
 import { asentada, clave, DIAS_PARA_ASENTAR, racha, ultimosDias, type Datos, type Pista } from '../../motor';
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 }
 
 export function Progreso({ pistas, datos }: Props): ReactElement {
-  const ahora = new Date();
+  const ahora = useAhora();
   const dias = ultimosDias(datos.historial, ahora, 14);
   const maximo = Math.max(1, ...dias.map((d) => d.respuestas));
   const total = datos.historial.length;

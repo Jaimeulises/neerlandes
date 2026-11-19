@@ -1,11 +1,11 @@
 // Ajustes: el tamaño de la ronda, lo nuevo por ronda, la voz, qué ejercicios
-// salen y la copia de seguridad. Borrar el progreso pide confirmación en la
-// propia pantalla.
+// salen y la copia de seguridad. Restaurar una copia y borrar el progreso piden
+// confirmación en la propia pantalla: los dos sustituyen todo lo de ahora.
 
 import { useRef, useState, type ReactElement } from 'react';
 import { VERSION_APP } from '../../estado/app';
 import { NOMBRES_FORMA, NUEVOS_POR_RONDA, TAMANOS_RONDA, type Ajustes as DatosAjustes, type Forma } from '../../estado/ajustes';
-import { exportarCopia, leerCopia, MENSAJE_DE_ENTREGA } from '../../estado/copia';
+import { exportarCopia, leerCopia, MENSAJE_DE_ENTREGA, type CopiaLeida } from '../../estado/copia';
 import type { Voz } from '../../estado/voz';
 import { CopiaIlegible, HISTORIAL_VACIO, PROGRESO_VACIO, TODAS_LAS_FORMAS, type Datos } from '../../motor';
 import { Boton } from '../componentes/Boton';
@@ -20,6 +20,13 @@ interface Props {
 }
 
 const ORDEN_FORMAS: readonly Forma[] = ['traducir', 'completar', 'ordenar', 'decir', 'dictado', 'opcion'];
+
+/** «3 cosas vistas y 12 respuestas», para comparar una copia con lo que hay en el dispositivo. */
+function resumen(d: Datos): string {
+  const vistas = d.progreso.size;
+  const respuestas = d.historial.length;
+  return `${String(vistas)} ${vistas === 1 ? 'cosa vista' : 'cosas vistas'} y ${String(respuestas)} ${respuestas === 1 ? 'respuesta' : 'respuestas'}`;
+}
 
 function Segmentos<T extends number>({ valores, actual, etiqueta, onElegir }: { valores: readonly T[]; actual: T; etiqueta: string; onElegir: (v: T) => void }): ReactElement {
   return (
@@ -43,11 +50,16 @@ function Segmentos<T extends number>({ valores, actual, etiqueta, onElegir }: { 
 export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar, onReemplazar }: Props): ReactElement {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [confirmarBorrado, setConfirmarBorrado] = useState(false);
+  const [porRestaurar, setPorRestaurar] = useState<CopiaLeida | null>(null);
   const archivo = useRef<HTMLInputElement>(null);
+
+  // Sin voz no hay dictado: no cuenta como forma elegida y no puede quedarse sola.
+  const sale = (f: Forma): boolean => f !== 'dictado' || voz.disponible;
+  const elegidas = ajustes.formas.filter(sale);
 
   const cambiarForma = (forma: Forma, activa: boolean): void => {
     const formas = activa ? [...new Set([...ajustes.formas, forma])] : ajustes.formas.filter((f) => f !== forma);
-    if (formas.length === 0) return;
+    if (!formas.some(sale)) return;
     onCambiar({ ...ajustes, formas: ORDEN_FORMAS.filter((f) => formas.includes(f) && TODAS_LAS_FORMAS.has(f)) });
   };
 
@@ -63,9 +75,9 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
     const elegido = lista?.[0];
     if (!elegido) return;
     try {
-      const copia = leerCopia(await elegido.text());
-      await onReemplazar(copia);
-      setMensaje('Copia restaurada.');
+      // Se lee y se enseña antes de restaurar: elegir el archivo equivocado no debe borrar nada.
+      setPorRestaurar(leerCopia(await elegido.text()));
+      setMensaje(null);
     } catch (e) {
       setMensaje(e instanceof CopiaIlegible ? `Esa copia no vale: ${e.message}.` : 'No se ha podido leer el archivo.');
     }
@@ -143,21 +155,27 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
           </>
         ) : (
           <p className="texto-2 pequeno" style={{ marginTop: 8 }}>
-            Este dispositivo no tiene voz neerlandesa. En iPhone se añade en Ajustes, Accesibilidad, Contenido leído, Voces, Neerlandés. Sin voz no hay dictado.
+            Este dispositivo no tiene voz neerlandesa propia (las de internet no se usan, para no enviar nada fuera). En iPhone se añade en Ajustes, Accesibilidad, Contenido leído, Voces, Neerlandés. Sin voz no hay dictado.
           </p>
         )}
       </section>
 
       <section className="tarjeta">
-        <h2>Ejercicios</h2>
+        <h2>Ejercicios en los repasos</h2>
+        <p className="texto-2 pequeno" style={{ marginTop: 8 }}>
+          Lo nuevo empieza siempre igual: las frases y los separables con fichas, las palabras con opciones y los verbos eligiendo o completando la forma. Aquí eliges qué más sale en los repasos; si ninguna de las elegidas sirve para un ejercicio, sale el de siempre.
+        </p>
         {ORDEN_FORMAS.map((forma) => (
           <label key={forma} className="ajuste">
-            <span>{NOMBRES_FORMA[forma]}</span>
+            <span>
+              {NOMBRES_FORMA[forma]}
+              {sale(forma) ? '' : ' (necesita la voz)'}
+            </span>
             <input
               type="checkbox"
               className="interruptor"
-              checked={ajustes.formas.includes(forma)}
-              disabled={ajustes.formas.length === 1 && ajustes.formas.includes(forma)}
+              checked={elegidas.includes(forma)}
+              disabled={!sale(forma) || (elegidas.length === 1 && elegidas.includes(forma))}
               onChange={(e) => {
                 cambiarForma(forma, e.target.checked);
               }}
@@ -196,6 +214,35 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
             }}
           />
         </div>
+        {porRestaurar ? (
+          <>
+            <p className="texto-2 pequeno">
+              Copia {porRestaurar.creadaEl ? `del ${porRestaurar.creadaEl.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}` : 'sin fecha'}: {resumen(porRestaurar.datos)}. Ahora en
+              este dispositivo: {resumen(datos)}. Si la restauras, lo de ahora se sustituye y no se puede recuperar.
+            </p>
+            <div className="fila">
+              <Boton
+                variante="secundario"
+                onClick={() => {
+                  setPorRestaurar(null);
+                }}
+              >
+                Cancelar
+              </Boton>
+              <Boton
+                variante="peligro"
+                onClick={() => {
+                  setPorRestaurar(null);
+                  void onReemplazar(porRestaurar.datos).then(() => {
+                    setMensaje('Copia restaurada.');
+                  });
+                }}
+              >
+                Restaurar
+              </Boton>
+            </div>
+          </>
+        ) : null}
         {mensaje ? (
           <p className="texto-2 pequeno" aria-live="polite">
             {mensaje}
