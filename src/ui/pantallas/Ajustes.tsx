@@ -169,6 +169,9 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
       <section className="tarjeta columna" style={{ gap: 10 }}>
         <h2>Copia de seguridad</h2>
         <p className="texto-2 pequeno">El progreso solo vive en este dispositivo. Saca una copia de vez en cuando.</p>
+        <p className="texto-2 pequeno">
+          En el móvil, añádela a la pantalla de inicio (en Safari: Compartir, Añadir a pantalla de inicio). Así se abre como una app y el navegador no borra el progreso si pasas unos días sin abrirla.
+        </p>
         <div className="fila fila--envuelve">
           <Boton variante="secundario" onClick={() => void exportar()}>
             Sacar copia

@@ -28,5 +28,5 @@ Quien la usa entiende bastante neerlandés, pero al hablar pone las palabras en 
 - Revisión de todo el contenido por una persona nativa (`docs/revision.md`). Hasta entonces, la app lo avisa en Hoy.
 - Comprobar la ortografía de cada palabra contra una lista de palabras libre, revisando antes su licencia.
 - Más frases por estructura y temas de conversación para B1 y B2.
-- Publicarla para usarla desde el móvil sin ordenador.
+- Publicarla para usarla desde el móvil sin ordenador (hecho: ver 0002).
 - El nombre y el icono definitivos.

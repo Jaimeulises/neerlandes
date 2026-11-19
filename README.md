@@ -14,7 +14,11 @@ Sin cuentas, sin anuncios y sin enviar nada fuera del dispositivo: el progreso s
 
 > El contenido lo ha escrito una IA y está pendiente de revisión por una persona nativa. Está todo en [docs/revision.md](docs/revision.md), numerado para apuntar correcciones.
 
-## Probarla
+## Usarla en el móvil
+
+Está publicada en https://jaimeulises.github.io/neerlandes/ y se actualiza sola cada vez que algo entra en `main`. Para tenerla como una app, añádela a la pantalla de inicio (en Safari: Compartir, Añadir a pantalla de inicio): así el navegador no borra el progreso aunque pases unos días sin abrirla.
+
+## Probarla en local
 
 Hace falta Node 22.
 
