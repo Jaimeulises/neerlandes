@@ -3,7 +3,7 @@
 // lo que de verdad cuesta.
 
 import type { ContextoEjercicio, Ejercicio, Elemento, Pista, Presentacion } from '../../motor';
-import { elegirForma, idDe, opcionesCon } from '../comun';
+import { conFormasTonicas, elegirForma, idDe, opcionesCon } from '../comun';
 import { GRUPOS_VOCABULARIO, NOMBRES_GRUPO_VOCABULARIO, PALABRAS, type DatosPalabra, type GrupoVocabulario } from './datos';
 
 export interface Palabra extends Elemento {
@@ -11,20 +11,27 @@ export interface Palabra extends Elemento {
   readonly nl: string;
   readonly es: string;
   readonly otras: readonly string[];
+  /** Si se escribe con su artículo (de o het): los sustantivos, también los que solo van en plural. */
+  readonly sustantivo: boolean;
   /** de o het, si es un sustantivo en singular. */
   readonly articulo: 'de' | 'het' | null;
+  /** Palabras (en neerlandés) cuyo significado también valdría: no salen como opción mala con esta, ni al revés. */
+  readonly parecidas: readonly string[];
   readonly nota: string | null;
 }
 
 export function crearPalabra(d: DatosPalabra): Palabra {
-  const articulo = d.plural ? null : d.nl.startsWith('de ') ? 'de' : d.nl.startsWith('het ') ? 'het' : null;
+  const sustantivo = !d.expresion && /^(de|het) /.test(d.nl);
+  const articulo = !sustantivo || d.plural ? null : d.nl.startsWith('de ') ? 'de' : 'het';
   return {
     id: `${d.grupo}:${idDe(d.nl)}`,
     grupo: d.grupo,
     nl: d.nl,
     es: d.es,
     otras: d.otras ?? [],
+    sustantivo,
     articulo,
+    parecidas: d.parecidas ?? [],
     nota: d.nota ?? null,
   };
 }
@@ -33,7 +40,7 @@ export const ELEMENTOS_VOCABULARIO: readonly Palabra[] = PALABRAS.map(crearPalab
 
 /** Distractores: primero los del mismo tema que ya se han visto, luego los del tema, luego cualquiera. */
 function distractores(e: Palabra, contexto: ContextoEjercicio, campo: (p: Palabra) => string): string[] {
-  const otras = ELEMENTOS_VOCABULARIO.filter((p) => p.id !== e.id);
+  const otras = ELEMENTOS_VOCABULARIO.filter((p) => p.id !== e.id && !e.parecidas.includes(p.nl) && !p.parecidas.includes(e.nl));
   const tema = otras.filter((p) => p.grupo === e.grupo);
   const vistosTema = tema.filter((p) => contexto.vistos.has(p.id));
   const orden = [...contexto.azar.barajar(vistosTema), ...contexto.azar.barajar(tema), ...contexto.azar.barajar(otras)];
@@ -75,7 +82,8 @@ export const vocabulario: Pista<Palabra> = {
         respuestaCorrecta: e.es,
       };
     }
-    if (contexto.repeticiones === 1) {
+    // Elegir en neerlandés, en el primer repaso, solo si las opciones están activadas.
+    if (contexto.repeticiones === 1 && contexto.formas.has('opcion')) {
       return {
         ...base,
         forma: 'opcion',
@@ -120,7 +128,8 @@ export const vocabulario: Pista<Palabra> = {
         instruccion: 'Escucha y escríbela',
         dictar: e.nl,
         significado: e.es,
-        respuestas: [e.nl, ...e.otras],
+        // Se escribe lo que se oye: las otras formas valen al escribirla en neerlandés, no aquí.
+        respuestas: [e.nl],
       };
     }
     return {
@@ -129,8 +138,8 @@ export const vocabulario: Pista<Palabra> = {
       tipo: 'vocabulario.escribir',
       instruccion: 'Escríbela en neerlandés',
       significado: e.es,
-      ...(e.articulo || e.nl.startsWith('de ') ? { pista: 'Con su artículo (de o het).' } : {}),
-      respuestas: [e.nl, ...e.otras],
+      ...(e.sustantivo ? { pista: 'Con su artículo (de o het).' } : {}),
+      respuestas: conFormasTonicas([e.nl, ...e.otras]),
     };
   },
   presentar(e): Presentacion {

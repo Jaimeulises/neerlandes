@@ -22,6 +22,11 @@ function presenteEnLinea(v: DatosVerbo): string {
   return `ik ${ik}, jij ${jij}, hij ${hij}, ${plural}`;
 }
 
+/** « También: «…», «…»» con las otras formas buenas, o nada. */
+function tambien(otras: readonly string[] | undefined): string {
+  return otras && otras.length > 0 ? ` También: ${otras.map((o) => `«${comoFrase(o)}»`).join(', ')}` : '';
+}
+
 function bloqueVerbo(v: DatosVerbo, n: number): string[] {
   const lineas = [`**V${String(n)}. ${v.inf}**: ${v.es}`, ''];
   if (v.comp !== undefined) {
@@ -33,12 +38,15 @@ function bloqueVerbo(v: DatosVerbo, n: number): string[] {
       if (otras.length > 0) presente += ` (también ${otras.map((o) => `«${o} jij»`).join(', ')})`;
     }
     lineas.push(presente);
+  } else if (v.raiz && v.pasado) {
+    // No se practica, pero sale como opción mala en el pasado: también hay que revisarlo.
+    lineas.push(`- Presente (solo sale como opción mala en el pasado): ${presenteEnLinea(v)}.`);
   }
   if (v.participio && v.perf) {
-    lineas.push(`- Perfectum: ${v.aux === 'zijn' ? 'is' : 'heeft'} ${v.participio}. «${comoFrase(v.perf[0])}» ${v.perf[1]}`);
+    lineas.push(`- Perfectum: ${v.aux === 'zijn' ? 'is' : 'heeft'} ${v.participio}. «${comoFrase(v.perf[0])}» ${v.perf[1]}${tambien(v.perfOtras)}`);
   }
   if (v.pasado) {
-    const ejemplo = v.pasadoEj ? ` «${comoFrase(v.pasadoEj[0])}» ${v.pasadoEj[1]}` : '';
+    const ejemplo = v.pasadoEj ? ` «${comoFrase(v.pasadoEj[0])}» ${v.pasadoEj[1]}${tambien(v.pasadoOtras)}` : '';
     lineas.push(`- Pasado: ${v.pasado[0]}, ${v.pasado[1]}.${ejemplo}`);
   }
   if (v.nota) lineas.push(`- Nota: ${v.nota}`);
@@ -59,6 +67,7 @@ export function documentoDeRevision(): string {
     '- Lee cada frase en neerlandés y marca lo que no dirías así, aunque sea correcto.',
     '- Comprueba que la traducción dice lo mismo que la frase.',
     '- Apunta el número (O12, V3, S5, P40) y cómo lo dirías tú.',
+    '- Al traducir, la app acepta además, sin que estén apuntadas, las formas tónicas: wij por we, mij por me, y zij por ze cuando abre la frase.',
     '',
     '**Voor wie dit nakijkt:** hier staan alle Nederlandse zinnen en woorden uit de app. Klopt het en klinkt het natuurlijk? Schrijf het nummer op (bijvoorbeeld O12) en hoe jij het zou zeggen.',
     '',

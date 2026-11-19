@@ -6,13 +6,13 @@
 
 import { describe, expect, it } from 'vitest';
 import { corregir, crearAzar, normalizar, TODAS_LAS_FORMAS, validarPista, type ContextoEjercicio, type Ejercicio } from '../motor';
-import { hueco, primera } from './comun';
-import { FRASES, GRUPOS_ORDEN } from './orden/datos';
-import { ELEMENTOS_ORDEN, orden } from './orden/pista';
+import { alternativas, conFormasTonicas, hueco, opcionesCon, primera } from './comun';
+import { FRASES, GRUPOS_ORDEN, REGLAS_ORDEN } from './orden/datos';
+import { ejercicioDeFrase, ELEMENTOS_ORDEN, orden } from './orden/pista';
 import { PISTAS } from './paquete';
 import { SEPARABLES, VERBOS } from './verbos/datos';
 import { ELEMENTOS_VERBOS, formasPresente, verbos } from './verbos/pista';
-import { ELEMENTOS_VOCABULARIO } from './vocabulario/pista';
+import { ELEMENTOS_VOCABULARIO, vocabulario } from './vocabulario/pista';
 
 const AUX_HEBBEN = new Set(['heb', 'hebt', 'heeft', 'hebben']);
 const AUX_ZIJN = new Set(['ben', 'bent', 'is', 'zijn']);
@@ -33,9 +33,11 @@ function participioSinGe(inf: string, raiz: string): string {
 function textos(): string[] {
   return [
     ...FRASES.flatMap((f) => [f.fichas, f.es, ...(f.otras ?? []), f.pista ?? '']),
-    ...VERBOS.flatMap((v) => [v.inf, v.es, ...(v.perf ?? []), ...(v.pasadoEj ?? []), v.nota ?? '', v.comp ?? '']),
-    ...SEPARABLES.flatMap((s) => [s.inf, s.es, s.presente, s.presenteEs, ...s.perf]),
-    ...ELEMENTOS_VOCABULARIO.flatMap((p) => [p.nl, p.es, p.nota ?? '']),
+    ...Object.values(REGLAS_ORDEN),
+    ...VERBOS.flatMap((v) => [v.inf, v.es, ...(v.perf ?? []), ...(v.perfOtras ?? []), ...(v.pasadoEj ?? []), ...(v.pasadoOtras ?? []), v.nota ?? '', v.comp ?? '']),
+    ...SEPARABLES.flatMap((s) => [s.inf, s.es, s.presente, s.presenteEs, ...(s.otras ?? []), ...s.perf]),
+    ...ELEMENTOS_VOCABULARIO.flatMap((p) => [p.nl, p.es, ...p.otras, p.nota ?? '']),
+    ...ELEMENTOS_VERBOS.flatMap((e) => [verbos.presentar?.(e)?.detalle ?? '']),
   ];
 }
 
@@ -216,4 +218,153 @@ describe('todos los ejercicios tienen una respuesta buena alcanzable', () => {
       expect(n).toBeGreaterThan(0);
     });
   }
+});
+
+/** Un contexto de ejercicio con lo justo: semilla, repeticiones y formas activas. */
+function contextoDe(semilla: number, repeticiones: number, formas: ReadonlySet<Ejercicio['forma']>, vistos: ReadonlySet<string> = new Set()): ContextoEjercicio {
+  return { azar: crearAzar(semilla), vistos, repeticiones, formas };
+}
+
+describe('lo que se da por bueno al responder', () => {
+  it('al traducir valen las formas tónicas de los pronombres sin apuntarlas, pero solo donde son seguras', () => {
+    expect(conFormasTonicas(['We gaan morgen.'])).toEqual(['We gaan morgen.', 'Wij gaan morgen.']);
+    expect(conFormasTonicas(['Als het regent, blijven we binnen.'])).toContain('Als het regent, blijven wij binnen.');
+    expect(conFormasTonicas(['Ze legt het uit.'])).toContain('Zij legt het uit.');
+    expect(conFormasTonicas(['Kun je me helpen?'])).toEqual(['Kun je me helpen?', 'Kun je mij helpen?']);
+    expect(conFormasTonicas(['Ze zegt dat we komen.'])).toEqual(
+      expect.arrayContaining(['Zij zegt dat we komen.', 'Ze zegt dat wij komen.', 'Zij zegt dat wij komen.']) as unknown,
+    );
+    // Detrás del verbo «ze» también es objeto, «je» es también objeto y posesivo, y dentro de otras palabras no se toca nada.
+    expect(conFormasTonicas(['Ik zie ze morgen.'])).toEqual(['Ik zie ze morgen.']);
+    expect(conFormasTonicas(['Waar woont je zus?'])).toEqual(['Waar woont je zus?']);
+    expect(conFormasTonicas(['Zeker twee keer mee.'])).toEqual(['Zeker twee keer mee.']);
+    // Sin repetir lo que ya está.
+    expect(conFormasTonicas(['We komen.', 'Wij komen.'])).toEqual(['We komen.', 'Wij komen.']);
+  });
+
+  it('en el orden de la frase, al traducir valen todas las formas apuntadas, y al dictar solo la que suena', () => {
+    for (const f of ELEMENTOS_ORDEN) {
+      const traducir = ejercicioDeFrase(f, 'traducir', contextoDe(1, 3, TODAS_LAS_FORMAS));
+      const dictado = ejercicioDeFrase(f, 'dictado', contextoDe(1, 3, TODAS_LAS_FORMAS));
+      if (traducir.forma !== 'traducir' || dictado.forma !== 'dictado') throw new Error(f.id);
+      for (const v of f.validas) expect(corregir(v, traducir.respuestas).veredicto, `${f.id}: ${v}`).toBe('exacta');
+      expect(dictado.respuestas, f.id).toEqual([dictado.dictar]);
+    }
+  });
+
+  it('en el vocabulario, al dictar solo vale la palabra que suena', () => {
+    for (const p of ELEMENTOS_VOCABULARIO) {
+      const ej = vocabulario.crearEjercicio(p, contextoDe(1, 3, new Set(['dictado'])));
+      if (ej.forma !== 'dictado') throw new Error(p.id);
+      expect(ej.respuestas, p.id).toEqual([p.nl]);
+    }
+  });
+
+  it('al traducir un verbo valen sus otras formas, y cada una lleva la forma que se practica', () => {
+    for (const v of VERBOS) {
+      for (const o of v.perfOtras ?? []) {
+        expect(hueco(o, v.participio ?? ''), `${v.inf}: ${o}`).not.toBeNull();
+        expect(normalizar(o), v.inf).not.toBe(normalizar(v.perf?.[0] ?? ''));
+      }
+      const pasado = [...alternativas(v.pasado?.[0] ?? ''), ...alternativas(v.pasado?.[1] ?? '')];
+      for (const o of v.pasadoOtras ?? []) {
+        expect(pasado.some((f) => hueco(o, f) !== null), `${v.inf}: ${o}`).toBe(true);
+        expect(normalizar(o), v.inf).not.toBe(normalizar(v.pasadoEj?.[0] ?? ''));
+      }
+    }
+    const soloTraducir = new Set<Ejercicio['forma']>(['traducir']);
+    for (const e of ELEMENTOS_VERBOS) {
+      const v = e.verbo;
+      if (!v || e.separable) continue;
+      const otras = e.grupo === 'pasado' ? v.pasadoOtras : e.grupo === 'presente' ? undefined : v.perfOtras;
+      if (!otras) continue;
+      const ej = verbos.crearEjercicio(e, contextoDe(1, 2, soloTraducir));
+      if (ej.forma !== 'traducir') throw new Error(e.id);
+      for (const o of otras) expect(corregir(o, ej.respuestas).veredicto, `${e.id}: ${o}`).toBe('exacta');
+    }
+  });
+});
+
+describe('lo que se ofrece como opción', () => {
+  it('las opciones malas se toman en el orden en que llegan, sin repetir', () => {
+    for (let semilla = 1; semilla <= 20; semilla++) {
+      const opciones = opcionesCon('a', ['b', 'c', 'B', 'd', 'e', 'f'], crearAzar(semilla), 4);
+      expect([...opciones].sort(), String(semilla)).toEqual(['a', 'b', 'c', 'd']);
+    }
+  });
+
+  it('en el pasado, las opciones malas son formas del verbo y ninguna es también buena', () => {
+    for (const e of ELEMENTOS_VERBOS.filter((x) => x.grupo === 'pasado')) {
+      const v = e.verbo;
+      if (!v?.pasado || !v.pasadoEj) throw new Error(e.id);
+      const singular = alternativas(v.pasado[0]);
+      const plural = alternativas(v.pasado[1]);
+      const presente = v.presente !== undefined || v.raiz !== undefined ? formasPresente(v).flatMap(alternativas) : [];
+      const conocidas = new Set([...singular, ...plural, v.participio ?? '', ...presente]);
+      const palabras = v.pasadoEj[0].split(/\s+/);
+      const buenas = singular.some((f) => palabras.includes(f)) ? singular : plural;
+      for (let semilla = 1; semilla <= 8; semilla++) {
+        const ej = verbos.crearEjercicio(e, contextoDe(semilla, 2, new Set(['opcion'])));
+        if (ej.forma !== 'opcion') throw new Error(e.id);
+        for (const o of ej.opciones) {
+          expect(conocidas.has(o), `${e.id}: ${o}`).toBe(true);
+          if (o !== ej.respuestaCorrecta) expect(buenas, `${e.id}: ${o}`).not.toContain(o);
+        }
+      }
+    }
+  });
+
+  it('las palabras parecidas no salen como opción mala la una de la otra', () => {
+    const todas = new Set(ELEMENTOS_VOCABULARIO.map((p) => p.id));
+    for (const p of ELEMENTOS_VOCABULARIO) {
+      for (const nl of p.parecidas) expect(ELEMENTOS_VOCABULARIO.some((q) => q.nl === nl), `${p.nl}: ${nl}`).toBe(true);
+      const parecidas = ELEMENTOS_VOCABULARIO.filter((q) => p.parecidas.includes(q.nl) || q.parecidas.includes(p.nl));
+      if (parecidas.length === 0) continue;
+      for (let repeticiones = 0; repeticiones <= 1; repeticiones++) {
+        for (let semilla = 1; semilla <= 30; semilla++) {
+          const ej = vocabulario.crearEjercicio(p, contextoDe(semilla, repeticiones, TODAS_LAS_FORMAS, todas));
+          if (ej.forma !== 'opcion') continue;
+          for (const q of parecidas) {
+            expect(ej.opciones, p.nl).not.toContain(q.es);
+            expect(ej.opciones, p.nl).not.toContain(q.nl);
+          }
+        }
+      }
+    }
+  });
+
+  it('las expresiones que empiezan por het no se preguntan con de o het ni piden artículo', () => {
+    for (const nl of ['het valt mee', 'het spijt me']) {
+      const p = ELEMENTOS_VOCABULARIO.find((x) => x.nl === nl);
+      expect(p?.articulo, nl).toBeNull();
+      expect(p?.sustantivo, nl).toBe(false);
+    }
+    for (const p of ELEMENTOS_VOCABULARIO) {
+      if (p.sustantivo) expect(p.nl, p.id).toMatch(/^(de|het) /);
+    }
+  });
+
+  it('en los repasos, elegir solo sale si las opciones están activadas, y el presente se elige si completar no lo está', () => {
+    const sinOpcion = new Set<Ejercicio['forma']>(['traducir', 'completar', 'ordenar', 'decir']);
+    for (const p of ELEMENTOS_VOCABULARIO) {
+      expect(vocabulario.crearEjercicio(p, contextoDe(1, 1, sinOpcion)).forma, p.id).not.toBe('opcion');
+    }
+    for (const e of ELEMENTOS_VERBOS.filter((x) => x.grupo === 'presente')) {
+      for (let semilla = 1; semilla <= 6; semilla++) {
+        expect(verbos.crearEjercicio(e, contextoDe(semilla, 2, sinOpcion)).forma, e.id).not.toBe('opcion');
+        expect(verbos.crearEjercicio(e, contextoDe(semilla, 2, new Set(['opcion', 'traducir']))).forma, e.id).toBe('opcion');
+      }
+    }
+  });
+});
+
+describe('las reglas', () => {
+  it('los ejemplos de las reglas del orden no son frases que la app pregunta', () => {
+    const preguntadas = new Set(ELEMENTOS_ORDEN.flatMap((f) => f.validas.map(normalizar)));
+    for (const [grupo, regla] of Object.entries(REGLAS_ORDEN)) {
+      for (const [, ejemplo = ''] of regla.matchAll(/«([^»]+)»/g)) {
+        expect(preguntadas.has(normalizar(ejemplo)), `${grupo}: ${ejemplo}`).toBe(false);
+      }
+    }
+  });
 });

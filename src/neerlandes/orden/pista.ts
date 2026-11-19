@@ -4,7 +4,7 @@
 // inglés.
 
 import type { ContextoEjercicio, Ejercicio, Elemento, Pista, Presentacion } from '../../motor';
-import { barajarFichas, comoFrase, elegirForma, idDe } from '../comun';
+import { barajarFichas, comoFrase, conFormasTonicas, elegirForma, idDe } from '../comun';
 import { FRASES, GRUPOS_ORDEN, NOMBRES_GRUPO_ORDEN, REGLAS_ORDEN, type DatosFrase, type GrupoOrden } from './datos';
 
 export interface Frase extends Elemento {
@@ -55,7 +55,7 @@ export function ejercicioDeFrase(e: Frase, forma: Ejercicio['forma'], contexto: 
         tipo: `${prefijo}.traducir`,
         instruccion: 'Escríbela en neerlandés',
         significado: e.es,
-        respuestas: e.validas,
+        respuestas: conFormasTonicas(e.validas),
         ...(e.pista ? { pista: e.pista } : {}),
       };
     case 'decir':
@@ -76,7 +76,8 @@ export function ejercicioDeFrase(e: Frase, forma: Ejercicio['forma'], contexto: 
         instruccion: 'Escucha y escríbela',
         dictar: e.frase,
         significado: e.es,
-        respuestas: e.validas,
+        // Se escribe lo que se oye: las otras formas valen al ordenar y al traducir, no aquí.
+        respuestas: [e.frase],
       };
     default:
       return {

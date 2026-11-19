@@ -4,7 +4,7 @@
 // escribiendo la forma, porque reconocerla no basta para decirla.
 
 import type { ContextoEjercicio, Ejercicio, Elemento, Pista, Presentacion } from '../../motor';
-import { alternativas, comoFrase, elegirForma, hueco, opcionesCon, primera } from '../comun';
+import { alternativas, comoFrase, conFormasTonicas, elegirForma, hueco, opcionesCon, primera } from '../comun';
 import { ejercicioDeFrase, type Frase } from '../orden/pista';
 import { SEPARABLES, VERBOS, type DatosSeparable, type DatosVerbo, type Formas } from './datos';
 
@@ -19,12 +19,18 @@ export const NOMBRES_GRUPO_VERBOS: Readonly<Record<GrupoVerbos, string>> = {
   pasado: 'Pasado simple',
 };
 
-const REGLA_PRESENTE = 'ik + raíz; jij, hij y zij + raíz + t; en plural, el infinitivo. Si jij va detrás del verbo, sin -t: «werk jij?».';
+// Los ejemplos de las reglas no son frases ni formas que la app pregunte antes de enseñarlas: la regla
+// se presenta al abrir el grupo y no debe dar la respuesta del ejercicio que viene detrás.
+const REGLA_PRESENTE =
+  'En los regulares: ik + raíz; jij, hij y zij + raíz + t (si la raíz ya acaba en t, no se añade otra: hij zet); en plural, el infinitivo. Si el sujeto jij o je va detrás del verbo, sin -t: «werk jij?». Los irregulares (zijn, hebben, kunnen, mogen…) tienen formas propias.';
 const REGLA_PERFECTUM =
-  'Participio regular: ge + raíz + t si la raíz acaba en t, k, f, s, ch o p (’t kofschip); si no, + d. Sin ge- con be-, ver-, ge-, her-, ont- y er-.';
-const REGLA_IRREGULAR = 'Participio irregular: no sigue la regla y hay que aprenderlo de memoria. Casi todos acaban en -en.';
-const REGLA_ZIJN = 'Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, blijven, worden, verhuizen…).';
-const REGLA_SEPARABLES = 'En presente la partícula se separa y va al final; en el participio va delante de ge- (opgebeld, meegenomen).';
+  'Participio regular: ge + raíz + t si en el infinitivo va t, k, f, s, ch o p delante de -en (’t kofschip); si no, ge + raíz + d. Se mira el infinitivo, no la raíz: leven da geleefd aunque se diga ik leef. Si la raíz ya acaba en t o d, no se añade otra (zetten da gezet). Sin ge- con los prefijos átonos be-, ver-, ge-, her-, ont- y er- (beloven da beloofd); si esas letras no son prefijo, sí lo lleva (verven da geverfd).';
+const REGLA_IRREGULAR =
+  'Participio irregular: no sigue la regla y hay que aprenderlo de memoria. Muchos acaban en -en, a menudo con otra vocal (drinken, gedronken; schrijven, geschreven); otros acaban en -cht (denken, gedacht; kopen, gekocht) y unos pocos son únicos (zijn, geweest; hebben, gehad).';
+const REGLA_ZIJN =
+  'Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, worden, verhuizen…), y además zijn y blijven, que no son ni lo uno ni lo otro (ik ben geweest, ik ben gebleven).';
+const REGLA_SEPARABLES =
+  'Cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y va al final: «ik bel je op». Va pegada en el infinitivo («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio, delante de ge- (opgebeld, meegenomen).';
 const REGLA_PASADO = 'El pasado simple se usa sobre todo para contar y describir: «toen woonde ik…», «het was koud».';
 
 export interface Verbo extends Elemento {
@@ -107,7 +113,9 @@ function ejercicioPresente(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio)
   const comp = v.comp ?? '';
   const base = { elementoId: e.id, aclaracion: `${resumenPresente(v)} ${REGLA_PRESENTE}` };
 
-  if (contexto.repeticiones === 0 || (contexto.formas.has('opcion') && azar.siguiente() < 0.2)) {
+  // La primera vez se elige; en los repasos, solo si elegir está activado (y siempre, si completar no lo está).
+  const elegir = contexto.repeticiones === 0 || (contexto.formas.has('opcion') && (!contexto.formas.has('completar') || azar.siguiente() < 0.2));
+  if (elegir) {
     // Elegir: solo con sujetos cuya forma no tiene alternativa, para que no haya dos respuestas buenas.
     const sujetos = SUJETOS.filter((s) => !formaDe(formas, s.i).includes('/'));
     const sujeto = azar.elegir(sujetos) ?? SUJETOS[0];
@@ -121,7 +129,7 @@ function ejercicioPresente(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio)
         instruccion: `Elige la forma de «${v.inf}»`,
         enunciado: `${comoFrase(sujeto.nl, '').trimEnd()} ___ ${comp}.`,
         enunciadoEnIdioma: true,
-        opciones: opcionesCon(correcta, distintas, azar, 4),
+        opciones: opcionesCon(correcta, azar.barajar(distintas), azar, 4),
         opcionesEnIdioma: true,
         respuestaCorrecta: correcta,
         audio: frasePresente(sujeto.nl, correcta, comp),
@@ -202,7 +210,7 @@ function elegirAuxiliar(e: Verbo, perf: readonly [string, string], aclaracion: s
   };
 }
 
-function traducirFrase(e: Verbo, perf: readonly [string, string], tipo: string, pista: string, aclaracion: string): Ejercicio {
+function traducirFrase(e: Verbo, perf: readonly [string, string], otras: readonly string[], tipo: string, pista: string, aclaracion: string): Ejercicio {
   const [nl, es] = perf;
   return {
     forma: 'traducir',
@@ -211,7 +219,7 @@ function traducirFrase(e: Verbo, perf: readonly [string, string], tipo: string, 
     instruccion: 'Escríbela en neerlandés',
     significado: es,
     pista,
-    respuestas: [comoFrase(nl)],
+    respuestas: conFormasTonicas([comoFrase(nl), ...otras.map((o) => comoFrase(o))]),
     audio: comoFrase(nl),
     aclaracion,
   };
@@ -255,7 +263,7 @@ function ejercicioPerfectum(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio
     'completar',
   );
   if (forma === 'opcion') return elegirAuxiliar(e, perf, aclaracion, contexto) ?? completarParticipio(e, v.inf, participio, perf, aclaracion);
-  if (forma === 'traducir') return traducirFrase(e, perf, 'verbos.perfectum.traducir', `En perfectum, con «${v.inf}».`, aclaracion);
+  if (forma === 'traducir') return traducirFrase(e, perf, v.perfOtras ?? [], 'verbos.perfectum.traducir', `En perfectum, con «${v.inf}».`, aclaracion);
   if (forma === 'decir') return decirFrase(e, perf, 'verbos.perfectum.decir', `En perfectum, con «${v.inf}».`, aclaracion);
   return completarParticipio(e, v.inf, participio, perf, aclaracion);
 }
@@ -284,7 +292,12 @@ function ejercicioPasado(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio): 
           'completar',
         );
   if (forma === 'opcion') {
-    const distractores = [primera(singular), primera(plural), v.participio ?? '', primera(formaDe(formasPresente(v), enSingular ? 2 : 3))].filter((d) => d !== '');
+    // El presente solo si sale de los datos (formas o raíz): sin ellos, formasPresente inventaría «schrijvent».
+    // Nada de lo que también vale (wilde/wou): sería una opción mala que es buena.
+    const presente = v.presente ?? (v.raiz ? formasPresente(v) : undefined);
+    const distractores = [primera(singular), primera(plural), v.participio ?? '', presente ? primera(formaDe(presente, enSingular ? 2 : 3)) : ''].filter(
+      (d) => d !== '' && !respuestas.includes(d),
+    );
     return {
       forma: 'opcion',
       tipo: 'verbos.pasado.elegir',
@@ -292,14 +305,14 @@ function ejercicioPasado(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio): 
       instruccion: `Elige el pasado de «${v.inf}»`,
       enunciado: comoFrase(palabras.map((p) => (p === usada ? '___' : p)).join(' ')),
       enunciadoEnIdioma: true,
-      opciones: opcionesCon(usada, distractores, contexto.azar, 4),
+      opciones: opcionesCon(usada, contexto.azar.barajar(distractores), contexto.azar, 4),
       opcionesEnIdioma: true,
       respuestaCorrecta: usada,
       audio: comoFrase(nl),
       aclaracion,
     };
   }
-  if (forma === 'traducir') return traducirFrase(e, [nl, es], 'verbos.pasado.traducir', `En pasado simple, con «${v.inf}».`, aclaracion);
+  if (forma === 'traducir') return traducirFrase(e, [nl, es], v.pasadoOtras ?? [], 'verbos.pasado.traducir', `En pasado simple, con «${v.inf}».`, aclaracion);
   const h = hueco(nl, usada) ?? { antes: comoFrase(nl), despues: '' };
   return {
     forma: 'completar',

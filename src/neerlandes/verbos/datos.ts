@@ -29,9 +29,13 @@ export interface DatosVerbo {
   readonly irregular?: boolean;
   /** Frase en perfectum: neerlandés y español. */
   readonly perf?: readonly [string, string];
+  /** Otras formas buenas de la frase en perfectum (con otro orden, por ejemplo): valen al traducir. */
+  readonly perfOtras?: readonly string[];
   /** Pasado simple: singular y plural. */
   readonly pasado?: readonly [string, string];
   readonly pasadoEj?: readonly [string, string];
+  /** Otras formas buenas de la frase en pasado: valen al traducir. */
+  readonly pasadoOtras?: readonly string[];
   /** Algo que conviene saber de este verbo. */
   readonly nota?: string;
 }
@@ -48,6 +52,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['ik heb de hele dag gewerkt', 'He trabajado todo el día.'],
     pasado: ['werkte', 'werkten'],
     pasadoEj: ['vroeger werkte ik in een restaurant', 'Antes trabajaba en un restaurante.'],
+    pasadoOtras: ['ik werkte vroeger in een restaurant'],
   },
   {
     inf: 'wonen',
@@ -59,6 +64,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['we hebben drie jaar in Utrecht gewoond', 'Vivimos tres años en Utrecht.'],
     pasado: ['woonde', 'woonden'],
     pasadoEj: ['toen woonden we in Madrid', 'Entonces vivíamos en Madrid.'],
+    pasadoOtras: ['we woonden toen in Madrid'],
   },
   {
     inf: 'maken',
@@ -80,14 +86,15 @@ export const VERBOS: readonly DatosVerbo[] = [
     participio: 'gefietst',
     aux: 'zijn',
     perf: ['ik ben naar mijn werk gefietst', 'He ido al trabajo en bici.'],
+    perfOtras: ['ik ben naar het werk gefietst'],
     nota: 'Con zijn si dices adónde (naar mijn werk); con hebben si solo cuentas la actividad (ik heb een uur gefietst).',
   },
-  { inf: 'koken', es: 'cocinar', raiz: 'kook', comp: 'vanavond', participio: 'gekookt', aux: 'hebben', perf: ['hij heeft voor iedereen gekookt', 'Ha cocinado para todos.'] },
+  { inf: 'koken', es: 'cocinar', raiz: 'kook', comp: 'vanavond', participio: 'gekookt', aux: 'hebben', perf: ['hij heeft voor iedereen gekookt', 'Él ha cocinado para todos.'] },
   { inf: 'leren', es: 'aprender', raiz: 'leer', comp: 'Nederlands', participio: 'geleerd', aux: 'hebben', perf: ['ik heb veel nieuwe woorden geleerd', 'He aprendido muchas palabras nuevas.'] },
   { inf: 'wachten', es: 'esperar', raiz: 'wacht', comp: 'op de bus', participio: 'gewacht', aux: 'hebben', perf: ['we hebben een half uur gewacht', 'Hemos esperado media hora.'] },
-  { inf: 'betalen', es: 'pagar', raiz: 'betaal', comp: 'de rekening', participio: 'betaald', aux: 'hebben', perf: ['ik heb de rekening al betaald', 'Ya he pagado la cuenta.'], nota: 'Sin ge-: los verbos con be-, ver-, ge-, her-, ont- o er- no lo llevan.' },
+  { inf: 'betalen', es: 'pagar', raiz: 'betaal', comp: 'de rekening', participio: 'betaald', aux: 'hebben', perf: ['ik heb de rekening al betaald', 'Ya he pagado la cuenta.'], nota: 'Aquí be- es un prefijo átono (el acento cae en ta), por eso betaald no lleva ge-.' },
   { inf: 'spelen', es: 'jugar', raiz: 'speel', comp: 'met de kinderen', participio: 'gespeeld', aux: 'hebben', perf: ['de kinderen hebben de hele middag buiten gespeeld', 'Los niños han jugado fuera toda la tarde.'] },
-  { inf: 'bellen', es: 'llamar por teléfono', raiz: 'bel', comp: 'de huisarts', participio: 'gebeld', aux: 'hebben', perf: ['mijn moeder heeft gisteren gebeld', 'Mi madre llamó ayer.'] },
+  { inf: 'bellen', es: 'llamar por teléfono', raiz: 'bel', comp: 'de huisarts', participio: 'gebeld', aux: 'hebben', perf: ['mijn moeder heeft gisteren gebeld', 'Mi madre llamó ayer.'], perfOtras: ['gisteren heeft mijn moeder gebeld'] },
   {
     inf: 'verhuizen',
     es: 'mudarse',
@@ -96,13 +103,31 @@ export const VERBOS: readonly DatosVerbo[] = [
     participio: 'verhuisd',
     aux: 'zijn',
     perf: ['we zijn vorig jaar verhuisd', 'Nos mudamos el año pasado.'],
+    perfOtras: ['vorig jaar zijn we verhuisd'],
     nota: 'La z de la raíz se escribe s (ik verhuis), pero el participio acaba en d porque el infinitivo tiene z.',
   },
-  { inf: 'reizen', es: 'viajar', raiz: 'reis', participio: 'gereisd', aux: 'hebben', perf: ['ze hebben veel gereisd', 'Han viajado mucho.'] },
-  { inf: 'dansen', es: 'bailar', raiz: 'dans', participio: 'gedanst', aux: 'hebben', perf: ['we hebben de hele avond gedanst', 'Hemos bailado toda la noche.'] },
+  {
+    inf: 'reizen',
+    es: 'viajar',
+    raiz: 'reis',
+    participio: 'gereisd',
+    aux: 'hebben',
+    perf: ['ze hebben veel gereisd', 'Han viajado mucho.'],
+    nota: 'La z del infinitivo se escribe s en la raíz (ik reis), pero el participio acaba en d porque el infinitivo tiene z: gereisd, no gereist. Con zijn si dices adónde (ze zijn naar Japan gereisd); con hebben si solo cuentas la actividad (ze hebben veel gereisd).',
+  },
+  { inf: 'dansen', es: 'bailar', raiz: 'dans', participio: 'gedanst', aux: 'hebben', perf: ['we hebben de hele avond gedanst', 'Hemos bailado toda la noche.'], perfOtras: ['we hebben de hele nacht gedanst'] },
   { inf: 'vragen', es: 'preguntar, pedir', raiz: 'vraag', participio: 'gevraagd', aux: 'hebben', perf: ['ik heb de weg gevraagd', 'He preguntado el camino.'] },
-  { inf: 'trouwen', es: 'casarse', raiz: 'trouw', participio: 'getrouwd', aux: 'zijn', perf: ['ze zijn in juni getrouwd', 'Se casaron en junio.'] },
-  { inf: 'stoppen', es: 'parar, dejar de', raiz: 'stop', participio: 'gestopt', aux: 'zijn', perf: ['ik ben gestopt met roken', 'He dejado de fumar.'] },
+  { inf: 'trouwen', es: 'casarse', raiz: 'trouw', participio: 'getrouwd', aux: 'zijn', perf: ['ze zijn in juni getrouwd', 'Se casaron en junio.'], perfOtras: ['in juni zijn ze getrouwd'] },
+  {
+    inf: 'stoppen',
+    es: 'parar, dejar de',
+    raiz: 'stop',
+    participio: 'gestopt',
+    aux: 'zijn',
+    perf: ['ik ben met roken gestopt', 'He dejado de fumar.'],
+    perfOtras: ['ik ben gestopt met roken'],
+    nota: 'También se dice mucho «ik ben gestopt met roken»: un complemento con preposición puede ir detrás del participio.',
+  },
 
   // Irregulares y de uso diario
   {
@@ -116,6 +141,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['ik ben nog nooit in Groningen geweest', 'Nunca he estado en Groningen.'],
     pasado: ['was', 'waren'],
     pasadoEj: ['gisteren was het erg druk in de stad', 'Ayer había mucha gente en el centro.'],
+    pasadoOtras: ['het was gisteren erg druk in de stad'],
   },
   {
     inf: 'hebben',
@@ -126,8 +152,10 @@ export const VERBOS: readonly DatosVerbo[] = [
     aux: 'hebben',
     irregular: true,
     perf: ['ik heb vorige week griep gehad', 'La semana pasada tuve gripe.'],
+    perfOtras: ['vorige week heb ik griep gehad'],
     pasado: ['had', 'hadden'],
     pasadoEj: ['vroeger had ik een hond', 'Antes tenía un perro.'],
+    pasadoOtras: ['ik had vroeger een hond'],
   },
   {
     inf: 'gaan',
@@ -140,6 +168,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['ik ben naar de dokter gegaan', 'He ido al médico.'],
     pasado: ['ging', 'gingen'],
     pasadoEj: ['vorige week gingen we naar Antwerpen', 'La semana pasada fuimos a Amberes.'],
+    pasadoOtras: ['we gingen vorige week naar Antwerpen'],
   },
   {
     inf: 'komen',
@@ -151,7 +180,8 @@ export const VERBOS: readonly DatosVerbo[] = [
     irregular: true,
     perf: ['ze zijn te laat gekomen', 'Han llegado tarde.'],
     pasado: ['kwam', 'kwamen'],
-    pasadoEj: ['hij kwam om negen uur thuis', 'Llegó a casa a las nueve.'],
+    pasadoEj: ['hij kwam om negen uur thuis', 'Él llegó a casa a las nueve.'],
+    pasadoOtras: ['om negen uur kwam hij thuis'],
   },
   {
     inf: 'doen',
@@ -176,6 +206,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['ik heb die film al gezien', 'Ya he visto esa película.'],
     pasado: ['zag', 'zagen'],
     pasadoEj: ['ik zag je gisteren in de supermarkt', 'Ayer te vi en el supermercado.'],
+    pasadoOtras: ['gisteren zag ik je in de supermarkt'],
   },
   {
     inf: 'staan',
@@ -199,7 +230,8 @@ export const VERBOS: readonly DatosVerbo[] = [
     irregular: true,
     perf: ['ik heb het altijd geweten', 'Siempre lo he sabido.'],
     pasado: ['wist', 'wisten'],
-    pasadoEj: ['dat wist ik niet', 'No lo sabía.'],
+    pasadoEj: ['dat wist ik niet', 'Eso no lo sabía.'],
+    pasadoOtras: ['ik wist dat niet'],
   },
   {
     inf: 'willen',
@@ -207,7 +239,8 @@ export const VERBOS: readonly DatosVerbo[] = [
     presente: ['wil', 'wilt/wil', 'wil', 'willen', 'willen', 'willen'],
     comp: 'een kopje koffie',
     pasado: ['wilde/wou', 'wilden/wouden'],
-    pasadoEj: ['ze wilde naar huis', 'Quería irse a casa.'],
+    pasadoEj: ['ze wilde naar huis', 'Ella quería irse a casa.'],
+    pasadoOtras: ['ze wilde naar huis gaan'],
   },
   {
     inf: 'kunnen',
@@ -242,6 +275,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     sinPregunta: true,
     pasado: ['zou', 'zouden'],
     pasadoEj: ['je zou me bellen', 'Ibas a llamarme.'],
+    nota: 'Para el futuro se suele usar el presente (ik doe het morgen) o gaan (ik ga het morgen doen); con ik, zal suena a promesa. Zou también es el condicional: «zou je me kunnen helpen?».',
   },
   {
     inf: 'eten',
@@ -254,6 +288,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['we hebben te veel gegeten', 'Hemos comido demasiado.'],
     pasado: ['at', 'aten'],
     pasadoEj: ['we aten elke zondag bij mijn oma', 'Comíamos todos los domingos en casa de mi abuela.'],
+    pasadoOtras: ['elke zondag aten we bij mijn oma'],
   },
   {
     inf: 'drinken',
@@ -265,7 +300,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     irregular: true,
     perf: ['ik heb te veel koffie gedronken', 'He bebido demasiado café.'],
     pasado: ['dronk', 'dronken'],
-    pasadoEj: ['hij dronk geen alcohol', 'No bebía alcohol.'],
+    pasadoEj: ['hij dronk geen alcohol', 'Él no bebía alcohol.'],
   },
   {
     inf: 'slapen',
@@ -290,6 +325,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['ik heb het boek in een week gelezen', 'Me he leído el libro en una semana.'],
     pasado: ['las', 'lazen'],
     pasadoEj: ['ik las elke avond een boek', 'Leía un libro cada noche.'],
+    pasadoOtras: ['elke avond las ik een boek'],
   },
   {
     inf: 'zitten',
@@ -302,31 +338,37 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['we hebben de hele dag binnen gezeten', 'Hemos estado dentro todo el día.'],
     pasado: ['zat', 'zaten'],
     pasadoEj: ['we zaten de hele avond te praten', 'Estuvimos toda la noche hablando.'],
+    pasadoOtras: ['we zaten de hele nacht te praten'],
   },
 
   // Solo perfectum y pasado
   {
     inf: 'schrijven',
+    raiz: 'schrijf',
     es: 'escribir',
     participio: 'geschreven',
     aux: 'hebben',
     irregular: true,
     perf: ['ik heb een lange mail geschreven', 'He escrito un correo largo.'],
     pasado: ['schreef', 'schreven'],
-    pasadoEj: ['ze schreef me een lange brief', 'Me escribió una carta larga.'],
+    pasadoEj: ['ze schreef me een lange brief', 'Ella me escribió una carta larga.'],
   },
   {
     inf: 'spreken',
+    raiz: 'spreek',
     es: 'hablar (un idioma, con alguien)',
     participio: 'gesproken',
     aux: 'hebben',
     irregular: true,
     perf: ['ik heb vandaag alleen Nederlands gesproken', 'Hoy solo he hablado neerlandés.'],
+    perfOtras: ['vandaag heb ik alleen Nederlands gesproken'],
     pasado: ['sprak', 'spraken'],
     pasadoEj: ['toen sprak ik nog geen Nederlands', 'Entonces todavía no hablaba neerlandés.'],
+    pasadoOtras: ['ik sprak toen nog geen Nederlands'],
   },
   {
     inf: 'nemen',
+    raiz: 'neem',
     es: 'coger, tomar',
     participio: 'genomen',
     aux: 'hebben',
@@ -337,16 +379,18 @@ export const VERBOS: readonly DatosVerbo[] = [
   },
   {
     inf: 'geven',
+    raiz: 'geef',
     es: 'dar',
     participio: 'gegeven',
     aux: 'hebben',
     irregular: true,
-    perf: ['ik heb haar een cadeau gegeven', 'Le he dado un regalo.'],
+    perf: ['ik heb haar een cadeau gegeven', 'Le he dado un regalo a ella.'],
     pasado: ['gaf', 'gaven'],
     pasadoEj: ['mijn opa gaf me altijd snoep', 'Mi abuelo siempre me daba caramelos.'],
   },
   {
     inf: 'vinden',
+    raiz: 'vind',
     es: 'encontrar; opinar',
     participio: 'gevonden',
     aux: 'hebben',
@@ -357,6 +401,7 @@ export const VERBOS: readonly DatosVerbo[] = [
   },
   {
     inf: 'blijven',
+    raiz: 'blijf',
     es: 'quedarse',
     participio: 'gebleven',
     aux: 'zijn',
@@ -367,6 +412,7 @@ export const VERBOS: readonly DatosVerbo[] = [
   },
   {
     inf: 'beginnen',
+    raiz: 'begin',
     es: 'empezar',
     participio: 'begonnen',
     aux: 'zijn',
@@ -377,6 +423,7 @@ export const VERBOS: readonly DatosVerbo[] = [
   },
   {
     inf: 'krijgen',
+    raiz: 'krijg',
     es: 'recibir',
     participio: 'gekregen',
     aux: 'hebben',
@@ -387,6 +434,7 @@ export const VERBOS: readonly DatosVerbo[] = [
   },
   {
     inf: 'denken',
+    raiz: 'denk',
     es: 'pensar',
     participio: 'gedacht',
     aux: 'hebben',
@@ -397,16 +445,18 @@ export const VERBOS: readonly DatosVerbo[] = [
   },
   {
     inf: 'brengen',
+    raiz: 'breng',
     es: 'llevar (algo o a alguien)',
     participio: 'gebracht',
     aux: 'hebben',
     irregular: true,
-    perf: ['hij heeft de kinderen naar school gebracht', 'Ha llevado a los niños al colegio.'],
+    perf: ['hij heeft de kinderen naar school gebracht', 'Él ha llevado a los niños al colegio.'],
     pasado: ['bracht', 'brachten'],
-    pasadoEj: ['hij bracht bloemen voor mijn schoonmoeder', 'Trajo flores para mi suegra.'],
+    pasadoEj: ['hij bracht bloemen voor mijn schoonmoeder', 'Él trajo flores para mi suegra.'],
   },
   {
     inf: 'kopen',
+    raiz: 'koop',
     es: 'comprar',
     participio: 'gekocht',
     aux: 'hebben',
@@ -418,6 +468,7 @@ export const VERBOS: readonly DatosVerbo[] = [
   { inf: 'zoeken', es: 'buscar', participio: 'gezocht', aux: 'hebben', irregular: true, perf: ['ik heb overal gezocht', 'He buscado por todas partes.'] },
   {
     inf: 'worden',
+    raiz: 'word',
     es: 'ponerse, volverse',
     participio: 'geworden',
     aux: 'zijn',
@@ -432,23 +483,26 @@ export const VERBOS: readonly DatosVerbo[] = [
     participio: 'vergeten',
     aux: 'zijn',
     irregular: true,
-    perf: ['ik ben zijn naam vergeten', 'He olvidado su nombre.'],
-    nota: 'Con zijn cuando algo se te va de la cabeza; con hebben cuando te dejas algo en un sitio (ik heb mijn sleutels vergeten).',
+    perf: ['ik ben je naam vergeten', 'He olvidado tu nombre.'],
+    perfOtras: ['ik ben jouw naam vergeten'],
+    nota: 'Con zijn cuando algo se te va de la cabeza; cuando te dejas algo en un sitio valen zijn y hebben (ik ben mijn sleutels vergeten, ik heb mijn sleutels vergeten).',
   },
   { inf: 'begrijpen', es: 'entender', participio: 'begrepen', aux: 'hebben', irregular: true, perf: ['ik heb het niet begrepen', 'No lo he entendido.'] },
   { inf: 'helpen', es: 'ayudar', participio: 'geholpen', aux: 'hebben', irregular: true, perf: ['mijn buurman heeft me geholpen', 'Mi vecino me ha ayudado.'] },
   {
     inf: 'zeggen',
+    raiz: 'zeg',
     es: 'decir',
     participio: 'gezegd',
     aux: 'hebben',
-    irregular: true,
-    perf: ['ze heeft niets gezegd', 'No ha dicho nada.'],
+    perf: ['ze heeft niets gezegd', 'Ella no ha dicho nada.'],
     pasado: ['zei', 'zeiden'],
     pasadoEj: ['hij zei dat hij moe was', 'Dijo que estaba cansado.'],
+    nota: 'El participio es regular (ge + zeg + d); lo irregular es el pasado: zei, zeiden.',
   },
   {
     inf: 'liggen',
+    raiz: 'lig',
     es: 'estar tumbado, estar (algo plano)',
     participio: 'gelegen',
     aux: 'hebben',
@@ -456,10 +510,12 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['ik heb de hele ochtend in bed gelegen', 'He estado toda la mañana en la cama.'],
     pasado: ['lag', 'lagen'],
     pasadoEj: ['de sleutels lagen op tafel', 'Las llaves estaban en la mesa.'],
+    pasadoOtras: ['de sleutels lagen op de tafel'],
   },
-  { inf: 'vallen', es: 'caerse', participio: 'gevallen', aux: 'zijn', irregular: true, perf: ['ze is van de fiets gevallen', 'Se ha caído de la bici.'] },
+  { inf: 'vallen', es: 'caerse', participio: 'gevallen', aux: 'zijn', irregular: true, perf: ['ze is van de fiets gevallen', 'Ella se ha caído de la bici.'] },
   {
     inf: 'lopen',
+    raiz: 'loop',
     es: 'andar, caminar',
     participio: 'gelopen',
     aux: 'zijn',
@@ -479,7 +535,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     nota: 'Con zijn si dices adónde (naar Rotterdam); con hebben si solo cuentas la actividad.',
   },
   { inf: 'kiezen', es: 'elegir', participio: 'gekozen', aux: 'hebben', irregular: true, perf: ['we hebben een restaurant gekozen', 'Hemos elegido un restaurante.'] },
-  { inf: 'winnen', es: 'ganar', participio: 'gewonnen', aux: 'hebben', irregular: true, perf: ['Ajax heeft gisteren gewonnen', 'El Ajax ganó ayer.'] },
+  { inf: 'winnen', es: 'ganar', participio: 'gewonnen', aux: 'hebben', irregular: true, perf: ['Ajax heeft gisteren gewonnen', 'El Ajax ganó ayer.'], perfOtras: ['gisteren heeft Ajax gewonnen'] },
 ];
 
 export interface DatosSeparable {
@@ -510,7 +566,7 @@ export const SEPARABLES: readonly DatosSeparable[] = [
     es: 'levantarse',
     presente: 'ik|sta|elke dag|om zeven uur|op',
     presenteEs: 'Me levanto todos los días a las siete.',
-    otras: ['elke dag sta ik om zeven uur op'],
+    otras: ['elke dag sta ik om zeven uur op', 'ik sta iedere dag om zeven uur op', 'iedere dag sta ik om zeven uur op'],
     participio: 'opgestaan',
     aux: 'zijn',
     perf: ['ik ben vandaag laat opgestaan', 'Hoy me he levantado tarde.'],

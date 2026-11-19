@@ -43,11 +43,58 @@ export function hueco(frase: string, palabra: string, final = '.'): { antes: str
   };
 }
 
-/** Opciones sin repetir (comparando como texto normalizado), con la buena dentro, barajadas. */
+/** Pronombres átonos que al escribir también valen en su forma tónica, estén donde estén. */
+const TONICAS: Readonly<Record<string, string>> = { we: 'wij', me: 'mij' };
+
+/** La forma tónica de una palabra, si la tiene; «ze» solo abriendo la frase, donde es el sujeto. */
+function tonica(palabra: string, abreLaFrase: boolean): string | null {
+  const partes = /^(\p{L}+)(.*)$/u.exec(palabra);
+  if (!partes) return null;
+  const [, letras = '', resto = ''] = partes;
+  const minuscula = letras.toLowerCase();
+  const forma = TONICAS[minuscula] ?? (abreLaFrase && minuscula === 'ze' ? 'zij' : null);
+  if (forma === null) return null;
+  const conMayuscula = letras !== minuscula;
+  return `${conMayuscula ? forma.charAt(0).toUpperCase() + forma.slice(1) : forma}${resto}`;
+}
+
+/**
+ * Las respuestas de traducir con las formas tónicas de los pronombres, que también valen al escribir:
+ * «wij» por «we» y «mij» por «me» en cualquier sitio, y «zij» por «ze» cuando abre la frase (detrás del
+ * verbo «ze» también es objeto: «ik zie ze»). «jij» por «je» va en los datos, porque «je» también es
+ * objeto y posesivo («ik bel je op», «je zus»). No se usa al dictar: ahí vale lo que suena.
+ */
+export function conFormasTonicas(respuestas: readonly string[]): string[] {
+  const todas = [...respuestas];
+  const vistas = new Set(respuestas.map(normalizar));
+  for (const respuesta of respuestas) {
+    const palabras = respuesta.split(' ');
+    const cambiables = palabras.flatMap((p, i) => (tonica(p, i === 0) === null ? [] : [i]));
+    // Todas las mezclas, porque se pueden combinar: «zij zegt dat we…» y «ze zegt dat wij…».
+    for (let mezcla = 1; mezcla < 2 ** cambiables.length; mezcla++) {
+      const variante = palabras
+        .map((p, i) => {
+          const k = cambiables.indexOf(i);
+          return k >= 0 && ((mezcla >> k) & 1) === 1 ? (tonica(p, i === 0) ?? p) : p;
+        })
+        .join(' ');
+      const n = normalizar(variante);
+      if (vistas.has(n)) continue;
+      vistas.add(n);
+      todas.push(variante);
+    }
+  }
+  return todas;
+}
+
+/**
+ * Opciones sin repetir (comparando como texto normalizado), con la buena dentro, barajadas. Los
+ * distractores se toman en el orden recibido, que es su prioridad: quien no la tenga, que los baraje.
+ */
 export function opcionesCon(correcta: string, distractores: readonly string[], azar: Azar, cuantas = 4): string[] {
   const vistas = new Set([normalizar(correcta)]);
   const elegidas: string[] = [];
-  for (const d of azar.barajar(distractores)) {
+  for (const d of distractores) {
     if (elegidas.length >= cuantas - 1) break;
     const n = normalizar(d);
     if (vistas.has(n)) continue;
