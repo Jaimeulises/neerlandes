@@ -82,21 +82,46 @@ export function formaConJij(v: DatosVerbo): string {
   return v.conJij ?? formasPresente(v)[0];
 }
 
-interface Sujeto {
+export interface Sujeto {
   readonly nl: string;
+  readonly es: string;
   /** Posición en las seis formas. */
   readonly i: number;
 }
 
-const SUJETOS: readonly Sujeto[] = [
-  { nl: 'ik', i: 0 },
-  { nl: 'jij', i: 1 },
-  { nl: 'hij', i: 2 },
-  { nl: 'mijn zus', i: 2 },
-  { nl: 'we', i: 3 },
-  { nl: 'jullie', i: 4 },
-  { nl: 'mijn ouders', i: 5 },
+export const SUJETOS: readonly Sujeto[] = [
+  { nl: 'ik', es: 'yo', i: 0 },
+  { nl: 'jij', es: 'tú', i: 1 },
+  { nl: 'hij', es: 'él', i: 2 },
+  { nl: 'mijn zus', es: 'mi hermana', i: 2 },
+  { nl: 'we', es: 'nosotros', i: 3 },
+  { nl: 'jullie', es: 'vosotros', i: 4 },
+  { nl: 'mijn ouders', es: 'mis padres', i: 5 },
 ];
+
+function conMayuscula(texto: string): string {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+/** Lo que dice en español la frase de presente de un sujeto («Mis padres trabajan en casa.»). */
+export function frasePresenteEs(v: DatosVerbo, sujeto: Sujeto): string | undefined {
+  const forma = v.presenteEs?.[sujeto.i];
+  if (forma === undefined || v.compEs === undefined) return undefined;
+  return `${conMayuscula(`${sujeto.es} ${forma}`)} ${v.compEs}.`;
+}
+
+/** La pregunta con jij en español, sin el «tú», que en español no hace falta («¿Trabajas en casa?»). */
+export function preguntaPresenteEs(v: DatosVerbo): string | undefined {
+  const forma = v.presenteEs?.[1];
+  if (forma === undefined || v.compEs === undefined) return undefined;
+  return `¿${conMayuscula(forma)} ${v.compEs}?`;
+}
+
+/** El significado, solo si lo hay: con exactOptionalPropertyTypes no vale un undefined explícito. */
+function conSignificado(significado: string | undefined): { significado?: string } {
+  return significado === undefined ? {} : { significado };
+}
+
 
 const AUXILIARES: Readonly<Record<string, string>> = {
   heb: 'ben',
@@ -157,6 +182,7 @@ function ejercicioPresente(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio)
         instruccion: `Elige la forma de «${v.inf}»`,
         enunciado: `${comoFrase(sujeto.nl, '').trimEnd()} ___ ${comp}.`,
         enunciadoEnIdioma: true,
+        ...conSignificado(frasePresenteEs(v, sujeto)),
         opciones: opcionesCon(correcta, azar.barajar(distintas), azar, 4),
         opcionesEnIdioma: true,
         respuestaCorrecta: correcta,
@@ -176,11 +202,12 @@ function ejercicioPresente(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio)
       antes: '',
       despues: ` jij ${comp}?`,
       pista: v.inf,
+      ...conSignificado(preguntaPresenteEs(v)),
       respuestas,
       audio: comoFrase(`${respuestas[0] ?? ''} jij ${comp}`, '?'),
     };
   }
-  const sujeto = azar.elegir(SUJETOS) ?? { nl: 'ik', i: 0 };
+  const sujeto = azar.elegir(SUJETOS) ?? { nl: 'ik', es: 'yo', i: 0 };
   const respuestas = alternativas(formaDe(formas, sujeto.i));
   return {
     ...base,
@@ -190,6 +217,7 @@ function ejercicioPresente(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio)
     antes: `${comoFrase(sujeto.nl, '').trimEnd()} `,
     despues: ` ${comp}.`,
     pista: v.inf,
+    ...conSignificado(frasePresenteEs(v, sujeto)),
     respuestas,
     audio: frasePresente(sujeto.nl, respuestas[0] ?? '', comp),
   };
@@ -227,9 +255,10 @@ function elegirAuxiliar(e: Verbo, perf: readonly [string, string], aclaracion: s
     forma: 'opcion',
     tipo: 'verbos.perfectum.auxiliar',
     elementoId: e.id,
-    instruccion: `¿Hebben o zijn? ${es}`,
+    instruccion: '¿Hebben o zijn?',
     enunciado: conHueco,
     enunciadoEnIdioma: true,
+    significado: es,
     opciones: contexto.azar.barajar([forma, otra]),
     opcionesEnIdioma: true,
     respuestaCorrecta: forma,
@@ -335,6 +364,7 @@ function ejercicioPasado(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio): 
       instruccion: `Elige el pasado de «${v.inf}»`,
       enunciado: comoFrase(palabras.map((p) => (p === usada ? '___' : p)).join(' ')),
       enunciadoEnIdioma: true,
+      significado: es,
       opciones: opcionesCon(usada, contexto.azar.barajar(distractores), contexto.azar, 4),
       opcionesEnIdioma: true,
       respuestaCorrecta: usada,
@@ -526,9 +556,9 @@ function presentacionDe(e: Verbo): Presentacion {
       nota: null,
       audio: comoFrase(s.presente.replaceAll('|', ' ')),
       detalle: REGLA_SEPARABLES,
-      tabla: [
-        ['presente', comoFrase(s.presente.replaceAll('|', ' '))],
-        ['perfectum', comoFrase(s.perf[0])],
+      ejemplos: [
+        { texto: comoFrase(s.presente.replaceAll('|', ' ')), significado: s.presenteEs },
+        { texto: comoFrase(s.perf[0]), significado: s.perf[1] },
       ],
     };
   }
@@ -543,7 +573,8 @@ function presentacionDe(e: Verbo): Presentacion {
       ['wij, jullie, zij', plural.replaceAll('/', ' / ')],
     ];
     if (v.participio) tabla.push(['perfectum', `${v.aux === 'zijn' ? 'is' : 'heeft'} ${v.participio}`]);
-    return { principal: v.inf, significado: v.es, nota: v.nota ?? null, audio: comoFrase(v.pasadoEj?.[0] ?? ''), detalle: REGLA_PASADO, tabla };
+    const [nl, es] = v.pasadoEj ?? ['', ''];
+    return { principal: v.inf, significado: v.es, nota: v.nota ?? null, audio: comoFrase(nl), detalle: REGLA_PASADO, tabla, ejemplos: [{ texto: comoFrase(nl), significado: es }] };
   }
   return {
     principal: `${v.inf} → ${v.aux === 'zijn' ? 'is' : 'heeft'} ${v.participio ?? ''}`,
@@ -551,6 +582,6 @@ function presentacionDe(e: Verbo): Presentacion {
     nota: v.nota ?? null,
     audio: comoFrase(v.perf?.[0] ?? ''),
     detalle: v.irregular ? REGLA_IRREGULAR : REGLA_PERFECTUM,
-    tabla: [['ejemplo', comoFrase(v.perf?.[0] ?? '')]],
+    ejemplos: [{ texto: comoFrase(v.perf?.[0] ?? ''), significado: v.perf?.[1] ?? '' }],
   };
 }

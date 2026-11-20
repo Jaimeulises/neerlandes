@@ -397,6 +397,19 @@
   font-weight: 600;
 }
 
+/* Una frase de ejemplo con su traducción debajo. */
+.ejemplo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.ejemplo p:first-child {
+  font-weight: 600;
+}
+
 /* Progreso */
 .barra-grupo {
   height: 8px;

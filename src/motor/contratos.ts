@@ -38,6 +38,8 @@ export interface EjercicioOpcion extends EjercicioBase {
   readonly enunciado: string;
   /** Si el enunciado está en el idioma que se aprende (para lang y la voz). */
   readonly enunciadoEnIdioma: boolean;
+  /** Qué dice el enunciado, en el idioma de la interfaz, cuando está en el que se aprende y no lo dicen ya las opciones. */
+  readonly significado?: string;
   /** Opciones sin repetir, ya barajadas. */
   readonly opciones: readonly string[];
   readonly opcionesEnIdioma: boolean;
@@ -126,6 +128,14 @@ export interface Presentacion {
   readonly detalle?: string;
   /** Formas que conviene ver juntas (una conjugación), si las hay. */
   readonly tabla?: readonly (readonly [string, string])[];
+  /** Frases de ejemplo, cada una con su traducción. */
+  readonly ejemplos?: readonly Ejemplo[];
+}
+
+/** Una frase en el idioma que se aprende y lo que dice en el de la interfaz. */
+export interface Ejemplo {
+  readonly texto: string;
+  readonly significado: string;
 }
 
 /** Lo que una pista sabe del alumno al crear un ejercicio. */
