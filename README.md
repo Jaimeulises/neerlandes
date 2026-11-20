@@ -45,7 +45,7 @@ npm ci
 npm run dev   # http://localhost:5181, se recarga al cambiar el código
 ```
 
-Para que lea las frases en voz alta, el dispositivo necesita una voz neerlandesa (en iPhone: Ajustes, Accesibilidad, Contenido leído, Voces, Neerlandés). Sin voz no hay dictado; lo demás funciona igual.
+Lo que la app lee en voz alta va grabado dentro de la app con una voz neuronal de Azure (ver [docs/decisiones/0005-voz-grabada.md](docs/decisiones/0005-voz-grabada.md)). Si cambia el contenido, `npm run audio` graba lo nuevo; mientras tanto, eso lo lee la voz neerlandesa del dispositivo, si la tiene (en iPhone: Ajustes, Accesibilidad, Contenido leído, Voces, Neerlandés).
 
 ## Antes de subir un cambio
 

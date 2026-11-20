@@ -34,3 +34,4 @@ Stap (nombre provisional) es una app personal para practicar neerlandés hablado
 - `public/`: icono (`icono.svg`; los PNG se sacan de él) y manifiesto para añadirla a la pantalla de inicio.
 - `docs/revision.md`: se genera; no se edita a mano.
 - `ios/`: el proyecto de Xcode de Capacitor. `ios/App/App/public` se copia de `dist/` al compilar y no se edita.
+- `public/audio/` y `src/neerlandes/audio-manifiesto.json`: el audio grabado (decisión 0005). Los escribe `npm run audio`; no se editan a mano. Si cambia el contenido, se vuelve a lanzar.
