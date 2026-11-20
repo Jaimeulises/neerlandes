@@ -1,20 +1,23 @@
 // Elegir una opción. Se marca la buena y, si se falló, la elegida.
 
-import { useEffect, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { Voz } from '../../estado/voz';
-import type { Calificacion, EjercicioOpcion } from '../../motor';
+import type { Calificacion, Diagnostico, EjercicioOpcion } from '../../motor';
 import { Resultado } from '../componentes/Resultado';
 
 interface Props {
   readonly ejercicio: EjercicioOpcion;
   readonly repeticion: boolean;
   readonly voz: Voz;
-  readonly onTerminar: (calificacion: Calificacion) => void;
+  /** Qué regla falla en una respuesta. Vacío si no hay nada concreto. */
+  readonly diagnosticar?: (respuesta: string) => readonly Diagnostico[];
+  readonly onTerminar: (calificacion: Calificacion, diagnosticos?: readonly Diagnostico[]) => void;
 }
 
-export function Opcion({ ejercicio, repeticion, voz, onTerminar }: Props): ReactElement {
+export function Opcion({ ejercicio, repeticion, voz, diagnosticar, onTerminar }: Props): ReactElement {
   const [elegida, setElegida] = useState<string | null>(null);
   const acierto = elegida === ejercicio.respuestaCorrecta;
+  const diagnosticos = useMemo(() => (elegida !== null && !acierto ? (diagnosticar?.(elegida) ?? []) : []), [elegida, acierto, diagnosticar]);
   const { decir } = voz;
 
   useEffect(() => {
@@ -58,8 +61,9 @@ export function Opcion({ ejercicio, repeticion, voz, onTerminar }: Props): React
           voz={voz}
           audio={ejercicio.audio}
           aclaracion={ejercicio.aclaracion}
+          diagnosticos={diagnosticos}
           onSiguiente={() => {
-            onTerminar(acierto ? 'bien' : 'otra_vez');
+            onTerminar(acierto ? 'bien' : 'otra_vez', diagnosticos);
           }}
         />
       ) : null}

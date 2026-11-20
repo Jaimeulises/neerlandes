@@ -2,7 +2,7 @@
 // se elige en neerlandés y a partir de ahí se escribe con su artículo, que es
 // lo que de verdad cuesta.
 
-import type { ContextoEjercicio, Ejercicio, Elemento, Pista, Presentacion } from '../../motor';
+import { palabras, type ContextoEjercicio, type Diagnostico, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
 import { conFormasTonicas, elegirForma, idDe, opcionesCon } from '../comun';
 import { GRUPOS_VOCABULARIO, NOMBRES_GRUPO_VOCABULARIO, PALABRAS, type DatosPalabra, type GrupoVocabulario } from './datos';
 
@@ -112,6 +112,7 @@ export const vocabulario: Pista<Palabra> = {
         ...base,
         forma: 'opcion',
         tipo: 'vocabulario.articulo',
+        destrezas: ['articulo'],
         instruccion: `¿De o het? (${e.es})`,
         enunciado: sinArticulo(e.nl),
         enunciadoEnIdioma: true,
@@ -141,6 +142,30 @@ export const vocabulario: Pista<Palabra> = {
       ...(e.sustantivo ? { pista: 'Con su artículo (de o het).' } : {}),
       respuestas: conFormasTonicas([e.nl, ...e.otras]),
     };
+  },
+  destrezasDe() {
+    return ['vocabulario'];
+  },
+  diagnosticar(ejercicio, respuesta): Diagnostico[] {
+    const e = ELEMENTOS_VOCABULARIO.find((x) => x.id === ejercicio.elementoId);
+    if (!e?.articulo) return [];
+    const dado = ejercicio.forma === 'opcion' ? [respuesta] : palabras(respuesta);
+    const articulo = dado[0];
+    const sustantivo = palabras(sinArticulo(e.nl)).join(' ');
+    const mismoSustantivo = ejercicio.forma === 'opcion' || dado.slice(1).join(' ') === sustantivo;
+    if ((articulo !== 'de' && articulo !== 'het') || articulo === e.articulo || !mismoSustantivo) return [];
+    const diminutivo = sustantivo.endsWith('je');
+    return [
+      {
+        destreza: 'articulo',
+        titulo: `Es «${e.articulo} ${sustantivo}», no «${articulo} ${sustantivo}»`,
+        texto: diminutivo
+          ? 'Acaba en -je: los diminutivos siempre van con het.'
+          : e.articulo === 'het'
+            ? 'Es de las palabras con het: hay menos que con de, así que conviene aprenderlas con su artículo, como una sola palabra.'
+            : 'Va con de, que es lo más común (todos los plurales y la mayoría de las palabras en singular). Apréndela con su artículo, como una sola palabra.',
+      },
+    ];
   },
   presentar(e): Presentacion {
     return { principal: e.nl, significado: e.es, nota: e.nota, audio: e.nl };

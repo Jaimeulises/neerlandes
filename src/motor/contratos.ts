@@ -28,6 +28,8 @@ interface EjercicioBase {
   readonly aclaracion?: string;
   /** Texto en el idioma que se aprende que se puede escuchar al responder. */
   readonly audio?: string;
+  /** Las destrezas que entrena, para medir el nivel de cada una. Si no vienen, las del elemento. */
+  readonly destrezas?: readonly string[];
 }
 
 /** Opción única: se muestra un enunciado y se elige entre varias opciones. */
@@ -137,6 +139,8 @@ export interface ContextoEjercicio {
   readonly formas: ReadonlySet<Ejercicio['forma']>;
   /** Variante del idioma de la interfaz, por si el paquete adapta sus textos. */
   readonly variante?: string;
+  /** Lo que domina el alumno cada destreza, de 0 a 1, o null si aún no hay datos. Sirve para subir o bajar la dificultad. */
+  readonly dominio?: (destreza: string) => number | null;
 }
 
 /**
@@ -165,6 +169,33 @@ export interface Pista<E extends Elemento = Elemento> {
   grupoListo?(grupo: string, vistosPorPista: ReadonlyMap<string, ReadonlySet<string>>): boolean;
   /** Si existe, explica un fallo en un ejercicio de opciones. null si no hay nada concreto que decir. */
   explicarFallo?(ejercicio: Ejercicio, elegida: string, variante?: string): ExplicacionFallo | null;
+  /** Si existe, las destrezas que entrena un elemento (para el nivel y para practicar una regla tras fallarla). */
+  destrezasDe?(elemento: E): readonly string[];
+  /**
+   * Si existe, explica qué falla en una respuesta escrita u ordenada que no vale: la regla concreta que se ha
+   * roto y dónde. Vacío si no encuentra nada concreto (una palabra que no se sabe, por ejemplo).
+   */
+  diagnosticar?(ejercicio: Ejercicio, respuesta: string): readonly Diagnostico[];
+}
+
+/** Un fallo concreto en una respuesta: qué regla se ha roto, dónde y cómo se arregla. */
+export interface Diagnostico {
+  /** La destreza que se ha fallado. */
+  readonly destreza: string;
+  /** Una línea que dice qué ha fallado. */
+  readonly titulo: string;
+  /** Por qué, con la regla aplicada a esta frase. */
+  readonly texto: string;
+}
+
+/** Una destreza que se mide: una regla o un tipo de conocimiento. */
+export interface Destreza {
+  readonly id: string;
+  readonly nombre: string;
+  /** Nivel del Marco Común Europeo en que se espera dominarla. */
+  readonly nivel: string;
+  /** Qué es, en una línea. */
+  readonly descripcion: string;
 }
 
 /** Por qué una respuesta elegida no era la buena, y qué elementos conviene practicar juntos. */
@@ -180,4 +211,6 @@ export interface PaqueteDeIdioma {
   readonly id: string;
   readonly nombre: string;
   readonly pistas: readonly Pista[];
+  /** Las destrezas que se miden, en el orden en que se enseñan. */
+  readonly destrezas?: readonly Destreza[];
 }

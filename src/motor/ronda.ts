@@ -20,6 +20,8 @@ export interface OpcionesRonda {
   readonly soloElementos?: ReadonlySet<string>;
   /** Incluir también los elementos vistos que aún no han vencido. */
   readonly incluirNoVencidos?: boolean;
+  /** Lo que domina el alumno cada destreza (ver ContextoEjercicio). */
+  readonly dominio?: (destreza: string) => number | null;
 }
 
 /** Un paso de la ronda: el ejercicio y, si el elemento es nuevo, su presentación. */
@@ -28,6 +30,8 @@ export interface PasoRonda {
   readonly presentacion: Presentacion | null;
   /** true si el paso es la vuelta de un fallo anterior en esta ronda. */
   readonly repeticion: boolean;
+  /** Si el paso está para practicar una regla que se acaba de fallar, cuál (el id de la destreza). */
+  readonly practica?: string;
 }
 
 export const TODAS_LAS_FORMAS: ReadonlySet<Ejercicio['forma']> = new Set(['opcion', 'ordenar', 'traducir', 'completar', 'dictado', 'decir']);
@@ -85,7 +89,15 @@ function contexto<E extends Elemento>(
     repeticiones: progreso.get(clave(pista.id, elemento.id))?.reps ?? 0,
     formas: opciones.formas,
     ...(opciones.variante !== undefined ? { variante: opciones.variante } : {}),
+    ...(opciones.dominio ? { dominio: opciones.dominio } : {}),
   };
+}
+
+/** El ejercicio de un elemento, con las destrezas del elemento si el ejercicio no dice las suyas. */
+export function crearEjercicioDe<E extends Elemento>(pista: Pista<E>, elemento: E, ctx: ContextoEjercicio): Ejercicio {
+  const ejercicio = pista.crearEjercicio(elemento, ctx);
+  if (ejercicio.destrezas || !pista.destrezasDe) return ejercicio;
+  return { ...ejercicio, destrezas: pista.destrezasDe(elemento) };
 }
 
 /**
@@ -118,7 +130,7 @@ export function construirRonda<E extends Elemento>(
   // elemento siguen saliendo del progreso.
   const vistosConNuevos = new Set([...vistosDe(progreso, pista.id), ...nuevos.map((e) => e.id)]);
   const crear = (e: E, repeticion: boolean): PasoRonda => ({
-    ejercicio: pista.crearEjercicio(e, contexto(pista, progreso, e, azar, opciones, vistosConNuevos)),
+    ejercicio: crearEjercicioDe(pista, e, contexto(pista, progreso, e, azar, opciones, vistosConNuevos)),
     presentacion: null,
     repeticion,
   });
@@ -146,9 +158,40 @@ export function repetirTrasFallo<E extends Elemento>(
 ): PasoRonda | null {
   if (vecesRepetido >= opciones.repeticionesPorFallo) return null;
   return {
-    ejercicio: pista.crearEjercicio(elemento, contexto(pista, progreso, elemento, azar, opciones)),
+    ejercicio: crearEjercicioDe(pista, elemento, contexto(pista, progreso, elemento, azar, opciones)),
     presentacion: null,
     repeticion: true,
+  };
+}
+
+/**
+ * Un ejercicio de otro elemento que entrena la misma destreza, para practicar en caliente la regla que se
+ * acaba de fallar con una frase distinta. Primero lo ya visto; si no hay, algo nuevo de un grupo abierto que
+ * no necesite presentación (lo que sale de una regla ya presentada). Nunca algo que ya esté en la ronda.
+ * null si no hay ninguno.
+ */
+export function practicarDestreza<E extends Elemento>(
+  pista: Pista<E>,
+  destreza: string,
+  excluir: ReadonlySet<string>,
+  progreso: Progreso,
+  azar: Azar,
+  opciones: OpcionesRonda = RONDA_POR_DEFECTO,
+): PasoRonda | null {
+  if (!pista.destrezasDe) return null;
+  const entrena = pista.elementos.filter((e) => !excluir.has(e.id) && (pista.destrezasDe?.(e) ?? []).includes(destreza));
+  const vistos = entrena.filter((e) => progreso.has(clave(pista.id, e.id)));
+  const abiertos = new Set(gruposDesbloqueados(pista, progreso));
+  const nuevosSinPresentacion = entrena.filter(
+    (e) => !progreso.has(clave(pista.id, e.id)) && abiertos.has(e.grupo) && (pista.presentar?.(e, opciones.variante) ?? null) === null,
+  );
+  const elemento = azar.elegir(vistos.length > 0 ? vistos : nuevosSinPresentacion);
+  if (!elemento) return null;
+  return {
+    ejercicio: crearEjercicioDe(pista, elemento, contexto(pista, progreso, elemento, azar, opciones)),
+    presentacion: null,
+    repeticion: true,
+    practica: destreza,
   };
 }
 

@@ -67,12 +67,19 @@ function leerTarjeta(clave: string, valor: unknown): Tarjeta {
 
 function leerRespuesta(indice: number, valor: unknown): Respuesta {
   if (!esObjeto(valor)) throw new CopiaIlegible(`respuesta ${indice}: no es un objeto`);
-  const { t, k, c, f } = valor;
+  const { t, k, c, f, d, x } = valor;
   if (typeof t !== 'number' || !Number.isFinite(t)) throw new CopiaIlegible(`respuesta ${indice}: fecha no válida`);
   if (typeof k !== 'string' || !k.includes('/')) throw new CopiaIlegible(`respuesta ${indice}: clave no válida`);
   if (typeof c !== 'string' || !CALIFICACIONES.has(c)) throw new CopiaIlegible(`respuesta ${indice}: calificación no válida`);
   if (typeof f !== 'string') throw new CopiaIlegible(`respuesta ${indice}: forma no válida`);
-  return { t, k, c: c as Respuesta['c'], f };
+  const listaDe = (v: unknown, nombre: string): readonly string[] | undefined => {
+    if (v === undefined) return undefined;
+    if (!Array.isArray(v) || !v.every((s) => typeof s === 'string')) throw new CopiaIlegible(`respuesta ${indice}: ${nombre} no válidas`);
+    return v;
+  };
+  const destrezas = listaDe(d, 'destrezas');
+  const fallos = listaDe(x, 'destrezas falladas');
+  return { t, k, c: c as Respuesta['c'], f, ...(destrezas ? { d: destrezas } : {}), ...(fallos ? { x: fallos } : {}) };
 }
 
 export function serializarProgreso(progreso: Progreso): string {

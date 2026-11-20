@@ -37,7 +37,15 @@ export interface DatosEnUso {
   /** Si lo guardado no se pudo leer, qué decía el error. */
   readonly error: string | null;
   readonly guardado: EstadoGuardado;
-  readonly responder: (pistaId: string, elementoId: string, calificacion: Calificacion, forma: Ejercicio['forma'], ahora?: Date) => void;
+  readonly responder: (
+    pistaId: string,
+    elementoId: string,
+    calificacion: Calificacion,
+    forma: Ejercicio['forma'],
+    destrezas?: readonly string[],
+    falladas?: readonly string[],
+    ahora?: Date,
+  ) => void;
   /**
    * Sustituye todo por una copia (restaurar) o por nada (borrar). Si lo que había no se pudo leer, antes lo
    * guarda aparte tal cual. No lanza: si no se puede guardar, lo dice `guardado`.
@@ -141,10 +149,25 @@ export function useDatos(almacen: Almacen): DatosEnUso {
   );
 
   const responder = useCallback(
-    (pistaId: string, elementoId: string, calificacion: Calificacion, forma: Ejercicio['forma'], ahora: Date = new Date()) => {
+    (
+      pistaId: string,
+      elementoId: string,
+      calificacion: Calificacion,
+      forma: Ejercicio['forma'],
+      destrezas: readonly string[] = [],
+      falladas: readonly string[] = [],
+      ahora: Date = new Date(),
+    ) => {
       const actual = ultimo.current;
       const progreso = registrarRespuesta(actual.progreso, pistaId, elementoId, calificacion, ahora);
-      const historial = anotar(actual.historial, { t: ahora.getTime(), k: `${pistaId}/${elementoId}`, c: calificacion, f: forma });
+      const historial = anotar(actual.historial, {
+        t: ahora.getTime(),
+        k: `${pistaId}/${elementoId}`,
+        c: calificacion,
+        f: forma,
+        ...(destrezas.length > 0 ? { d: destrezas } : {}),
+        ...(falladas.length > 0 ? { x: falladas } : {}),
+      });
       const nuevos: Datos = { progreso, historial };
       ultimo.current = nuevos;
       setDatos(nuevos);
