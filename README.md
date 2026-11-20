@@ -10,13 +10,24 @@ Tiene tres partes, y en cada una los grupos se abren en orden:
 
 El repaso es espaciado (FSRS): lo que fallas vuelve antes. El corrector de frases escritas no perdona una letra de más o de menos en el verbo, pero sí las mayúsculas, la puntuación y las tildes, y distingue «están todas las palabras, pero en otro orden» de «has dicho otra cosa».
 
-Sin cuentas, sin anuncios y sin enviar nada fuera del dispositivo: el progreso se guarda en el navegador y se puede sacar una copia desde Ajustes.
+Sin cuentas, sin anuncios y sin enviar nada fuera del dispositivo: el progreso se guarda en el dispositivo y se puede sacar una copia desde Ajustes.
 
 > El contenido lo ha escrito una IA y está pendiente de revisión por una persona nativa. Está todo en [docs/revision.md](docs/revision.md), numerado para apuntar correcciones.
 
-## Usarla en el móvil
+## Instalarla en el iPhone
 
-De momento no está publicada: se sirve desde el ordenador por la wifi de casa.
+Se instala como app por cable desde un Mac con Xcode (ver [docs/decisiones/0004-app-de-iphone.md](docs/decisiones/0004-app-de-iphone.md)).
+
+```sh
+npm ci          # la primera vez
+npm run iphone  # compila, firma con la cuenta de Apple de Xcode y la instala en el iPhone conectado
+```
+
+El iPhone tiene que estar conectado, desbloqueado y con el modo de desarrollador activo. Con una cuenta de Apple gratuita la instalación caduca a los siete días: se vuelve a lanzar `npm run iphone` y el progreso se conserva. La app guarda su progreso aparte del de Safari; para pasarlo de una a otra, Sacar copia y Restaurar copia en Ajustes.
+
+## Usarla en el móvil por la wifi
+
+No está publicada: también se puede servir desde el ordenador por la wifi de casa, si el ordenador acepta conexiones entrantes.
 
 ```sh
 npm ci          # la primera vez
