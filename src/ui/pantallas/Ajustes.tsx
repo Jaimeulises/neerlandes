@@ -8,6 +8,7 @@ import { NOMBRES_FORMA, NUEVOS_POR_RONDA, TAMANOS_RONDA, type Ajustes as DatosAj
 import { exportarCopia, leerCopia, MENSAJE_DE_ENTREGA, type CopiaLeida } from '../../estado/copia';
 import type { Voz } from '../../estado/voz';
 import { CopiaIlegible, HISTORIAL_VACIO, PROGRESO_VACIO, TODAS_LAS_FORMAS, type Datos } from '../../motor';
+import { FRASE_DE_PRUEBA } from '../../neerlandes/audio';
 import { Boton } from '../componentes/Boton';
 
 interface Props {
@@ -149,7 +150,7 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
                 variante="secundario"
                 disabled={!voz.disponible}
                 onClick={() => {
-                  voz.decir('Goedemorgen! Hoe gaat het met je?');
+                  voz.decir(FRASE_DE_PRUEBA);
                 }}
               >
                 Probar
