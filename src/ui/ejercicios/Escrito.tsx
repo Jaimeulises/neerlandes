@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactElement, type SyntheticEvent } from 'react';
 import type { Voz } from '../../estado/voz';
-import { calificacionDe, corregir, type Calificacion, type Correccion, type EjercicioEscrito, type Veredicto } from '../../motor';
+import { calificacionDe, corregir, type Calificacion, type Correccion, type Diagnostico, type EjercicioEscrito, type Veredicto } from '../../motor';
 import { Boton } from '../componentes/Boton';
 import { BotonVoz } from '../componentes/BotonVoz';
 import { Marcas } from '../componentes/Marcas';
@@ -15,7 +15,9 @@ interface Props {
   readonly ejercicio: EjercicioEscrito;
   readonly repeticion: boolean;
   readonly voz: Voz;
-  readonly onTerminar: (calificacion: Calificacion) => void;
+  /** Qué regla falla en una respuesta. Vacío si no hay nada concreto. */
+  readonly diagnosticar?: (respuesta: string) => readonly Diagnostico[];
+  readonly onTerminar: (calificacion: Calificacion, diagnosticos?: readonly Diagnostico[]) => void;
 }
 
 const TITULOS: Readonly<Record<Veredicto, string>> = {
@@ -34,9 +36,10 @@ const ATRIBUTOS_CAMPO = {
   lang: 'nl',
 } as const;
 
-export function Escrito({ ejercicio, repeticion, voz, onTerminar }: Props): ReactElement {
+export function Escrito({ ejercicio, repeticion, voz, diagnosticar, onTerminar }: Props): ReactElement {
   const [respuesta, setRespuesta] = useState('');
   const [correccion, setCorreccion] = useState<Correccion | null>(null);
+  const [diagnosticos, setDiagnosticos] = useState<readonly Diagnostico[]>([]);
   const campo = useRef<HTMLTextAreaElement & HTMLInputElement>(null);
   const { decir } = voz;
   const bien = correccion !== null && calificacionDe(correccion.veredicto) === 'bien';
@@ -48,7 +51,10 @@ export function Escrito({ ejercicio, repeticion, voz, onTerminar }: Props): Reac
 
   const comprobar = (): void => {
     if (respuesta.trim() === '' || correccion !== null) return;
-    setCorreccion(corregir(respuesta, ejercicio.respuestas));
+    const c = corregir(respuesta, ejercicio.respuestas);
+    setCorreccion(c);
+    // El dictado es para el oído: sus fallos son de lo que se oye, no de gramática.
+    if (calificacionDe(c.veredicto) !== 'bien' && ejercicio.forma !== 'dictado') setDiagnosticos(diagnosticar?.(respuesta) ?? []);
     if (ejercicio.audio) decir(ejercicio.audio);
   };
 
@@ -135,8 +141,9 @@ export function Escrito({ ejercicio, repeticion, voz, onTerminar }: Props): Reac
           voz={voz}
           audio={ejercicio.audio}
           aclaracion={ejercicio.aclaracion}
+          diagnosticos={diagnosticos}
           onSiguiente={() => {
-            onTerminar(bien ? 'bien' : 'otra_vez');
+            onTerminar(bien ? 'bien' : 'otra_vez', diagnosticos);
           }}
           extra={
             bien ? null : (

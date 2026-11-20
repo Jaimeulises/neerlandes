@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NOMBRE_APP } from '../estado/app';
 import {
   almacenEnMemoria,
+  crearAzar,
   anotar,
   CLAVE_HISTORIAL,
   CLAVE_PROGRESO,
@@ -23,6 +24,7 @@ import {
 } from '../motor';
 import { boton, buscarBoton, enPantalla, escribirEn, esperar, limpiar, montar, prepararNavegador, pulsar } from '../pruebas/pantalla';
 import type { Voz } from '../estado/voz';
+import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../neerlandes/orden/pista';
 import { App } from './App';
 import { Escrito } from './ejercicios/Escrito';
 import { Ordenar } from './ejercicios/Ordenar';
@@ -240,6 +242,12 @@ describe('ordenar las fichas en pantalla', () => {
   });
 });
 
+function fraseDeMorgen(): Frase {
+  const f = ELEMENTOS_ORDEN.find((e) => e.frase.startsWith('Morgen ga ik'));
+  if (!f) throw new Error('falta la frase');
+  return f;
+}
+
 describe('corregir una frase escrita en pantalla', () => {
   const ejercicio: EjercicioTraducir = {
     forma: 'traducir',
@@ -272,6 +280,32 @@ describe('corregir una frase escrita en pantalla', () => {
     expect(enPantalla()).toContain('El verbo va en segunda posición.');
     await pulsar(boton('Mi respuesta también vale'));
     expect(calificaciones).toEqual(['bien']);
+  });
+
+  it('si se falla una regla concreta, se explica y se pasa a la ronda', async () => {
+    prepararNavegador();
+    const terminados: [string, string[]][] = [];
+    const ejercicioReal = ejercicioDeFrase(fraseDeMorgen(), 'traducir', { azar: crearAzar(1), vistos: new Set(), repeticiones: 1, formas: new Set(['traducir']) });
+    await montar(
+      <Escrito
+        ejercicio={ejercicioReal as EjercicioTraducir}
+        repeticion={false}
+        voz={SIN_VOZ}
+        diagnosticar={(r) => orden.diagnosticar?.(ejercicioReal, r) ?? []}
+        onTerminar={(c, ds) => {
+          terminados.push([c, (ds ?? []).map((d) => d.destreza)]);
+        }}
+      />,
+    );
+    const campo = document.querySelector<HTMLTextAreaElement>('textarea');
+    if (!campo) throw new Error('falta el campo');
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('el verbo va antes que el sujeto');
+    expect(enPantalla()).toContain('La regla completa');
+    expect(document.querySelector('.diagnostico [lang="nl"]')).not.toBeNull();
+    await pulsar(boton('Siguiente'));
+    expect(terminados).toEqual([['otra_vez', ['inversion']]]);
   });
 
   it('la frase buena se da por buena', async () => {

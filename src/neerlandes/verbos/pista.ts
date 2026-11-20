@@ -3,8 +3,17 @@
 // simple o, si es separable, dónde va la partícula. Casi todo se responde
 // escribiendo la forma, porque reconocerla no basta para decirla.
 
-import type { ContextoEjercicio, Ejercicio, Elemento, Pista, Presentacion } from '../../motor';
+import { UMBRAL_DOMINADA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
 import { alternativas, comoFrase, conFormasTonicas, elegirForma, hueco, opcionesCon, primera } from '../comun';
+import type { IdDestreza } from '../destrezas';
+import {
+  auxiliarDe,
+  diagnosticarAuxiliar,
+  diagnosticarConFrase,
+  diagnosticarForma,
+  diagnosticarFraseLibre,
+  diagnosticarParticipio,
+} from '../diagnostico';
 import { ejercicioDeFrase, type Frase } from '../orden/pista';
 import { SEPARABLES, VERBOS, type DatosSeparable, type DatosVerbo, type Formas } from './datos';
 
@@ -130,7 +139,10 @@ function ejercicioPresente(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio)
   const base = { elementoId: e.id, aclaracion: `${resumenPresente(v)} ${REGLA_PRESENTE}` };
 
   // La primera vez se elige; en los repasos, solo si elegir está activado (y siempre, si completar no lo está).
-  const elegir = contexto.repeticiones === 0 || (contexto.formas.has('opcion') && (!contexto.formas.has('completar') || azar.siguiente() < 0.2));
+  // Si el presente ya se domina, ni la primera vez: se escribe.
+  const domina = (contexto.dominio?.('presente') ?? 0) >= UMBRAL_DOMINADA && contexto.formas.has('completar');
+  const elegir =
+    (contexto.repeticiones === 0 && !domina) || (contexto.formas.has('opcion') && (!contexto.formas.has('completar') || (!domina && azar.siguiente() < 0.2)));
   if (elegir) {
     // Elegir: solo con sujetos cuya forma no tiene alternativa, para que no haya dos respuestas buenas.
     const sujetos = SUJETOS.filter((s) => !formaDe(formas, s.i).includes('/'));
@@ -267,14 +279,16 @@ function ejercicioPerfectum(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio
   const participio = v.participio ?? '';
   const aclaracion = reglaPerfectum(v);
   if (contexto.repeticiones === 0) return completarParticipio(e, v.inf, participio, perf, aclaracion);
+  // Si el participio ya se domina, se practica sobre todo en la frase entera.
+  const domina = (contexto.dominio?.(v.irregular ? 'participio-irregular' : 'participio') ?? 0) >= UMBRAL_DOMINADA;
   const forma = elegirForma(
     contexto.azar,
     contexto.formas,
     [
-      ['completar', 4],
+      ['completar', domina ? 1 : 4],
       ['opcion', v.aux === 'zijn' ? 3 : 1],
-      ['traducir', 2],
-      ['decir', 1],
+      ['traducir', domina ? 4 : 2],
+      ['decir', domina ? 2 : 1],
     ],
     'completar',
   );
@@ -392,6 +406,14 @@ function crearElementos(): Verbo[] {
 
 export const ELEMENTOS_VERBOS: readonly Verbo[] = crearElementos();
 
+function crearEjercicioVerbo(e: Verbo, contexto: ContextoEjercicio): Ejercicio {
+  if (e.separable) return ejercicioSeparable(e, e.separable, contexto);
+  const v = e.verbo as DatosVerbo;
+  if (e.grupo === 'presente') return ejercicioPresente(e, v, contexto);
+  if (e.grupo === 'pasado') return ejercicioPasado(e, v, contexto);
+  return ejercicioPerfectum(e, v, contexto);
+}
+
 /** El primer elemento de cada grupo, que es el que lo abre. */
 const ABRE_GRUPO = new Set(GRUPOS_VERBOS.map((g) => ELEMENTOS_VERBOS.find((e) => e.grupo === g)?.id));
 
@@ -402,6 +424,72 @@ function saleDeLaRegla(e: Verbo): boolean {
   return e.grupo === 'perfectum';
 }
 
+/** Lo que entrena cada elemento: todo lo que sus ejercicios pueden preguntar. */
+function destrezasDelElemento(e: Verbo): IdDestreza[] {
+  if (e.separable) return ['separables'];
+  if (e.grupo === 'presente') return ['presente'];
+  if (e.grupo === 'pasado') return ['pasado'];
+  return [e.grupo === 'perfectum-irregular' ? 'participio-irregular' : 'participio', 'auxiliar', 'perfectum-orden'];
+}
+
+/** Lo que entrena un ejercicio concreto de un elemento. */
+function destrezasDelEjercicio(e: Verbo, ejercicio: Ejercicio): IdDestreza[] {
+  const participio: IdDestreza = e.grupo === 'perfectum-irregular' ? 'participio-irregular' : 'participio';
+  if (e.separable) return ['separables'];
+  switch (ejercicio.tipo) {
+    case 'verbos.perfectum.participio':
+      return [participio];
+    case 'verbos.perfectum.auxiliar':
+      return ['auxiliar'];
+    default:
+      return destrezasDelElemento(e);
+  }
+}
+
+const POR_ID = new Map<string, Verbo>(ELEMENTOS_VERBOS.map((e) => [e.id, e]));
+
+/** Lo que va delante y detrás del hueco en un ejercicio de opciones («Mijn zus ___ thuis.»). */
+function alrededorDelHueco(enunciado: string): { antes: string; despues: string } {
+  const [antes = '', despues = ''] = enunciado.split('___');
+  return { antes, despues };
+}
+
+function diagnosticarVerbo(e: Verbo, ejercicio: Ejercicio, respuesta: string) {
+  if (e.separable) {
+    if (ejercicio.tipo === 'verbos.perfectum.participio' && ejercicio.forma === 'completar') return diagnosticarParticipio(ejercicio.respuestas[0] ?? '', respuesta);
+    return diagnosticarConFrase(fraseDeSeparable(e.separable), ejercicio, respuesta);
+  }
+  const v = e.verbo;
+  if (!v) return [];
+  switch (ejercicio.tipo) {
+    case 'verbos.presente.completar':
+    case 'verbos.presente.pregunta':
+    case 'verbos.pasado.completar':
+      return ejercicio.forma === 'completar' ? diagnosticarForma(ejercicio.respuestas[0] ?? '', respuesta, ejercicio.antes, ejercicio.despues) : [];
+    case 'verbos.presente.elegir':
+    case 'verbos.pasado.elegir': {
+      if (ejercicio.forma !== 'opcion') return [];
+      const { antes, despues } = alrededorDelHueco(ejercicio.enunciado);
+      return diagnosticarForma(ejercicio.respuestaCorrecta, respuesta, antes, despues);
+    }
+    case 'verbos.perfectum.participio':
+      return ejercicio.forma === 'completar' ? diagnosticarParticipio(ejercicio.respuestas[0] ?? '', respuesta) : [];
+    case 'verbos.perfectum.auxiliar':
+      return ejercicio.forma === 'opcion' ? diagnosticarAuxiliar(respuesta, ejercicio.respuestaCorrecta, v.participio ?? '', `«${comoFrase(v.perf?.[0] ?? '', '')}»`) : [];
+    case 'verbos.perfectum.traducir': {
+      const aux = auxiliarDe(v.perf?.[0] ?? '');
+      return aux && v.participio ? diagnosticarFraseLibre(ejercicio, respuesta, aux, [v.participio], 'participio') : [];
+    }
+    case 'verbos.pasado.traducir': {
+      const nl = v.pasadoEj?.[0] ?? '';
+      const usada = (v.pasado ?? []).flatMap(alternativas).find((f) => nl.split(/\s+/).includes(f));
+      return usada ? diagnosticarFraseLibre(ejercicio, respuesta, usada, [], null) : [];
+    }
+    default:
+      return [];
+  }
+}
+
 export const verbos: Pista<Verbo> = {
   id: 'verbos',
   nombre: 'Verbos',
@@ -410,11 +498,13 @@ export const verbos: Pista<Verbo> = {
   nombresDeGrupo: NOMBRES_GRUPO_VERBOS,
   elementos: ELEMENTOS_VERBOS,
   crearEjercicio(e, contexto) {
-    if (e.separable) return ejercicioSeparable(e, e.separable, contexto);
-    const v = e.verbo as DatosVerbo;
-    if (e.grupo === 'presente') return ejercicioPresente(e, v, contexto);
-    if (e.grupo === 'pasado') return ejercicioPasado(e, v, contexto);
-    return ejercicioPerfectum(e, v, contexto);
+    const ejercicio = crearEjercicioVerbo(e, contexto);
+    return { ...ejercicio, destrezas: destrezasDelEjercicio(e, ejercicio) };
+  },
+  destrezasDe: destrezasDelElemento,
+  diagnosticar(ejercicio, respuesta) {
+    const e = POR_ID.get(ejercicio.elementoId);
+    return e ? diagnosticarVerbo(e, ejercicio, respuesta) : [];
   },
   // Lo regular se intenta sin verlo antes: su regla se presenta con el verbo que abre el grupo y se
   // repite al corregir. Lo irregular, los separables y el pasado sí se enseñan, porque no se deducen.

@@ -3,6 +3,7 @@
 // prueba avisa si el contenido cambia y el documento no se ha vuelto a generar.
 
 import { alternativas, comoFrase, primera } from './comun';
+import { diagnosticarEjemplos } from './diagnostico/ejemplos';
 import { GRUPOS_ORDEN, NOMBRES_GRUPO_ORDEN, REGLAS_ORDEN } from './orden/datos';
 import { ELEMENTOS_ORDEN } from './orden/pista';
 import { SEPARABLES, VERBOS, type DatosVerbo } from './verbos/datos';
@@ -66,7 +67,7 @@ export function documentoDeRevision(): string {
     '',
     '- Lee cada frase en neerlandés y marca lo que no dirías así, aunque sea correcto.',
     '- Comprueba que la traducción dice lo mismo que la frase.',
-    '- Apunta el número (O12, V3, S5, P40) y cómo lo dirías tú.',
+    '- Apunta el número (O12, V3, S5, P40, E4) y cómo lo dirías tú.',
     '- Al traducir, la app acepta además, sin que estén apuntadas, las formas tónicas: wij por we, mij por me, y zij por ze cuando abre la frase.',
     '',
     '**Voor wie dit nakijkt:** hier staan alle Nederlandse zinnen en woorden uit de app. Klopt het en klinkt het natuurlijk? Schrijf het nummer op (bijvoorbeeld O12) en hoe jij het zou zeggen.',
@@ -129,6 +130,19 @@ export function documentoDeRevision(): string {
     }
     l.push('');
   }
+
+  const ejemplos = diagnosticarEjemplos();
+  l.push(
+    `## Explicaciones de errores (E1 a E${String(ejemplos.length)})`,
+    '',
+    'Cuando se falla una frase, la app explica qué regla se ha roto con las palabras de esa frase. Las explicaciones se montan solas; aquí van fallos típicos con lo que diría la app. Revisa que la regla esté bien dicha y que el neerlandés de la explicación sea correcto.',
+    '',
+  );
+  ejemplos.forEach((e, i) => {
+    l.push(`**E${String(i + 1)}.** «${e.frase}» → respuesta: «${e.respuesta}»`, '');
+    for (const d of e.diagnosticos) l.push(`- **${d.titulo}.** ${d.texto}`);
+    l.push('');
+  });
 
   return `${l.join('\n').trimEnd()}\n`;
 }
