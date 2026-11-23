@@ -96,33 +96,46 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
 
   // Dónde ha puesto el verbo conjugado de la principal, aunque lo haya conjugado mal.
   let iVerbo = -1;
+  // Dónde va el primer verbo conjugado que no es el de la frase, si lo hay: entonces la ha dicho de otra manera.
+  let iOtroVerbo = -1;
   if (p.verbo !== '') {
     // En una subordinada delante, el verbo de la principal se busca detrás de la subordinada.
     const desde = sub?.delante ? Math.max(0, u.indexOf(sub.verbo) + 1) : 0;
-    iVerbo = u.indexOf(p.verbo, desde);
-    if (iVerbo < 0) {
-      const esAux = FORMAS_HEBBEN.has(p.verbo) || FORMAS_ZIJN.has(p.verbo);
-      // Detrás de un artículo o un posesivo no es un verbo sino un sustantivo («met de fiets»), salvo detrás del
-      // je que es el sujeto («wat je gaat doen»).
-      const trasDeterminante = (i: number): boolean => {
-        const antes = u[i - 1] ?? '';
-        return DETERMINANTES.has(antes) && !(sujetoJij && iguales(antes, 'je'));
-      };
-      iVerbo = u.findIndex((w, i) => i >= desde && !trasDeterminante(i) && (mismoVerbo(w, p.verbo) || (esAux && (FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w)))));
-      const dada = u[iVerbo];
-      if (dada !== undefined && !enAlgunaValida(validas, dada)) {
-        const contrario = (FORMAS_HEBBEN.has(p.verbo) && FORMAS_ZIJN.has(dada)) || (FORMAS_ZIJN.has(p.verbo) && FORMAS_HEBBEN.has(dada));
-        if (contrario && p.tipoFinal === 'participio') {
-          anadir(explicarAuxiliar(dada, p.verbo, p.finales.at(-1) ?? '', frase));
-        } else if (!contrario) {
-          const iSuj = buscar(u, p.sujeto);
-          // «Jij werkt morgen?»: con jij delante, «werkt» es lo que toca. Falla el orden, y eso se explica abajo.
-          formaPorOrden = sujetoJij && iSuj >= 0 && iSuj < iVerbo && formasConJijDelante(p.verbo).includes(dada);
-          if (!formaPorOrden) anadir(explicarConjugacion(p.verbo, dada, p.sujeto, iSuj > iVerbo));
-        }
+    const esAux = FORMAS_HEBBEN.has(p.verbo) || FORMAS_ZIJN.has(p.verbo);
+    // Detrás de un artículo o un posesivo no es un verbo sino un sustantivo («met de fiets»), salvo detrás del
+    // je que es el sujeto («wat je gaat doen»).
+    const trasDeterminante = (i: number): boolean => {
+      const antes = u[i - 1] ?? '';
+      return DETERMINANTES.has(antes) && !(sujetoJij && iguales(antes, 'je'));
+    };
+    const delVerbo = (w: string): boolean => mismoVerbo(w, p.verbo) || (esAux && (FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w)));
+    const conjugado = (w: string): boolean => FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w) || formasDe(w).some((f) => f.tipo === 'presente' || f.tipo === 'pasado');
+    // Un sustantivo que se escribe como un verbo: detrás de un artículo o un posesivo, también con un adjetivo en medio
+    // («een nieuwe fiets»).
+    const sustantivo = (i: number): boolean => trasDeterminante(i) || (trasDeterminante(i - 1) && /e$/.test(u[i - 1] ?? '') && formasDe(u[i - 1] ?? '').length === 0);
+    // El verbo de la subordinada no cuenta: si está mal conjugado, no se sabe dónde acaba y se mira desde el principio.
+    const deLaSubordinada = (w: string): boolean => sub !== null && [sub.verbo, ...sub.verbos].some((v) => mismoVerbo(w, v));
+    iOtroVerbo = u.findIndex((w, i) => i >= desde && !sustantivo(i) && conjugado(w) && !delVerbo(w) && !deLaSubordinada(w));
+    const exacto = u.indexOf(p.verbo, desde);
+    iVerbo = exacto >= 0 ? exacto : u.findIndex((w, i) => i >= desde && !trasDeterminante(i) && delVerbo(w));
+    // Con otro verbo conjugado delante («Ik ga vandaag thuis werken», «Vroeger heb ik … gewerkt»), lo que lleva del
+    // verbo de la frase es un infinitivo, un participio o un nombre («met fiets»), no su verbo conjugado fuera de sitio.
+    if (iOtroVerbo >= 0 && iOtroVerbo < iVerbo) iVerbo = -1;
+    const dada = exacto < 0 ? u[iVerbo] : undefined;
+    if (dada !== undefined && !enAlgunaValida(validas, dada)) {
+      const contrario = (FORMAS_HEBBEN.has(p.verbo) && FORMAS_ZIJN.has(dada)) || (FORMAS_ZIJN.has(p.verbo) && FORMAS_HEBBEN.has(dada));
+      if (contrario && p.tipoFinal === 'participio') {
+        anadir(explicarAuxiliar(dada, p.verbo, p.finales.at(-1) ?? '', frase));
+      } else if (!contrario) {
+        const iSuj = buscar(u, p.sujeto);
+        // «Jij werkt morgen?»: con jij delante, «werkt» es lo que toca. Falla el orden, y eso se explica abajo.
+        formaPorOrden = sujetoJij && iSuj >= 0 && iSuj < iVerbo && formasConJijDelante(p.verbo).includes(dada);
+        if (!formaPorOrden) anadir(explicarConjugacion(p.verbo, dada, p.sujeto, iSuj > iVerbo));
       }
     }
   }
+  /** Si delante de esa posición (o en toda la principal, si es -1) va un verbo conjugado que no es el de la frase. */
+  const otroVerboAntes = (i: number): boolean => iOtroVerbo >= 0 && (i < 0 || iOtroVerbo < i);
 
   // El participio, si lo hay.
   if (p.tipoFinal === 'participio') {
@@ -203,12 +216,13 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     }
   }
 
-  // La partícula pegada al verbo («ik opbel je»): entonces el verbo es esa palabra.
+  // La partícula pegada al verbo («ik opbel je»): entonces el verbo es esa palabra. Con otro verbo conjugado
+  // delante es el infinitivo, que va pegado («ik ga je opbellen»).
   if (p.tipoFinal === 'particula' && iVerbo < 0) {
     const particula = p.finales[0] ?? '';
     const i = u.findIndex((w) => w.length > particula.length && w.startsWith(particula) && mismoVerbo(w.slice(particula.length), p.verbo));
     const pegada = u[i];
-    if (pegada) {
+    if (pegada && !otroVerboAntes(i)) {
       anadir({
         caso: 'separable-pegado',
         destreza: 'separables',
@@ -333,7 +347,8 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     };
     const deLaRespuesta = vecinos(sinVerbos(u));
     const mismoSitio = validas.some((v) => v.includes('niet') && vecinos(sinVerbos(v)) === deLaRespuesta);
-    if (!mismoSitio) {
+    // Dicha con otro verbo conjugado («Morgen ga ik niet komen»), sus vecinos no se pueden comparar con los de la buena.
+    if (!mismoSitio && !otroVerboAntes(iVerbo)) {
       const i = modelo.indexOf('niet');
       const antes = modelo[i - 1];
       const despues = modelo[i + 1];

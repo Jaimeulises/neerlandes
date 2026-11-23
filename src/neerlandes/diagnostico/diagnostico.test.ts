@@ -484,4 +484,34 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(casos(singular)).toEqual(['presente-falta-t']);
     expect(singular[0]?.pista).toContain('«mijn zus»');
   });
+
+  it('con otro verbo conjugado delante, lo que lleva del verbo de la frase no es su verbo conjugado fuera de sitio', () => {
+    // Dicha con «gaan», un modal o el perfectum, el verbo de la frase va en infinitivo o en participio, o es un nombre
+    // («met fiets»): el orden, la partícula y «niet» no se pueden comparar con los de la frase buena.
+    for (const [f, r] of [
+      ['In het weekend', 'In het weekend gaan we vaak met fiets naar het strand'],
+      ['In het weekend', 'In het weekend gaan we vaak fietsen naar het strand'],
+      ['Werk jij morgen', 'Ga jij morgen werken?'],
+      ['Vandaag werk ik', 'Ik ga vandaag thuis werken'],
+      ['Ik kom morgen niet', 'Morgen ga ik niet komen'],
+      ['Ik kom morgen niet', 'Ik ga morgen niet komen'],
+      ['Meestal eten we', 'Meestal gaan we om zes uur eten'],
+      ['Omdat het regent', 'Omdat het regent, gaan we binnen blijven'],
+      ['Ik bel je morgen', 'Ik ga je morgen opbellen'],
+    ] as const) {
+      expect(diagnostico(f, r), r).toEqual([]);
+    }
+    const werken = ELEMENTOS_VERBOS.find((x) => x.grupo === 'pasado' && x.verbo?.inf === 'werken');
+    if (!werken) throw new Error('falta werken');
+    const pasado = verbos.crearEjercicio(werken, contexto);
+    expect(pasado.forma).toBe('traducir');
+    expect(verbos.diagnosticar?.(pasado, 'Vroeger heb ik in een restaurant gewerkt')).toEqual([]);
+    // Sin otro verbo delante, el verbo de la frase mal conjugado y fuera de sitio se sigue diagnosticando, también
+    // detrás de una subordinada con su verbo mal conjugado.
+    expect(casos(diagnostico('Morgen ga ik', 'Morgen ik gaat naar mijn schoonouders'))).toEqual(['presente-ik-con-t', 'inversion-delante']);
+    expect(casos(diagnostico('Als ik tijd heb', 'Als ik tijd hebt, komt ik langs'))).toEqual(['presente-ik-con-t']);
+    expect(casos(diagnostico('Ik bel je morgen', 'Ik opbel je morgen'))).toEqual(['separable-pegado']);
+    // Un sustantivo que se escribe como un verbo («fiets», con un adjetivo detrás del artículo) no es otro verbo.
+    expect(casos(diagnostico('Ik wil morgen', 'Een nieuwe fiets wil ik kopen morgen'))).toEqual(['infinitivo-al-final']);
+  });
 });
