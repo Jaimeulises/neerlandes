@@ -4,13 +4,15 @@
 // inglés.
 
 import { UMBRAL_DOMINADA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
-import { barajarFichas, comoFrase, conFormasTonicas, elegirForma, idDe } from '../comun';
+import { barajarFichas, comoFrase, conFormasTonicas, elegirForma, idFijo } from '../comun';
 import { diagnosticarConFrase } from '../diagnostico';
 import type { IdDestreza } from '../destrezas';
 import { FRASES, GRUPOS_ORDEN, NOMBRES_GRUPO_ORDEN, REGLAS_ORDEN, type DatosFrase, type GrupoOrden } from './datos';
 
 export interface Frase extends Elemento {
   readonly grupo: GrupoOrden;
+  /** Su código permanente (O12; en los separables, S3). */
+  readonly codigo: string;
   /** Las fichas en su orden. */
   readonly fichas: readonly string[];
   /** La frase entera, con mayúscula y puntuación. */
@@ -26,7 +28,8 @@ export function crearFrase(d: DatosFrase): Frase {
   const final = d.final ?? '.';
   const frase = comoFrase(fichas.join(' '), final);
   return {
-    id: `${d.grupo}:${idDe(fichas.join(' '))}`,
+    id: idFijo(d.codigo),
+    codigo: d.codigo,
     grupo: d.grupo,
     fichas,
     frase,

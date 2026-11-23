@@ -2,6 +2,7 @@
 // huecos en una frase y opciones barajadas sin repetir.
 
 import { comoFrase, normalizar, type Azar, type Ejercicio } from '../motor';
+import { IDS_FIJOS } from './ids-fijos';
 
 /** «wilt/wil» → ['wilt', 'wil']. La primera es la que se enseña. */
 export function alternativas(forma: string): string[] {
@@ -12,16 +13,12 @@ export function primera(forma: string): string {
   return alternativas(forma)[0] ?? forma;
 }
 
-/** Un identificador estable a partir de un texto: minúsculas, sin tildes ni signos, con guiones. */
-export function idDe(texto: string, maximo = 6): string {
-  return normalizar(texto)
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .replace(/[^a-z0-9 ]/g, '')
-    .split(' ')
-    .filter((p) => p !== '')
-    .slice(0, maximo)
-    .join('-');
+/**
+ * El id de un elemento por su código permanente: el que tenía antes de la fase 1, si lo tenía (así su
+ * historial sigue con él aunque se corrija el texto), o el propio código si es nuevo. Ver ids-fijos.ts.
+ */
+export function idFijo(codigo: string): string {
+  return IDS_FIJOS[codigo] ?? codigo;
 }
 
 /** Una frase con un hueco donde estaba una palabra. null si la palabra no está una sola vez. */

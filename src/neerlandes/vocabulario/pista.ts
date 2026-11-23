@@ -3,11 +3,13 @@
 // lo que de verdad cuesta.
 
 import { palabras, type ContextoEjercicio, type Diagnostico, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
-import { conFormasTonicas, elegirForma, idDe, opcionesCon } from '../comun';
+import { conFormasTonicas, elegirForma, idFijo, opcionesCon } from '../comun';
 import { GRUPOS_VOCABULARIO, NOMBRES_GRUPO_VOCABULARIO, PALABRAS, type DatosPalabra, type GrupoVocabulario } from './datos';
 
 export interface Palabra extends Elemento {
   readonly grupo: GrupoVocabulario;
+  /** Su código permanente (P40). */
+  readonly codigo: string;
   readonly nl: string;
   readonly es: string;
   readonly otras: readonly string[];
@@ -24,7 +26,8 @@ export function crearPalabra(d: DatosPalabra): Palabra {
   const sustantivo = !d.expresion && /^(de|het) /.test(d.nl);
   const articulo = !sustantivo || d.plural ? null : d.nl.startsWith('de ') ? 'de' : 'het';
   return {
-    id: `${d.grupo}:${idDe(d.nl)}`,
+    id: idFijo(d.codigo),
+    codigo: d.codigo,
     grupo: d.grupo,
     nl: d.nl,
     es: d.es,

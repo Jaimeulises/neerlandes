@@ -4,7 +4,7 @@
 // escribiendo la forma, porque reconocerla no basta para decirla.
 
 import { UMBRAL_DOMINADA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
-import { alternativas, comoFrase, conFormasTonicas, elegirForma, hueco, opcionesCon, primera } from '../comun';
+import { alternativas, comoFrase, conFormasTonicas, elegirForma, hueco, idFijo, opcionesCon, primera } from '../comun';
 import type { IdDestreza } from '../destrezas';
 import {
   auxiliarDe,
@@ -394,7 +394,8 @@ export function fraseDeSeparable(s: DatosSeparable): Frase {
   const fichas = s.presente.split('|').map((f) => f.trim());
   const frase = comoFrase(fichas.join(' '));
   return {
-    id: `separables:${s.inf}`,
+    id: `separables:${idFijo(s.codigo)}`,
+    codigo: s.codigo,
     grupo: 'separables',
     fichas,
     frase,
@@ -426,11 +427,12 @@ function ejercicioSeparable(e: Verbo, s: DatosSeparable, contexto: ContextoEjerc
 }
 
 function crearElementos(): Verbo[] {
-  const presente: Verbo[] = VERBOS.filter((v) => v.comp !== undefined).map((v) => ({ id: `presente:${v.inf}`, grupo: 'presente', verbo: v }));
-  const perfectum: Verbo[] = VERBOS.filter((v) => v.participio && v.perf && !v.irregular).map((v) => ({ id: `perfectum:${v.inf}`, grupo: 'perfectum', verbo: v }));
-  const irregular: Verbo[] = VERBOS.filter((v) => v.participio && v.perf && v.irregular).map((v) => ({ id: `perfectum-irregular:${v.inf}`, grupo: 'perfectum-irregular', verbo: v }));
-  const separables: Verbo[] = SEPARABLES.map((s) => ({ id: `separables:${s.inf}`, grupo: 'separables', separable: s }));
-  const pasado: Verbo[] = VERBOS.filter((v) => v.pasado && v.pasadoEj).map((v) => ({ id: `pasado:${v.inf}`, grupo: 'pasado', verbo: v }));
+  // El id lleva el grupo y la clave fija del verbo: su infinitivo de antes de la fase 1, o su código si es nuevo.
+  const presente: Verbo[] = VERBOS.filter((v) => v.comp !== undefined).map((v) => ({ id: `presente:${idFijo(v.codigo)}`, grupo: 'presente', verbo: v }));
+  const perfectum: Verbo[] = VERBOS.filter((v) => v.participio && v.perf && !v.irregular).map((v) => ({ id: `perfectum:${idFijo(v.codigo)}`, grupo: 'perfectum', verbo: v }));
+  const irregular: Verbo[] = VERBOS.filter((v) => v.participio && v.perf && v.irregular).map((v) => ({ id: `perfectum-irregular:${idFijo(v.codigo)}`, grupo: 'perfectum-irregular', verbo: v }));
+  const separables: Verbo[] = SEPARABLES.map((s) => ({ id: `separables:${idFijo(s.codigo)}`, grupo: 'separables', separable: s }));
+  const pasado: Verbo[] = VERBOS.filter((v) => v.pasado && v.pasadoEj).map((v) => ({ id: `pasado:${idFijo(v.codigo)}`, grupo: 'pasado', verbo: v }));
   return [...presente, ...perfectum, ...irregular, ...separables, ...pasado];
 }
 
