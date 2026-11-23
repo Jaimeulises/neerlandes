@@ -41,9 +41,17 @@ function singularRegular(presente: NonNullable<ReturnType<typeof presenteDelVerb
   return hij[0] === conT && raiz !== conT ? { raiz, conT } : null;
 }
 
+/** Si un pasado es regular: la raíz del verbo con -te o -de, y -n en plural («werkte», «woonden»). */
+function pasadoRegular(pasado: string): boolean {
+  return formasDe(pasado).some((f) => {
+    const raiz = f.verbo?.raiz;
+    return f.tipo === 'pasado' && raiz !== undefined && pasado.startsWith(raiz) && /^[td]en?$/.test(pasado.slice(raiz.length));
+  });
+}
+
 /**
  * Por qué una forma conjugada no es la buena. null si las dos palabras no son del mismo verbo (entonces no es
- * un fallo de conjugación sino de palabra).
+ * un fallo de conjugación sino de palabra) o si no se sabe qué falla.
  */
 export function explicarConjugacion(esperada: string, dada: string, sujeto: readonly string[], invertido: boolean): DiagnosticoNl | null {
   if (!mismoVerbo(esperada, dada) || esperada === dada) return null;
@@ -94,6 +102,9 @@ export function explicarConjugacion(esperada: string, dada: string, sujeto: read
         `¿-te o -de? Mira qué letra va delante de -en en el infinitivo${delVerbo}: ¿está en ${cita('’t kofschip')} (t, k, f, s, ch, p)?`,
       );
     }
+    // Un pasado regular mal escrito («makte», «wonden») o el participio por el pasado: no se sabe qué regla falla,
+    // y decir que es irregular sería falso.
+    if (pasadoRegular(esperada)) return null;
     return explicar(
       'pasado-irregular',
       'pasado',
@@ -194,6 +205,14 @@ function letraAntesDeEn(inf: string): string {
   return sinEn.endsWith('ch') ? 'ch' : sinEn.slice(-1);
 }
 
+/** La partícula de un participio separable: lo que va delante de ge- y empieza también el infinitivo («op» en «opgebeld»). */
+function particulaDe(participio: string, inf: string): string {
+  for (let i = 1; i < participio.length; i++) {
+    if (participio.startsWith('ge', i) && inf.startsWith(participio.slice(0, i))) return participio.slice(0, i);
+  }
+  return '';
+}
+
 /** Por qué un participio no es el bueno. null si no se puede decir nada concreto. */
 export function explicarParticipio(esperado: string, dado: string): DiagnosticoNl | null {
   if (esperado === dado) return null;
@@ -204,7 +223,10 @@ export function explicarParticipio(esperado: string, dado: string): DiagnosticoN
   const verbo = inf && inf !== esperado ? cita(inf) : 'este verbo';
   const Verbo = inf && inf !== esperado ? cita(inf) : 'Este verbo';
 
-  if (forma?.separable) {
+  // En un separable, si ge- va delante de todo o falta («geopbeld», «opbeld»). Con ge- en su sitio («opgebelt»,
+  // «thuisgekomt») lo que falla es otra cosa, y se mira como en los demás participios.
+  const particula = forma?.separable ? particulaDe(esperado, forma.inf) : '';
+  if (forma?.separable && (particula === '' || !dado.startsWith(`${particula}ge`))) {
     return {
       caso: 'participio-separable',
       destreza: 'separables',
@@ -233,8 +255,9 @@ export function explicarParticipio(esperado: string, dado: string): DiagnosticoN
   }
 
   const conGe = esperado.startsWith('ge');
-  // Con ge- o sin él: la misma pregunta en las dos direcciones, para que haya que aplicar el criterio.
-  const preguntaGe = `¿Lleva ge- el participio de ${verbo}? Mira cómo empieza el infinitivo: los que empiezan por be-, ver-, ge-, her-, ont- o er- no lo llevan.`;
+  // Con ge- o sin él: la misma pregunta en las dos direcciones, para que haya que aplicar el criterio. Habla del
+  // prefijo átono y no de unas letras: «bellen» empieza por be y lleva ge- («gebeld»).
+  const preguntaGe = `¿Lleva ge- el participio de ${verbo}? Mira cómo empieza el infinitivo: los que empiezan por un prefijo átono (be-, ver-, ge-, her-, ont- o er-) no lo llevan.`;
   if (!conGe && dado.startsWith('ge')) {
     return {
       caso: 'participio-prefijo',
@@ -265,6 +288,11 @@ export function explicarParticipio(esperado: string, dado: string): DiagnosticoN
       pista: `La raíz de ${verbo} ya acaba en ${letra}. ¿Hace falta añadir otra t o d?`,
     };
   }
+  // ’t kofschip solo si es el participio con la otra de t o d al final («gewerkd», «gereist»). Con la raíz mal
+  // escrita («gespeld»), otro verbo u otro participio, la terminación no es lo que falla, y la pista la señalaría.
+  const final = esperado.at(-1);
+  const conLaOtra = final === 't' ? `${esperado.slice(0, -1)}d` : final === 'd' ? `${esperado.slice(0, -1)}t` : null;
+  if (dado !== conLaOtra) return null;
   return {
     caso: 'participio-kofschip',
     destreza: 'participio',

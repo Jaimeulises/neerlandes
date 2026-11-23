@@ -4,7 +4,7 @@
 import { palabras, type Diagnostico, type Ejercicio } from '../../motor';
 import { diagnosticarFrase } from './frase';
 import { FORMAS_HEBBEN, FORMAS_ZIJN } from './formas';
-import { papelesDe, papelesDeFraseLibre, type Papeles } from './papeles';
+import { DETERMINANTES, papelesDe, papelesDeFraseLibre, type Papeles } from './papeles';
 import { explicarAuxiliar, explicarConjugacion, explicarParticipio } from './verbo';
 import type { Frase } from '../orden/pista';
 
@@ -46,14 +46,23 @@ export function auxiliarDe(frase: string): string | undefined {
 }
 
 const PRONOMBRES = new Set(['ik', 'jij', 'je', 'hij', 'zij', 'ze', 'het', 'we', 'wij', 'jullie', 'u']);
+/** Los que solo pueden ser sujeto: «je», «ze», «het» y «u» también son objeto, y «het» y «je», artículo o posesivo. */
+const SOLO_SUJETO = new Set(['ik', 'jij', 'hij', 'zij', 'we', 'wij', 'jullie']);
 
-/** El sujeto de una frase con hueco: lo que va justo delante si es un pronombre o un nombre, o lo de detrás si va invertido. */
+/**
+ * El sujeto de una frase con hueco: lo que va justo delante si es un pronombre o un nombre, o lo de detrás si va
+ * invertido. Un nombre con su artículo o su posesivo delante gana a un «het», «je», «ze» o «u» de detrás, que ahí
+ * son el objeto o su artículo («Mijn ouders ___ het ontbijt»); a un pronombre que solo puede ser sujeto, no.
+ */
 export function sujetoDeHueco(antes: string, despues: string): { sujeto: string[]; invertido: boolean } {
   const a = palabras(antes);
   const d = palabras(despues);
   if (a.length > 0 && PRONOMBRES.has(a.at(-1) ?? '')) return { sujeto: a.slice(-1), invertido: false };
+  if (d.length > 0 && SOLO_SUJETO.has(d[0] ?? '')) return { sujeto: d.slice(0, 1), invertido: true };
+  // «Mijn zus ___», «Mijn ouders ___», «De baby ___».
+  if (a.length >= 2 && a.length <= 3 && DETERMINANTES.has(a[0] ?? '')) return { sujeto: a, invertido: false };
   if (d.length > 0 && PRONOMBRES.has(d[0] ?? '')) return { sujeto: d.slice(0, 1), invertido: true };
-  // «Mijn zus ___», «Mijn ouders ___»: todo lo de delante, si son pocas palabras.
+  // Lo demás: todo lo de delante, si son pocas palabras.
   if (a.length > 0 && a.length <= 3) return { sujeto: a, invertido: false };
   return { sujeto: [], invertido: false };
 }

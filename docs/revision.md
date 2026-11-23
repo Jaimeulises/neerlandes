@@ -573,14 +573,14 @@ Se marca con: `npm run revisado -- O32-O40 R5 E7-E9 E20 E22-E23 --lote e2e3ba77`
 
 ## Lote O41 a O48, R6, E10 a E11, E18, E21, E30, E32 (unos 14 minutos)
 
-Se marca con: `npm run revisado -- O41-O48 R6 E10-E11 E18 E21 E30 E32 --lote 13fb605d`
-<!-- lote 13fb605d: E21 674e505a, E32 6f66add8, R6 b6710449, O41 ff08e265, O42 6faecd53, O43 4d5b2a63, O44 76b29332, O45 497ff04a, O46 0b131d07, O47 1b0554c0, O48 2fb61f07, E10 13b9cd3f, E11 4dc1711d, E18 6bd82e72, E30 92162485 -->
+Se marca con: `npm run revisado -- O41-O48 R6 E10-E11 E18 E21 E30 E32 --lote 65ced3da`
+<!-- lote 65ced3da: E21 6e75b209, E32 6f66add8, R6 b6710449, O41 ff08e265, O42 6faecd53, O43 4d5b2a63, O44 76b29332, O45 497ff04a, O46 0b131d07, O47 1b0554c0, O48 2fb61f07, E10 13b9cd3f, E11 4dc1711d, E18 6bd82e72, E30 92162485 -->
 
 ### Explicaciones de errores: «Niet» y «geen»
 
 **E21.** Sobre O35: «Dat is niet waar.» → respuesta: «Dat niet is waar»
 
-- **El verbo conjugado va en segunda posición.** Empezando por el sujeto («dat»), el verbo («is») va justo detrás, y «niet» después: «Dat is niet waar». En español el “no” va delante del verbo; en neerlandés, «niet» nunca va entre el sujeto y el verbo conjugado.
+- **El verbo conjugado va en segunda posición.** Empezando por el sujeto («dat»), el verbo («is») va justo detrás, y «niet» después: «Dat is niet waar». En español el “no” va delante del verbo; en neerlandés, en la frase principal, «niet» nunca va entre el sujeto y el verbo conjugado.
   - *Pista antes del segundo intento:* Has puesto «niet» delante del verbo, como el “no” del español. En neerlandés, ¿en qué posición va siempre el verbo conjugado?
 
 **E32.** Sobre O37: «Ik begrijp het niet.» → respuesta: «Ik begrijpen het niet»
@@ -1240,8 +1240,8 @@ Se marca con: `npm run revisado -- V34-V52 --lote bc77ad08`
 
 ## Lote R13, V53 a V58, S1, E24 a E29, E36 a E39, T30, T33 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- R13 V53-V58 S1 E24-E29 E36-E39 T30 T33 --lote dee73c1d`
-<!-- lote dee73c1d: V53 043c74ad, V54 57719715, V55 b6e09333, V56 188b3123, V57 ea435e1a, V58 70692600, T30 eebf8989, T33 c50c7089, E24 3445d3e3, E25 63cf5007, E26 1831fa99, E27 a3973f67, E28 caf4d928, E29 e7607390, E36 51a77777, E37 258efc83, E38 69404de0, E39 33dd9b51, R13 cc813e87, S1 7b29ff1a -->
+Se marca con: `npm run revisado -- R13 V53-V58 S1 E24-E29 E36-E39 T30 T33 --lote 79b41a93`
+<!-- lote 79b41a93: V53 043c74ad, V54 57719715, V55 b6e09333, V56 188b3123, V57 ea435e1a, V58 70692600, T30 eebf8989, T33 c50c7089, E24 3445d3e3, E25 63cf5007, E26 1831fa99, E27 a3973f67, E28 caf4d928, E29 e7607390, E36 b733e7ca, E37 2e0f892e, E38 69404de0, E39 33dd9b51, R13 cc813e87, S1 7b29ff1a -->
 
 ### Verbos
 
@@ -1313,12 +1313,12 @@ Se marca con: `npm run revisado -- R13 V53-V58 S1 E24-E29 E36-E39 T30 T33 --lote
 **E36.** Sobre V9: «Ik heb de rekening al betaald.» → respuesta: «Ik heb de rekening al gebetaald»
 
 - **«gebetaald» no: «betaald».** «betalen» empieza por un prefijo átono (be-, ver-, ge-, her-, ont-, er-), y con ellos el participio no lleva ge-: «betaald».
-  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «betalen»? Mira cómo empieza el infinitivo: los que empiezan por be-, ver-, ge-, her-, ont- o er- no lo llevan.
+  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «betalen»? Mira cómo empieza el infinitivo: los que empiezan por un prefijo átono (be-, ver-, ge-, her-, ont- o er-) no lo llevan.
 
 **E37.** Sobre V10: «De kinderen hebben de hele middag buiten gespeeld.» → respuesta: «De kinderen hebben de hele middag buiten speeld»
 
 - **«speeld» no: «gespeeld».** El participio regular empieza por ge-: ge + raíz + t o d. «spelen» da «gespeeld».
-  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «spelen»? Mira cómo empieza el infinitivo: los que empiezan por be-, ver-, ge-, her-, ont- o er- no lo llevan.
+  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «spelen»? Mira cómo empieza el infinitivo: los que empiezan por un prefijo átono (be-, ver-, ge-, her-, ont- o er-) no lo llevan.
 
 **E38.** Sobre V4: «Ik heb lang met mijn schoonvader gepraat.» → respuesta: «Ik heb lang met mijn schoonvader gepraatt»
 

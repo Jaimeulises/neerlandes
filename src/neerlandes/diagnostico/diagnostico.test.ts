@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { crearAzar, type Diagnostico, type Ejercicio } from '../../motor';
 import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../orden/pista';
+import { VERBOS } from '../verbos/datos';
 import { ELEMENTOS_VERBOS, verbos } from '../verbos/pista';
 import { vocabulario, ELEMENTOS_VOCABULARIO } from '../vocabulario/pista';
 import { DESTREZAS } from '../destrezas';
 import { CASOS, CASOS_SIN_EJEMPLO } from './casos';
 import { diagnosticarEjemplos, EJEMPLOS_DE_ERROR } from './ejemplos';
 import { formasDe, mismoVerbo } from './formas';
+import { sujetoDeHueco } from './index';
 import { papelesDe } from './papeles';
 import { explicarConjugacion, explicarParticipio } from './verbo';
 
@@ -32,6 +34,14 @@ const IDS = new Set<string>(DESTREZAS.map((d) => d.id));
 const CASOS_VALIDOS = new Set<string>(CASOS);
 /** El caso de cada diagnóstico (todos los de neerlandés lo llevan). */
 const casos = (ds: readonly Diagnostico[]): string[] => ds.map((d) => ('caso' in d && typeof d.caso === 'string' ? d.caso : 'sin caso'));
+
+/**
+ * Si unos códigos E son únicos y van en orden. Puede haber huecos: el código de un ejemplo borrado va a RETIRADOS
+ * (codigos.test.ts comprueba que cada hueco está allí), porque renumerar los de detrás reutilizaría códigos.
+ */
+function codigosEnOrden(codigos: readonly string[]): boolean {
+  return codigos.every((c, i) => /^E[1-9]\d*$/.test(c) && (i === 0 || Number(c.slice(1)) > Number((codigos[i - 1] ?? '').slice(1))));
+}
 
 describe('papeles de las frases de orden', () => {
   it('todas tienen verbo y sujeto donde toca, y lo que va al final está en la frase', () => {
@@ -260,8 +270,13 @@ describe('ejemplos de error de docs/revision.md', () => {
     for (const c of Object.keys(CASOS_SIN_EJEMPLO)) expect(conEjemplo.has(c as (typeof CASOS)[number]), `${c} tiene ejemplo: quítalo de CASOS_SIN_EJEMPLO`).toBe(false);
   });
 
-  it('los códigos son únicos y siguen el orden', () => {
-    expect(EJEMPLOS_DE_ERROR.map((e) => e.codigo)).toEqual(EJEMPLOS_DE_ERROR.map((_, i) => `E${String(i + 1)}`));
+  it('los códigos son únicos y van en orden, y retirar uno deja su hueco sin renumerar los demás', () => {
+    const codigos = EJEMPLOS_DE_ERROR.map((e) => e.codigo);
+    expect(codigosEnOrden(codigos)).toBe(true);
+    // Lo que pide CLAUDE.md al borrar un ejemplo: su código va a RETIRADOS y los de detrás no cambian.
+    expect(codigosEnOrden(codigos.filter((c) => c !== 'E16'))).toBe(true);
+    expect(codigosEnOrden(['E1', 'E3', 'E2'])).toBe(false);
+    expect(codigosEnOrden(['E1', 'E2', 'E2'])).toBe(false);
   });
 });
 
@@ -380,5 +395,153 @@ describe('cobertura de los datos del diagnóstico', () => {
         for (const c of casos(orden.diagnosticar?.(ejercicio, azar.barajar(f.fichas).join(' ')) ?? [])) expect(CASOS_VALIDOS.has(c), c).toBe(true);
       }
     }
+  });
+});
+
+// Una pista que señala otro sitio es peor que la general, y el diagnóstico falso cuenta además como regla
+// fallada: baja su nivel y la ronda la practica. Si no se puede asegurar qué falla, no se diagnostica nada.
+describe('lo que la revisión de las pistas encontró mal diagnosticado', () => {
+  it('niet entre el sujeto y el verbo: la regla es la de la frase principal, que en la subordinada sí va ahí', () => {
+    const d = diagnostico('Dat is niet waar', 'Dat niet is waar');
+    expect(casos(d)).toEqual(['inversion-niet']);
+    // «omdat ik niet lekker ben» (O49): en la subordinada, «niet» va entre el sujeto y el verbo conjugado.
+    expect(d[0]?.texto).toContain('en la frase principal, «niet» nunca va entre el sujeto y el verbo conjugado');
+  });
+
+  it('’t kofschip solo cuando la respuesta es el participio con la otra de t o d al final', () => {
+    expect(explicarParticipio('gewerkt', 'gewerkd')?.caso).toBe('participio-kofschip');
+    expect(explicarParticipio('gereisd', 'gereist')?.caso).toBe('participio-kofschip');
+    // La raíz mal escrita, otro verbo u otro participio: la terminación ya estaba bien, o no es eso lo que falla.
+    for (const [esperado, dado] of [
+      ['gespeeld', 'gespeld'],
+      ['gewoond', 'gewond'],
+      ['gekookt', 'gekokt'],
+      ['gewerkt', 'gemaakt'],
+      ['gefietst', 'gelopen'],
+    ] as const) {
+      expect(explicarParticipio(esperado, dado), `${esperado}: ${dado}`).toBeNull();
+    }
+    // En su primer ejercicio, el hueco del participio, y en la frase entera.
+    const spelen = ELEMENTOS_VERBOS.find((x) => x.grupo === 'perfectum' && x.verbo?.inf === 'spelen');
+    const fietsen = ELEMENTOS_VERBOS.find((x) => x.grupo === 'perfectum' && x.verbo?.inf === 'fietsen');
+    if (!spelen || !fietsen) throw new Error('faltan spelen o fietsen');
+    const hueco = verbos.crearEjercicio(spelen, { ...contexto, repeticiones: 0 });
+    expect(hueco.forma).toBe('completar');
+    expect(verbos.diagnosticar?.(hueco, 'gespeld')).toEqual([]);
+    const frase = verbos.crearEjercicio(fietsen, contexto);
+    expect(frase.forma).toBe('traducir');
+    expect(verbos.diagnosticar?.(frase, 'Ik ben naar mijn werk gelopen')).toEqual([]);
+  });
+
+  it('en un separable con ge- en su sitio, lo que falla no es dónde va ge-', () => {
+    // «opgebelt» lleva ge- entre la partícula y el verbo: falla la d, como en «gewerkd». «thuisgekomt» es irregular.
+    expect(explicarParticipio('opgebeld', 'opgebelt')?.caso).toBe('participio-kofschip');
+    expect(explicarParticipio('thuisgekomen', 'thuisgekomt')?.caso).toBe('participio-irregular');
+    expect(explicarParticipio('opgebeld', 'opgebelld')).toBeNull();
+    expect(casos(diagnostico('Hij is om tien uur', 'Hij is om tien uur thuisgekomt'))).toEqual(['participio-irregular']);
+    // Con ge- delante de todo o sin ge-, sí falla dónde va.
+    expect(explicarParticipio('opgebeld', 'geopbeld')?.caso).toBe('participio-separable');
+    expect(explicarParticipio('opgebeld', 'opbeld')?.caso).toBe('participio-separable');
+    // En el hueco del participio de «opbellen».
+    const opbellen = ELEMENTOS_VERBOS.find((x) => x.separable?.inf === 'opbellen');
+    if (!opbellen) throw new Error('falta opbellen');
+    const hueco = verbos.crearEjercicio(opbellen, { ...contexto, formas: new Set(['completar'] as const) });
+    expect(hueco.forma).toBe('completar');
+    expect(casos(verbos.diagnosticar?.(hueco, 'opgebelt') ?? [])).toEqual(['participio-kofschip']);
+  });
+
+  it('un pasado regular nunca se explica como irregular', () => {
+    // La vocal mal escrita o el participio por el pasado: no se sabe qué regla falla, y llamarlo irregular es falso.
+    for (const [esperada, dada, sujeto] of [
+      ['maakte', 'makte', ['mijn', 'moeder']],
+      ['woonden', 'wonden', ['we']],
+      ['werkte', 'gewerkt', ['ik']],
+    ] as const) {
+      expect(explicarConjugacion(esperada, dada, sujeto, false), `${esperada}: ${dada}`).toBeNull();
+    }
+    for (const v of VERBOS.filter((x) => x.raiz !== undefined && (x.pasado?.[0] ?? '').startsWith(x.raiz))) {
+      for (const esperada of v.pasado ?? []) expect(explicarConjugacion(esperada, v.participio ?? '', ['ik'], false), `${esperada}: ${v.participio ?? ''}`).toBeNull();
+    }
+    // Lo que sí se sabe de los regulares sigue saliendo, y el irregular hecho con la regla también.
+    expect(explicarConjugacion('woonden', 'woonten', ['we'], false)?.caso).toBe('pasado-te-de');
+    expect(explicarConjugacion('kwam', 'komde', ['hij'], false)?.caso).toBe('pasado-irregular');
+    // En su primer ejercicio, el hueco: sin diagnóstico, para que salga la pista general.
+    const maken = ELEMENTOS_VERBOS.find((x) => x.grupo === 'pasado' && x.verbo?.inf === 'maken');
+    if (!maken) throw new Error('falta maken');
+    const hueco = verbos.crearEjercicio(maken, { ...contexto, repeticiones: 0 });
+    expect(hueco.forma).toBe('completar');
+    expect(verbos.diagnosticar?.(hueco, 'makte')).toEqual([]);
+  });
+
+  it('con un nombre delante del hueco, el sujeto es ese nombre y el «het» de detrás es el artículo del objeto', () => {
+    expect(sujetoDeHueco('Mijn ouders ', ' het ontbijt.')).toEqual({ sujeto: ['mijn', 'ouders'], invertido: false });
+    expect(sujetoDeHueco('Mijn zus ', ' het probleem.')).toEqual({ sujeto: ['mijn', 'zus'], invertido: false });
+    // Con otra cosa delante, el pronombre de detrás sí es el sujeto, también «het».
+    expect(sujetoDeHueco('Gisteren ', ' het erg druk in de stad.')).toEqual({ sujeto: ['het'], invertido: true });
+    expect(sujetoDeHueco('Vorige week ', ' we naar Antwerpen.')).toEqual({ sujeto: ['we'], invertido: true });
+    // Un pronombre que solo puede ser sujeto sigue mandando, aunque delante vaya un nombre con su artículo.
+    expect(sujetoDeHueco('De hele dag ', ' ik thuis.')).toEqual({ sujeto: ['ik'], invertido: true });
+    // Y en el ejercicio, la pista habla del sujeto de verdad y no pide la forma que se acaba de dar.
+    const maken = ELEMENTOS_VERBOS.find((x) => x.grupo === 'presente' && x.verbo?.inf === 'maken');
+    if (!maken) throw new Error('falta maken');
+    const hueco = (antes: string, buena: string): Ejercicio => ({
+      forma: 'completar',
+      tipo: 'verbos.presente.completar',
+      elementoId: maken.id,
+      instruccion: '',
+      antes,
+      despues: ' het ontbijt.',
+      pista: 'maken',
+      respuestas: [buena],
+    });
+    const plural = verbos.diagnosticar?.(hueco('Mijn ouders ', 'maken'), 'maakt') ?? [];
+    expect(casos(plural)).toEqual(['presente-plural']);
+    expect(plural[0]?.pista).toContain('«mijn ouders»');
+    const singular = verbos.diagnosticar?.(hueco('Mijn zus ', 'maakt'), 'maak') ?? [];
+    expect(casos(singular)).toEqual(['presente-falta-t']);
+    expect(singular[0]?.pista).toContain('«mijn zus»');
+  });
+
+  it('con otro verbo conjugado delante, lo que lleva del verbo de la frase no es su verbo conjugado fuera de sitio', () => {
+    // Dicha con «gaan», un modal o el perfectum, el verbo de la frase va en infinitivo o en participio, o es un nombre
+    // («met fiets»): el orden, la partícula y «niet» no se pueden comparar con los de la frase buena.
+    for (const [f, r] of [
+      ['In het weekend', 'In het weekend gaan we vaak met fiets naar het strand'],
+      ['In het weekend', 'In het weekend gaan we vaak fietsen naar het strand'],
+      ['Werk jij morgen', 'Ga jij morgen werken?'],
+      ['Vandaag werk ik', 'Ik ga vandaag thuis werken'],
+      ['Ik kom morgen niet', 'Morgen ga ik niet komen'],
+      ['Ik kom morgen niet', 'Ik ga morgen niet komen'],
+      ['Meestal eten we', 'Meestal gaan we om zes uur eten'],
+      ['Omdat het regent', 'Omdat het regent, gaan we binnen blijven'],
+      ['Ik bel je morgen', 'Ik ga je morgen opbellen'],
+    ] as const) {
+      expect(diagnostico(f, r), r).toEqual([]);
+    }
+    const werken = ELEMENTOS_VERBOS.find((x) => x.grupo === 'pasado' && x.verbo?.inf === 'werken');
+    if (!werken) throw new Error('falta werken');
+    const pasado = verbos.crearEjercicio(werken, contexto);
+    expect(pasado.forma).toBe('traducir');
+    expect(verbos.diagnosticar?.(pasado, 'Vroeger heb ik in een restaurant gewerkt')).toEqual([]);
+    // Sin otro verbo delante, el verbo de la frase mal conjugado y fuera de sitio se sigue diagnosticando, también
+    // detrás de una subordinada con su verbo mal conjugado.
+    expect(casos(diagnostico('Morgen ga ik', 'Morgen ik gaat naar mijn schoonouders'))).toEqual(['presente-ik-con-t', 'inversion-delante']);
+    expect(casos(diagnostico('Als ik tijd heb', 'Als ik tijd hebt, komt ik langs'))).toEqual(['presente-ik-con-t']);
+    expect(casos(diagnostico('Ik bel je morgen', 'Ik opbel je morgen'))).toEqual(['separable-pegado']);
+    // Un sustantivo que se escribe como un verbo («fiets», con un adjetivo detrás del artículo) no es otro verbo.
+    expect(casos(diagnostico('Ik wil morgen', 'Een nieuwe fiets wil ik kopen morgen'))).toEqual(['infinitivo-al-final']);
+  });
+
+  it('el perfectum dicho en otro tiempo o con otro verbo conjugado no lleva un participio sin ge-', () => {
+    // Lo contrario de «Vroeger heb ik … gewerkt»: «werkte» y el «werken» de «ik ga … werken» no intentan ser el participio.
+    const werken = ELEMENTOS_VERBOS.find((x) => x.grupo === 'perfectum' && x.verbo?.inf === 'werken');
+    if (!werken) throw new Error('falta werken');
+    const perfectum = verbos.crearEjercicio(werken, contexto);
+    expect(perfectum.forma).toBe('traducir');
+    expect(verbos.diagnosticar?.(perfectum, 'Ik werkte de hele dag')).toEqual([]);
+    expect(verbos.diagnosticar?.(perfectum, 'Ik ga de hele dag werken')).toEqual([]);
+    // Con el auxiliar, lo que va detrás sí es su participio, y se sigue diagnosticando.
+    expect(casos(verbos.diagnosticar?.(perfectum, 'Ik heb de hele dag werken') ?? [])).toEqual(['participio-sin-ge']);
+    expect(casos(verbos.diagnosticar?.(perfectum, 'Ik heb de hele dag gewerkd') ?? [])).toEqual(['participio-kofschip']);
   });
 });
