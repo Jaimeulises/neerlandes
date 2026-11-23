@@ -28,14 +28,14 @@ export const DESTREZAS = [
 
 export type IdDestreza = (typeof DESTREZAS)[number]['id'];
 
-/** Lo que hace falta para B2 y la app aún no practica: se enseña en Progreso para no dar una idea falsa del nivel. */
-export const FALTA_PARA_B2: readonly string[] = [
-  'Relativas (de man die…, het huis dat…)',
-  'Om te + infinitivo y te con los verbos que lo piden',
-  'Er en todos sus usos',
-  'Pasiva (worden, zijn + participio)',
-  'Cuándo pasado simple y cuándo perfectum al contar',
-  'Escuchar y responder a velocidad normal',
+/** Lo que hace falta para B2 y la app aún no practica: se enseña en Progreso para no dar una idea falsa del nivel. Cada uno con su código de revisión (T16). */
+export const FALTA_PARA_B2: readonly { readonly codigo: string; readonly texto: string }[] = [
+  { codigo: 'T16', texto: 'Relativas (de man die…, het huis dat…)' },
+  { codigo: 'T17', texto: 'Om te + infinitivo y te con los verbos que lo piden' },
+  { codigo: 'T18', texto: 'Er en todos sus usos' },
+  { codigo: 'T19', texto: 'Pasiva (worden, zijn + participio)' },
+  { codigo: 'T20', texto: 'Cuándo pasado simple y cuándo perfectum al contar' },
+  { codigo: 'T21', texto: 'Escuchar y responder a velocidad normal' },
 ];
 
 export function nombreDeDestreza(id: string): string {

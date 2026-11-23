@@ -24,6 +24,7 @@ Stap (nombre provisional) es una app personal para practicar neerlandés hablado
 - Cada frase de orden lleva en `otras` las demás formas naturales de decirla: si falta una, el corrector suspende una respuesta buena.
 - Los participios regulares siguen la regla de ’t kofschip y las pruebas lo comprueban; los irregulares van marcados.
 - Lo regular se intenta sin enseñarlo antes; se presenta la regla al abrir su grupo (ver `docs/decisiones/0001-arranque.md`).
+- `docs/revision.md` muestra solo lo pendiente, en lotes de unos 15 minutos. Al terminar un lote se aplican sus correcciones y se marca con la orden que lleva (`npm run revisado -- O1-O12`); si algo revisado cambia, vuelve solo a pendiente (decisión 0007).
 
 ## Dónde va cada cosa
 

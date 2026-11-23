@@ -1,23 +1,51 @@
 # Revisión del neerlandés
 
-Todo el neerlandés que enseña la app, para que una persona nativa lo revise. Lo ha escrito una IA y nadie del equipo es nativo: hasta que se revise, puede haber frases correctas que nadie diría así.
+El neerlandés que enseña la app, para que una persona nativa lo revise. Lo ha escrito una IA y nadie del equipo es nativo: hasta que se revise, puede haber frases correctas que nadie diría así.
 
-Este archivo se genera con `npm run revision`: no se edita a mano. Las correcciones van en los datos (`src/neerlandes/*/datos.ts`).
+Este archivo se genera con `npm run revision`: no se edita a mano. Las correcciones van en los datos (`src/neerlandes/*/datos.ts`) o en el texto de donde sale cada cosa.
 
 ## Cómo revisarlo
 
+Aquí sale solo lo que falta por revisar, en lotes de unos 15 minutos: uno por sesión. Los tiempos son una estimación sin medir; si el primer lote no sale en 15 minutos, se ajusta `RITMO` en `src/neerlandes/revision/documento.ts`.
+
 - Lee cada frase en neerlandés y marca lo que no dirías así, aunque sea correcto.
 - Comprueba que la traducción dice lo mismo que la frase.
-- Apunta el número (O12, V3, S5, P40, E4) y cómo lo dirías tú.
+- Apunta el código (O12, R3, V3, S5, P40, E4, T2) y cómo lo dirías tú.
 - Al traducir, la app acepta además, sin que estén apuntadas, las formas tónicas: wij por we, mij por me, y zij por ze cuando abre la frase.
 
-**Voor wie dit nakijkt:** hier staan alle Nederlandse zinnen en woorden uit de app. Klopt het en klinkt het natuurlijk? Schrijf het nummer op (bijvoorbeeld O12) en hoe jij het zou zeggen.
+Qué mirar en cada tipo:
 
-## Orden de la frase (O1 a O64)
+- **O, orden de la frase:** que la frase sea natural y que estén todas las formas naturales de decirla. Si falta una, la app suspende una respuesta buena.
+- **R, reglas:** salen al abrir cada grupo y al corregir. Que la regla esté bien dicha.
+- **V y S, verbos:** las formas, los ejemplos y su traducción.
+- **P, vocabulario:** la palabra con su artículo, sus otras formas y que el significado sea ese.
+- **E, explicaciones de errores:** cuando se falla una frase, la app explica qué regla se ha roto con las palabras de esa frase. Las explicaciones se montan solas; aquí van fallos típicos con lo que diría la app. Que la regla esté bien dicha y que el neerlandés de la explicación sea correcto.
+- **T, otros textos:** textos de la app que llevan neerlandés o hablan de él.
 
-### Inversión
+Al terminar un lote: aplica sus correcciones y marca el lote con la orden que lleva debajo del título (`npm run revisado -- …`), que apunta qué se ha revisado y vuelve a generar este archivo. Marca solo lo que ha visto tal como queda: si al corregir cambias algo más de lo que dijo, deja ese código fuera. Si después cambia algo de lo revisado, vuelve solo a pendiente.
 
-> Si la frase empieza por algo que no es el sujeto (morgen, vandaag, in het weekend…), el verbo va en segunda posición y el sujeto justo detrás. En inglés se dice «Now I have time»; en neerlandés, «Nu heb ik tijd». En, maar y want no cuentan: detrás va el orden normal («want ik ben moe»).
+**Voor wie dit nakijkt:** hier staan de Nederlandse zinnen en woorden uit de app die nog niemand heeft nagekeken. Klopt het en klinkt het natuurlijk? Schrijf het nummer op (bijvoorbeeld O12) en hoe jij het zou zeggen. Je hoeft niet alles in één keer te doen: elk blok (Lote) kost ongeveer een kwartier.
+
+## Resumen
+
+| | Pendientes | Revisados | Minutos pendientes |
+|---|---|---|---|
+| Orden de la frase (O) | 64 | 0 | 63 |
+| Reglas (R) | 14 | 0 | 14 |
+| Verbos (V) | 58 | 0 | 58 |
+| Verbos separables (S) | 15 | 0 | 13 |
+| Vocabulario (P) | 128 | 0 | 25 |
+| Explicaciones de errores (E) | 16 | 0 | 13 |
+| Otros textos de la app (T) | 25 | 0 | 9 |
+| **Total** | **320** | **0** | **195** |
+
+## Lote 1 (unos 14 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- O1-O10 R1-R2`
+
+### Orden de la frase: Inversión
+
+> **R1.** Si la frase empieza por algo que no es el sujeto (morgen, vandaag, in het weekend…), el verbo va en segunda posición y el sujeto justo detrás. En inglés se dice «Now I have time»; en neerlandés, «Nu heb ik tijd». En, maar y want no cuentan: detrás va el orden normal («want ik ben moe»).
 
 | # | Neerlandés | Español |
 |---|---|---|
@@ -30,14 +58,23 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | O7 | Volgende week heb ik een afspraak bij de tandarts.<br>*También:* Ik heb volgende week een afspraak bij de tandarts. | La semana que viene tengo cita con el dentista.<br>*Pista:* Empieza por «Volgende week». |
 | O8 | Meestal eten we om zes uur.<br>*También:* We eten meestal om zes uur. / Om zes uur eten we meestal. | Normalmente cenamos a las seis.<br>*Pista:* Empieza por «Meestal». |
 
-### Verbos modales
+### Orden de la frase: Verbos modales
 
-> Con willen, kunnen, moeten, mogen, zullen o gaan + infinitivo, ese verbo va en segunda posición (en primera si es una pregunta de sí o no: «Kun je me helpen?») y el infinitivo se va al final.
+> **R2.** Con willen, kunnen, moeten, mogen, zullen o gaan + infinitivo, ese verbo va en segunda posición (en primera si es una pregunta de sí o no: «Kun je me helpen?») y el infinitivo se va al final.
 
 | # | Neerlandés | Español |
 |---|---|---|
 | O9 | Ik wil morgen een nieuwe fiets kopen.<br>*También:* Morgen wil ik een nieuwe fiets kopen. | Mañana quiero comprar una bici nueva.<br>*Pista:* Con «willen»: el infinitivo al final. |
 | O10 | Kun je het zout even aangeven?<br>*También:* Kun je even het zout aangeven? / Kun je het zout aangeven? / Kun je me het zout even aangeven? / Kun je me even het zout aangeven? / Kun je me het zout aangeven? / Kun jij het zout even aangeven? / Kun jij even het zout aangeven? / Kun jij het zout aangeven? / Kun jij me het zout even aangeven? / Kun jij me even het zout aangeven? / Kun jij me het zout aangeven? / Kan je het zout even aangeven? / Kan je even het zout aangeven? / Kan je het zout aangeven? / Kan je me het zout even aangeven? / Kan je me even het zout aangeven? / Kan je me het zout aangeven? / Kan jij het zout even aangeven? / Kan jij even het zout aangeven? / Kan jij het zout aangeven? / Kan jij me het zout even aangeven? / Kan jij me even het zout aangeven? / Kan jij me het zout aangeven? | ¿Puedes pasarme la sal?<br>*Pista:* Empieza por «Kun je»; usa «aangeven». |
+
+## Lote 2 (unos 13 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- O11-O24 R3`
+
+### Orden de la frase: Verbos modales
+
+| # | Neerlandés | Español |
+|---|---|---|
 | O11 | We moeten om acht uur bij mijn ouders zijn.<br>*También:* Om acht uur moeten we bij mijn ouders zijn. | Tenemos que estar en casa de mis padres a las ocho.<br>*Pista:* Con «moeten». |
 | O12 | Ik ga vanavond voor iedereen koken.<br>*También:* Vanavond ga ik voor iedereen koken. | Esta noche voy a cocinar para todos.<br>*Pista:* Con «gaan» + infinitivo. |
 | O13 | Mag ik je iets vragen?<br>*También:* Mag ik je wat vragen? / Mag ik jou iets vragen? / Mag ik jou wat vragen? | ¿Puedo preguntarte una cosa?<br>*Pista:* Empieza por «Mag ik». |
@@ -45,9 +82,9 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | O15 | Ik wil elke dag Nederlands spreken.<br>*También:* Elke dag wil ik Nederlands spreken. / Ik wil iedere dag Nederlands spreken. / Iedere dag wil ik Nederlands spreken. | Quiero hablar neerlandés todos los días.<br>*Pista:* Con «willen». |
 | O16 | Zullen we morgen naar de markt gaan? | ¿Vamos mañana al mercado?<br>*Pista:* Empieza por «Zullen we». |
 
-### Perfectum
+### Orden de la frase: Perfectum
 
-> En el perfectum, hebben o zijn van en segunda posición (en primera si es una pregunta de sí o no: «Heb je al gegeten?») y el participio se va al final de la frase.
+> **R3.** En el perfectum, hebben o zijn van en segunda posición (en primera si es una pregunta de sí o no: «Heb je al gegeten?») y el participio se va al final de la frase.
 
 | # | Neerlandés | Español |
 |---|---|---|
@@ -60,9 +97,13 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | O23 | We hebben veel gelachen. | Nos hemos reído mucho.<br>*Pista:* En perfectum, con «lachen». |
 | O24 | Hij is om tien uur thuisgekomen.<br>*También:* Om tien uur is hij thuisgekomen. | Llegó a casa a las diez.<br>*Pista:* En perfectum, con «thuiskomen»; él es «hij». |
 
-### Verbos separables
+## Lote 3 (unos 14 minutos)
 
-> En los verbos separables (opbellen, opstaan, meenemen…), cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y se va al final. Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Con un modal o en una subordinada va pegada al verbo: «Ik wil je opbellen», «omdat ik je opbel».
+Para marcarlo cuando esté corregido: `npm run revisado -- O25-O38 R4-R5`
+
+### Orden de la frase: Verbos separables
+
+> **R4.** En los verbos separables (opbellen, opstaan, meenemen…), cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y se va al final. Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Con un modal o en una subordinada va pegada al verbo: «Ik wil je opbellen», «omdat ik je opbel».
 
 | # | Neerlandés | Español |
 |---|---|---|
@@ -75,9 +116,9 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | O31 | Wanneer kom je terug?<br>*También:* Wanneer kom jij terug? | ¿Cuándo vuelves?<br>*Pista:* Con «terugkomen». |
 | O32 | Ze legt het nog een keer uit.<br>*También:* Zij legt het nog een keer uit. / Ze legt het nog eens uit. / Ze legt het opnieuw uit. / Ze legt het weer uit. | Ella lo explica otra vez.<br>*Pista:* Con «uitleggen». |
 
-### Niet y geen
+### Orden de la frase: Niet y geen
 
-> Niet va detrás del verbo, de las palabras que dicen cuándo (morgen, vandaag, vanavond…) y del objeto definido (de film, mijn fiets, het, hem), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar. Con un sustantivo sin artículo o con een, se usa geen.
+> **R5.** Niet va detrás del verbo, de las palabras que dicen cuándo (morgen, vandaag, vanavond…) y del objeto definido (de film, mijn fiets, het, hem), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar. Con un sustantivo sin artículo o con een, se usa geen.
 
 | # | Neerlandés | Español |
 |---|---|---|
@@ -87,12 +128,21 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | O36 | We gaan vanavond niet uit.<br>*También:* Vanavond gaan we niet uit. | Esta noche no salimos.<br>*Pista:* Con «uitgaan» y «niet». |
 | O37 | Ik begrijp het niet.<br>*También:* Ik snap het niet. / Dat begrijp ik niet. / Dat snap ik niet. | No lo entiendo.<br>*Pista:* Con «niet». |
 | O38 | Hij wil niet meekomen.<br>*También:* Hij wil niet met ons meekomen. | No quiere venir con nosotros.<br>*Pista:* Con «meekomen» y «niet»; él es «hij». |
+
+## Lote 4 (unos 14 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- O39-O52 R6-R7`
+
+### Orden de la frase: Niet y geen
+
+| # | Neerlandés | Español |
+|---|---|---|
 | O39 | Ik heb vandaag geen tijd.<br>*También:* Vandaag heb ik geen tijd. | Hoy no tengo tiempo.<br>*Pista:* Con «geen». |
 | O40 | Ik woon niet in het centrum. | No vivo en el centro.<br>*Pista:* Con «niet». |
 
-### Preguntas
+### Orden de la frase: Preguntas
 
-> En las preguntas el verbo va primero, o justo detrás de la palabra interrogativa (wat, waar, hoe…). Si el sujeto es jij o je y va detrás del verbo, el verbo pierde la -t: «Drink jij koffie?». Si je es «tu», la -t se queda: «Waar werkt je vriend?».
+> **R6.** En las preguntas el verbo va primero, o justo detrás de la palabra interrogativa (wat, waar, hoe…). Si el sujeto es jij o je y va detrás del verbo, el verbo pierde la -t: «Drink jij koffie?». Si je es «tu», la -t se queda: «Waar werkt je vriend?».
 
 | # | Neerlandés | Español |
 |---|---|---|
@@ -105,9 +155,9 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | O47 | Hoelang woon je al in Nederland?<br>*También:* Hoelang woon jij al in Nederland? / Hoe lang woon je al in Nederland? / Hoe lang woon jij al in Nederland? | ¿Cuánto tiempo llevas viviendo en los Países Bajos?<br>*Pista:* Con «hoelang… al». |
 | O48 | Waarom lach je?<br>*También:* Waarom lach jij? | ¿Por qué te ríes? |
 
-### Subordinadas
+### Orden de la frase: Subordinadas
 
-> Después de dat, omdat, als, of (si), waar… el verbo conjugado se va al final de esa parte de la frase: «omdat ik moe ben». Si hay también un infinitivo o un participio, los verbos van juntos al final: «dat ik morgen moet werken», «dat ik het heb gezien» o «dat ik het gezien heb».
+> **R7.** Después de dat, omdat, als, of (si), waar… el verbo conjugado se va al final de esa parte de la frase: «omdat ik moe ben». Si hay también un infinitivo o un participio, los verbos van juntos al final: «dat ik morgen moet werken», «dat ik het heb gezien» o «dat ik het gezien heb».
 
 | # | Neerlandés | Español |
 |---|---|---|
@@ -115,14 +165,23 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | O50 | Ik denk dat het morgen gaat regenen. | Creo que mañana va a llover.<br>*Pista:* Con «dat». |
 | O51 | Weet je of ze vanavond komt?<br>*También:* Weet jij of ze vanavond komt? / Weet je of zij vanavond komt? / Weet jij of zij vanavond komt? | ¿Sabes si viene esta noche?<br>*Pista:* Con «of»; ella es «ze». |
 | O52 | Ze zegt dat ze geen tijd heeft.<br>*También:* Zij zegt dat ze geen tijd heeft. / Ze zegt dat zij geen tijd heeft. | Dice que no tiene tiempo.<br>*Pista:* Con «dat»; ella es «ze». |
+
+## Lote 5 (unos 15 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- O53-O64 R8`
+
+### Orden de la frase: Subordinadas
+
+| # | Neerlandés | Español |
+|---|---|---|
 | O53 | Ik bel je als ik thuis ben.<br>*También:* Als ik thuis ben, bel ik je. / Ik bel je op als ik thuis ben. / Als ik thuis ben, bel ik je op. / Ik bel jou als ik thuis ben. / Als ik thuis ben, bel ik jou. / Ik bel jou op als ik thuis ben. / Als ik thuis ben, bel ik jou op. | Te llamo cuando esté en casa.<br>*Pista:* Con «als». |
 | O54 | Hij weet niet waar de sleutels liggen. | No sabe dónde están las llaves.<br>*Pista:* Con «waar»; él es «hij»; las llaves «liggen». |
 | O55 | Ik ben blij dat jullie er zijn. | Me alegro de que estéis aquí.<br>*Pista:* Con «dat» y «er zijn». |
 | O56 | We gaan naar binnen omdat het koud is. | Entramos porque hace frío.<br>*Pista:* Con «omdat». |
 
-### Subordinada delante
+### Orden de la frase: Subordinada delante
 
-> Si la frase empieza por la subordinada, esa subordinada ocupa la primera posición y se cierra con una coma: la principal sigue con el verbo y después el sujeto («Als het regent, neem ik de tram»).
+> **R8.** Si la frase empieza por la subordinada, esa subordinada ocupa la primera posición y se cierra con una coma: la principal sigue con el verbo y después el sujeto («Als het regent, neem ik de tram»).
 
 | # | Neerlandés | Español |
 |---|---|---|
@@ -135,81 +194,103 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | O63 | Als ik slaap heb, spreek ik slechter Nederlands.<br>*También:* Ik spreek slechter Nederlands als ik slaap heb. | Cuando tengo sueño, hablo peor neerlandés.<br>*Pista:* Empieza por «Als»; tener sueño es «slaap hebben». |
 | O64 | Zodra ik thuis ben, stuur ik je een berichtje.<br>*También:* Ik stuur je een berichtje zodra ik thuis ben. / Zodra ik thuis ben, stuur ik je een bericht. / Ik stuur je een bericht zodra ik thuis ben. / Zodra ik thuis ben, stuur ik jou een berichtje. / Ik stuur jou een berichtje zodra ik thuis ben. / Zodra ik thuis ben, stuur ik jou een bericht. / Ik stuur jou een bericht zodra ik thuis ben. | En cuanto esté en casa, te mando un mensaje.<br>*Pista:* Empieza por «Zodra». |
 
-## Verbos (V1 a V58)
+## Lote 6 (unos 15 minutos)
 
-> **Presente.** En los regulares: ik + raíz; jij, hij y zij + raíz + t (si la raíz ya acaba en t, no se añade otra: hij zet); en plural, el infinitivo. Si el sujeto jij o je va detrás del verbo, sin -t: «speel jij?». Los irregulares (zijn, hebben, kunnen, mogen…) tienen formas propias.
->
-> **Perfectum regular.** Participio regular: ge + raíz + t si en el infinitivo va t, k, f, s, ch o p delante de -en (’t kofschip); si no, ge + raíz + d. Se mira el infinitivo, no la raíz: leven da geleefd aunque se diga ik leef. Si la raíz ya acaba en t o d, no se añade otra (zetten da gezet). Sin ge- con los prefijos átonos be-, ver-, ge-, her-, ont- y er- (beloven da beloofd); si esas letras no son prefijo, sí lo lleva (verven da geverfd).
->
-> **Perfectum irregular.** Participio irregular: no sigue la regla y hay que aprenderlo de memoria. Muchos acaban en -en, a menudo con otra vocal (drinken, gedronken; schrijven, geschreven); otros acaban en -cht (denken, gedacht; kopen, gekocht) y unos pocos son únicos (zijn, geweest; hebben, gehad).
->
-> **Perfectum con zijn.** Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, worden, verhuizen…), y además zijn y blijven, que no son ni lo uno ni lo otro (ik ben geweest, ik ben gebleven).
->
-> **Pasado simple.** El pasado simple se usa sobre todo para contar y describir: «toen woonde ik…», «het was koud».
+Para marcarlo cuando esté corregido: `npm run revisado -- R9-R12 R14 V1-V9`
+
+### Verbos
+
+> **R9.** **Presente.** En los regulares: ik + raíz; jij, hij y zij + raíz + t (si la raíz ya acaba en t, no se añade otra: hij zet); en plural, el infinitivo. Si el sujeto jij o je va detrás del verbo, sin -t: «speel jij?». Los irregulares (zijn, hebben, kunnen, mogen…) tienen formas propias.
+
+> **R10.** **Perfectum regular.** Participio regular: ge + raíz + t si en el infinitivo va t, k, f, s, ch o p delante de -en (’t kofschip); si no, ge + raíz + d. Se mira el infinitivo, no la raíz: leven da geleefd aunque se diga ik leef. Si la raíz ya acaba en t o d, no se añade otra (zetten da gezet). Sin ge- con los prefijos átonos be-, ver-, ge-, her-, ont- y er- (beloven da beloofd); si esas letras no son prefijo, sí lo lleva (verven da geverfd).
+
+> **R11.** **Perfectum irregular.** Participio irregular: no sigue la regla y hay que aprenderlo de memoria. Muchos acaban en -en, a menudo con otra vocal (drinken, gedronken; schrijven, geschreven); otros acaban en -cht (denken, gedacht; kopen, gekocht) y unos pocos son únicos (zijn, geweest; hebben, gehad).
+
+> **R12.** **Perfectum con zijn.** Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, worden, verhuizen…), y además zijn y blijven, que no son ni lo uno ni lo otro (ik ben geweest, ik ben gebleven).
+
+> **R14.** **Pasado simple.** El pasado simple se usa sobre todo para contar y describir: «toen woonde ik…», «het was koud».
 
 **V1. werken**: trabajar
 
 - Presente: ik werk, jij werkt, hij werkt, wij, jullie, zij werken. «Ik werk thuis.» «Werk jij thuis?»
+- En español: trabajo, trabajas, trabaja, trabajamos, trabajáis, trabajan + «en casa». La pregunta: «¿Trabajas en casa?»
 - Perfectum: heeft gewerkt. «Ik heb de hele dag gewerkt.» He trabajado todo el día.
 - Pasado: werkte, werkten. «Vroeger werkte ik in een restaurant.» Antes trabajaba en un restaurante. También: «Ik werkte vroeger in een restaurant.»
 
 **V2. wonen**: vivir (en un sitio)
 
 - Presente: ik woon, jij woont, hij woont, wij, jullie, zij wonen. «Ik woon in Amsterdam.» «Woon jij in Amsterdam?»
+- En español: vivo, vives, vive, vivimos, vivís, viven + «en Ámsterdam». La pregunta: «¿Vives en Ámsterdam?»
 - Perfectum: heeft gewoond. «We hebben drie jaar in Utrecht gewoond.» Vivimos tres años en Utrecht.
 - Pasado: woonde, woonden. «Toen woonden we in Madrid.» Entonces vivíamos en Madrid. También: «We woonden toen in Madrid.»
 
 **V3. maken**: hacer, preparar
 
 - Presente: ik maak, jij maakt, hij maakt, wij, jullie, zij maken. «Ik maak het ontbijt.» «Maak jij het ontbijt?»
+- En español: preparo, preparas, prepara, preparamos, preparáis, preparan + «el desayuno». La pregunta: «¿Preparas el desayuno?»
 - Perfectum: heeft gemaakt. «Ik heb een fout gemaakt.» He cometido un error.
 - Pasado: maakte, maakten. «Mijn moeder maakte altijd paella.» Mi madre siempre hacía paella.
 
 **V4. praten**: hablar, charlar
 
 - Presente: ik praat, jij praat, hij praat, wij, jullie, zij praten. «Ik praat met de buren.» «Praat jij met de buren?»
+- En español: hablo, hablas, habla, hablamos, habláis, hablan + «con los vecinos». La pregunta: «¿Hablas con los vecinos?»
 - Perfectum: heeft gepraat. «Ik heb lang met mijn schoonvader gepraat.» He hablado mucho rato con mi suegro.
 
 **V5. fietsen**: ir en bici
 
 - Presente: ik fiets, jij fietst, hij fietst, wij, jullie, zij fietsen. «Ik fiets naar het werk.» «Fiets jij naar het werk?»
+- En español: voy en bici, vas en bici, va en bici, vamos en bici, vais en bici, van en bici + «al trabajo». La pregunta: «¿Vas en bici al trabajo?»
 - Perfectum: is gefietst. «Ik ben naar mijn werk gefietst.» He ido al trabajo en bici. También: «Ik ben naar het werk gefietst.»
 - Nota: Con zijn si dices adónde (naar mijn werk); con hebben si solo cuentas la actividad (ik heb een uur gefietst).
 
 **V6. koken**: cocinar
 
 - Presente: ik kook, jij kookt, hij kookt, wij, jullie, zij koken. «Ik kook vanavond.» «Kook jij vanavond?»
+- En español: cocino, cocinas, cocina, cocinamos, cocináis, cocinan + «esta noche». La pregunta: «¿Cocinas esta noche?»
 - Perfectum: heeft gekookt. «Hij heeft voor iedereen gekookt.» Él ha cocinado para todos.
 
 **V7. leren**: aprender
 
 - Presente: ik leer, jij leert, hij leert, wij, jullie, zij leren. «Ik leer Nederlands.» «Leer jij Nederlands?»
+- En español: aprendo, aprendes, aprende, aprendemos, aprendéis, aprenden + «neerlandés». La pregunta: «¿Aprendes neerlandés?»
 - Perfectum: heeft geleerd. «Ik heb veel nieuwe woorden geleerd.» He aprendido muchas palabras nuevas.
 
 **V8. wachten**: esperar
 
 - Presente: ik wacht, jij wacht, hij wacht, wij, jullie, zij wachten. «Ik wacht op de bus.» «Wacht jij op de bus?»
+- En español: espero, esperas, espera, esperamos, esperáis, esperan + «el autobús». La pregunta: «¿Esperas el autobús?»
 - Perfectum: heeft gewacht. «We hebben een half uur gewacht.» Hemos esperado media hora.
 
 **V9. betalen**: pagar
 
 - Presente: ik betaal, jij betaalt, hij betaalt, wij, jullie, zij betalen. «Ik betaal de rekening.» «Betaal jij de rekening?»
+- En español: pago, pagas, paga, pagamos, pagáis, pagan + «la cuenta». La pregunta: «¿Pagas la cuenta?»
 - Perfectum: heeft betaald. «Ik heb de rekening al betaald.» Ya he pagado la cuenta.
 - Nota: Aquí be- es un prefijo átono (el acento cae en ta), por eso betaald no lleva ge-.
+
+## Lote 7 (unos 15 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- V10-V23`
+
+### Verbos
 
 **V10. spelen**: jugar
 
 - Presente: ik speel, jij speelt, hij speelt, wij, jullie, zij spelen. «Ik speel met de kinderen.» «Speel jij met de kinderen?»
+- En español: juego, juegas, juega, jugamos, jugáis, juegan + «con los niños». La pregunta: «¿Juegas con los niños?»
 - Perfectum: heeft gespeeld. «De kinderen hebben de hele middag buiten gespeeld.» Los niños han jugado fuera toda la tarde.
 
 **V11. bellen**: llamar por teléfono
 
 - Presente: ik bel, jij belt, hij belt, wij, jullie, zij bellen. «Ik bel de huisarts.» «Bel jij de huisarts?»
+- En español: llamo, llamas, llama, llamamos, llamáis, llaman + «al médico de cabecera». La pregunta: «¿Llamas al médico de cabecera?»
 - Perfectum: heeft gebeld. «Mijn moeder heeft gisteren gebeld.» Mi madre llamó ayer. También: «Gisteren heeft mijn moeder gebeld.»
 
 **V12. verhuizen**: mudarse
 
 - Presente: ik verhuis, jij verhuist, hij verhuist, wij, jullie, zij verhuizen. «Ik verhuis volgende maand.» «Verhuis jij volgende maand?»
+- En español: me mudo, te mudas, se muda, nos mudamos, os mudáis, se mudan + «el mes que viene». La pregunta: «¿Te mudas el mes que viene?»
 - Perfectum: is verhuisd. «We zijn vorig jaar verhuisd.» Nos mudamos el año pasado. También: «Vorig jaar zijn we verhuisd.»
 - Nota: La z de la raíz se escribe s (ik verhuis), pero el participio acaba en d porque el infinitivo tiene z.
 
@@ -238,104 +319,128 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 **V18. zijn**: ser, estar
 
 - Presente: ik ben, jij bent, hij is, wij, jullie, zij zijn. «Ik ben thuis.» «Ben jij thuis?»
+- En español: estoy, estás, está, estamos, estáis, están + «en casa». La pregunta: «¿Estás en casa?»
 - Perfectum: is geweest. «Ik ben nog nooit in Groningen geweest.» Nunca he estado en Groningen.
 - Pasado: was, waren. «Gisteren was het erg druk in de stad.» Ayer había mucha gente en el centro. También: «Het was gisteren erg druk in de stad.»
 
 **V19. hebben**: tener
 
 - Presente: ik heb, jij hebt, hij heeft, wij, jullie, zij hebben. «Ik heb een fiets.» «Heb jij een fiets?»
+- En español: tengo, tienes, tiene, tenemos, tenéis, tienen + «una bici». La pregunta: «¿Tienes una bici?»
 - Perfectum: heeft gehad. «Ik heb vorige week griep gehad.» La semana pasada tuve gripe. También: «Vorige week heb ik griep gehad.»
 - Pasado: had, hadden. «Vroeger had ik een hond.» Antes tenía un perro. También: «Ik had vroeger een hond.»
 
 **V20. gaan**: ir
 
 - Presente: ik ga, jij gaat, hij gaat, wij, jullie, zij gaan. «Ik ga naar huis.» «Ga jij naar huis?»
+- En español: voy, vas, va, vamos, vais, van + «a casa». La pregunta: «¿Vas a casa?»
 - Perfectum: is gegaan. «Ik ben naar de dokter gegaan.» He ido al médico.
 - Pasado: ging, gingen. «Vorige week gingen we naar Antwerpen.» La semana pasada fuimos a Amberes. También: «We gingen vorige week naar Antwerpen.»
 
 **V21. komen**: venir
 
 - Presente: ik kom, jij komt, hij komt, wij, jullie, zij komen. «Ik kom morgen.» «Kom jij morgen?»
+- En español: vengo, vienes, viene, venimos, venís, vienen + «mañana». La pregunta: «¿Vienes mañana?»
 - Perfectum: is gekomen. «Ze zijn te laat gekomen.» Han llegado tarde.
 - Pasado: kwam, kwamen. «Hij kwam om negen uur thuis.» Él llegó a casa a las nueve. También: «Om negen uur kwam hij thuis.», «Hij kwam thuis om negen uur.»
 
 **V22. doen**: hacer (una actividad)
 
 - Presente: ik doe, jij doet, hij doet, wij, jullie, zij doen. «Ik doe de boodschappen.» «Doe jij de boodschappen?»
+- En español: hago, haces, hace, hacemos, hacéis, hacen + «la compra». La pregunta: «¿Haces la compra?»
 - Perfectum: heeft gedaan. «Ik heb de boodschappen gedaan.» He hecho la compra.
 - Pasado: deed, deden. «Ze deed alles alleen.» Ella lo hacía todo sola.
 
 **V23. zien**: ver
 
 - Presente: ik zie, jij ziet, hij ziet, wij, jullie, zij zien. «Ik zie het probleem.» «Zie jij het probleem?»
+- En español: veo, ves, ve, vemos, veis, ven + «el problema». La pregunta: «¿Ves el problema?»
 - Perfectum: heeft gezien. «Ik heb die film al gezien.» Ya he visto esa película.
 - Pasado: zag, zagen. «Ik zag je gisteren in de supermarkt.» Ayer te vi en el supermercado. También: «Gisteren zag ik je in de supermarkt.», «Ik zag jou gisteren in de supermarkt.», «Gisteren zag ik jou in de supermarkt.»
+
+## Lote 8 (unos 15 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- V24-V36`
+
+### Verbos
 
 **V24. staan**: estar de pie
 
 - Presente: ik sta, jij staat, hij staat, wij, jullie, zij staan. «Ik sta in de file.» «Sta jij in de file?»
+- En español: estoy, estás, está, estamos, estáis, están + «en un atasco». La pregunta: «¿Estás en un atasco?»
 - Perfectum: heeft gestaan. «Ik heb een uur in de file gestaan.» He estado una hora en un atasco.
 - Pasado: stond, stonden. «Er stond een lange rij.» Había una cola larga.
 
 **V25. weten**: saber
 
 - Presente: ik weet, jij weet, hij weet, wij, jullie, zij weten. «Ik weet het antwoord.» «Weet jij het antwoord?»
+- En español: sé, sabes, sabe, sabemos, sabéis, saben + «la respuesta». La pregunta: «¿Sabes la respuesta?»
 - Perfectum: heeft geweten. «Ik heb het altijd geweten.» Siempre lo he sabido.
 - Pasado: wist, wisten. «Dat wist ik niet.» Eso no lo sabía. También: «Ik wist dat niet.»
 
 **V26. willen**: querer
 
 - Presente: ik wil, jij wilt/wil, hij wil, wij, jullie, zij willen. «Ik wil een kopje koffie.» «Wil jij een kopje koffie?»
+- En español: quiero, quieres, quiere, queremos, queréis, quieren + «un café». La pregunta: «¿Quieres un café?»
 - Pasado: wilde/wou, wilden/wouden. «Ze wilde naar huis.» Ella quería irse a casa. También: «Ze wilde naar huis gaan.», «Ze wou naar huis.», «Ze wou naar huis gaan.»
 
 **V27. kunnen**: poder (ser capaz)
 
 - Presente: ik kan, jij kunt/kan, hij kan, wij, jullie, zij kunnen. «Ik kan goed koken.» «Kun jij goed koken?» (también «kan jij»)
+- En español: sé, sabes, sabe, sabemos, sabéis, saben + «cocinar bien». La pregunta: «¿Sabes cocinar bien?»
 - Pasado: kon, konden. «Ik kon niet slapen.» No podía dormir.
 
 **V28. mogen**: poder (tener permiso)
 
 - Presente: ik mag, jij mag, hij mag, wij, jullie, zij mogen. «Ik mag hier parkeren.» «Mag jij hier parkeren?»
+- En español: puedo, puedes, puede, podemos, podéis, pueden + «aparcar aquí». La pregunta: «¿Puedes aparcar aquí?»
 - Pasado: mocht, mochten. «We mochten niet binnenkomen.» No nos dejaban entrar.
 
 **V29. moeten**: tener que
 
 - Presente: ik moet, jij moet, hij moet, wij, jullie, zij moeten. «Ik moet morgen vroeg werken.» «Moet jij morgen vroeg werken?»
+- En español: tengo que, tienes que, tiene que, tenemos que, tenéis que, tienen que + «trabajar mañana temprano». La pregunta: «¿Tienes que trabajar mañana temprano?»
 - Pasado: moest, moesten. «We moesten lang wachten.» Tuvimos que esperar mucho.
 
 **V30. zullen**: futuro y ofrecimientos (zal ik…?)
 
 - Presente: ik zal, jij zult/zal, hij zal, wij, jullie, zij zullen. «Ik zal het morgen doen.»
+- En español: lo haré, lo harás, lo hará, lo haremos, lo haréis, lo harán + «mañana».
 - Pasado: zou, zouden. «Je zou me bellen.» Ibas a llamarme. También: «Jij zou me bellen.»
 - Nota: Para el futuro se suele usar el presente (ik doe het morgen) o gaan (ik ga het morgen doen); con ik, zal suena a promesa. Zou también es el condicional: «zou je me kunnen helpen?».
 
 **V31. eten**: comer
 
 - Presente: ik eet, jij eet, hij eet, wij, jullie, zij eten. «Ik eet om zes uur.» «Eet jij om zes uur?»
+- En español: como, comes, come, comemos, coméis, comen + «a las seis». La pregunta: «¿Comes a las seis?»
 - Perfectum: heeft gegeten. «We hebben te veel gegeten.» Hemos comido demasiado.
 - Pasado: at, aten. «We aten elke zondag bij mijn oma.» Comíamos todos los domingos en casa de mi abuela. También: «Elke zondag aten we bij mijn oma.»
 
 **V32. drinken**: beber
 
 - Presente: ik drink, jij drinkt, hij drinkt, wij, jullie, zij drinken. «Ik drink thee.» «Drink jij thee?»
+- En español: bebo, bebes, bebe, bebemos, bebéis, beben + «té». La pregunta: «¿Bebes té?»
 - Perfectum: heeft gedronken. «Ik heb te veel koffie gedronken.» He bebido demasiado café.
 - Pasado: dronk, dronken. «Hij dronk geen alcohol.» Él no bebía alcohol.
 
 **V33. slapen**: dormir
 
 - Presente: ik slaap, jij slaapt, hij slaapt, wij, jullie, zij slapen. «Ik slaap slecht.» «Slaap jij slecht?»
+- En español: duermo, duermes, duerme, dormimos, dormís, duermen + «mal». La pregunta: «¿Duermes mal?»
 - Perfectum: heeft geslapen. «Ik heb slecht geslapen.» He dormido mal.
 - Pasado: sliep, sliepen. «De baby sliep de hele nacht.» El bebé durmió toda la noche.
 
 **V34. lezen**: leer
 
 - Presente: ik lees, jij leest, hij leest, wij, jullie, zij lezen. «Ik lees de krant.» «Lees jij de krant?»
+- En español: leo, lees, lee, leemos, leéis, leen + «el periódico». La pregunta: «¿Lees el periódico?»
 - Perfectum: heeft gelezen. «Ik heb het boek in een week gelezen.» Me he leído el libro en una semana.
 - Pasado: las, lazen. «Ik las elke avond een boek.» Leía un libro cada noche. También: «Elke avond las ik een boek.»
 
 **V35. zitten**: estar sentado
 
 - Presente: ik zit, jij zit, hij zit, wij, jullie, zij zitten. «Ik zit in de trein.» «Zit jij in de trein?»
+- En español: estoy, estás, está, estamos, estáis, están + «en el tren». La pregunta: «¿Estás en el tren?»
 - Perfectum: heeft gezeten. «We hebben de hele dag binnen gezeten.» Hemos estado dentro todo el día.
 - Pasado: zat, zaten. «We zaten de hele avond te praten.» Estuvimos toda la noche hablando. También: «We zaten de hele nacht te praten.»
 
@@ -344,6 +449,12 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 - Presente (solo sale como opción mala en el pasado): ik schrijf, jij schrijft, hij schrijft, wij, jullie, zij schrijven.
 - Perfectum: heeft geschreven. «Ik heb een lange mail geschreven.» He escrito un correo largo.
 - Pasado: schreef, schreven. «Ze schreef me een lange brief.» Ella me escribió una carta larga.
+
+## Lote 9 (unos 14 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- V37-V52`
+
+### Verbos
 
 **V37. spreken**: hablar (un idioma, con alguien)
 
@@ -435,6 +546,12 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 - Pasado: zei, zeiden. «Hij zei dat hij moe was.» Dijo que estaba cansado.
 - Nota: El participio es regular (ge + zeg + d); lo irregular es el pasado: zei, zeiden.
 
+## Lote 10 (unos 14 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- R13 V53-V58 S1-S9`
+
+### Verbos
+
 **V53. liggen**: estar tumbado, estar (algo plano)
 
 - Presente (solo sale como opción mala en el pasado): ik lig, jij ligt, hij ligt, wij, jullie, zij liggen.
@@ -465,9 +582,9 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 
 - Perfectum: heeft gewonnen. «Ajax heeft gisteren gewonnen.» El Ajax ganó ayer. También: «Gisteren heeft Ajax gewonnen.»
 
-## Verbos separables (S1 a S15)
+### Verbos separables
 
-> Cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y va al final: «ik bel je op». Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Va pegada en el infinitivo («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio, delante de ge- (opgebeld, meegenomen). Con te + infinitivo, el te va entre las dos partes: «om je op te bellen».
+> **R13.** Cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y va al final: «ik bel je op». Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Va pegada en el infinitivo («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio, delante de ge- (opgebeld, meegenomen). Con te + infinitivo, el te va entre las dos partes: «om je op te bellen».
 
 **S1. opbellen**: llamar por teléfono
 
@@ -514,6 +631,12 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 - Presente: «Ik ruim mijn kamer op.» Ordeno mi habitación.
 - Perfectum: heeft opgeruimd. «Ik heb de keuken opgeruimd.» He recogido la cocina.
 
+## Lote 11 (unos 15 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- S10-S15 P1-P54`
+
+### Verbos separables
+
 **S10. uitleggen**: explicar
 
 - Presente: «Zij legt de regels uit.» Ella explica las reglas. También: «Ze legt de regels uit.»
@@ -544,9 +667,7 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 - Presente: «Ik doe ook mee.» Yo también me apunto.
 - Perfectum: heeft meegedaan. «Ze heeft aan de marathon meegedaan.» Ha participado en el maratón.
 
-## Vocabulario (P1 a P128)
-
-### Familia y gente
+### Vocabulario: Familia y gente
 
 | # | Neerlandés | Español | Nota |
 |---|---|---|---|
@@ -571,7 +692,7 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | P19 | de jongen | el chico |  |
 | P20 | de baby | el bebé |  |
 
-### Casa y comida
+### Vocabulario: Casa y comida
 
 | # | Neerlandés | Español | Nota |
 |---|---|---|---|
@@ -600,7 +721,7 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | P43 | de vork | el tenedor |  |
 | P44 | de lepel | la cuchara |  |
 
-### Tiempo y planes
+### Vocabulario: Tiempo y planes
 
 | # | Neerlandés | Español | Nota |
 |---|---|---|---|
@@ -614,6 +735,15 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | P52 | de week | la semana |  |
 | P53 | de maand | el mes |  |
 | P54 | het jaar | el año |  |
+
+## Lote 12 (unos 15 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- P55-P128`
+
+### Vocabulario: Tiempo y planes
+
+| # | Neerlandés | Español | Nota |
+|---|---|---|---|
 | P55 | het uur | la hora | Para preguntar la hora se dice «Hoe laat is het?», y «¿a qué hora?» es «Hoe laat?». Uur es la hora que dura (een uur) y la de «om drie uur». |
 | P56 | de ochtend<br>*También:* de morgen | la mañana | También de morgen, como en vanmorgen o goedemorgen. Morgen solo, sin artículo, es «mañana», el día siguiente. |
 | P57 | de middag | la tarde (hasta las seis) |  |
@@ -627,7 +757,7 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | P65 | binnenkort | pronto (en unos días o semanas) | Para dentro de un rato, hoy mismo, se dice straks. |
 | P66 | net<br>*También:* zojuist / zonet / daarnet | hace un momento | «Ik ben net thuis»: acabo de llegar a casa. |
 
-### Trabajo y ciudad
+### Vocabulario: Trabajo y ciudad
 
 | # | Neerlandés | Español | Nota |
 |---|---|---|---|
@@ -651,7 +781,7 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | P84 | het centrum | el centro |  |
 | P85 | de file | el atasco |  |
 
-### Para conversar
+### Vocabulario: Para conversar
 
 | # | Neerlandés | Español | Nota |
 |---|---|---|---|
@@ -677,7 +807,7 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | P105 | helaas | por desgracia |  |
 | P106 | eindelijk | por fin |  |
 
-### Cómo es, cómo está
+### Vocabulario: Cómo es, cómo está
 
 | # | Neerlandés | Español | Nota |
 |---|---|---|---|
@@ -704,9 +834,11 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | P127 | weer | otra vez |  |
 | P128 | samen | juntos |  |
 
-## Explicaciones de errores (E1 a E16)
+## Lote 13 (unos 15 minutos)
 
-Cuando se falla una frase, la app explica qué regla se ha roto con las palabras de esa frase. Las explicaciones se montan solas; aquí van fallos típicos con lo que diría la app. Revisa que la regla esté bien dicha y que el neerlandés de la explicación sea correcto.
+Para marcarlo cuando esté corregido: `npm run revisado -- E1-E16 T1-T5`
+
+### Explicaciones de errores
 
 **E1.** «Morgen ga ik naar mijn schoonouders.» → respuesta: «Morgen ik ga naar mijn schoonouders»
 
@@ -771,3 +903,42 @@ Cuando se falla una frase, la app explica qué regla se ha roto con las palabras
 **E16.** «Als ik tijd heb, kom ik langs.» → respuesta: «Als ik heb tijd, kom ik langs»
 
 - **Después de «als», el verbo va al final.** «als» abre una subordinada, y en la subordinada el verbo conjugado («heb») se va al final: «als ik tijd heb». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).
+
+### Otros textos de la app
+
+- **T1** (Progreso, una regla): Conjugar en presente. ik werk, jij werkt, werk jij?, wij werken.
+- **T2** (Progreso, una regla): Verbo en segunda posición. Morgen ga ik…: si la frase no empieza por el sujeto, el verbo va antes que él.
+- **T3** (Progreso, una regla): Modal + infinitivo al final. Ik wil morgen een fiets kopen.
+- **T4** (Progreso, una regla): Perfectum: participio al final. Ik heb gisteren de hele dag gewerkt.
+- **T5** (Progreso, una regla): Participio regular. ge + raíz + t o d (’t kofschip).
+
+## Lote 14 (unos 7 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- T6-T25`
+
+### Otros textos de la app
+
+- **T6** (Progreso, una regla): Hebben o zijn. Ik heb gewerkt, pero ik ben gegaan.
+- **T7** (Progreso, una regla): Niet y geen. Dónde va niet y cuándo se dice geen.
+- **T8** (Progreso, una regla): Preguntas. Werk jij morgen? Waar woont je zus?
+- **T9** (Progreso, una regla): Vocabulario básico. Las palabras de todos los días.
+- **T10** (Progreso, una regla): De o het. El artículo de cada sustantivo.
+- **T11** (Progreso, una regla): Participios irregulares. gegeten, geslapen, gedacht…
+- **T12** (Progreso, una regla): Verbos separables. Ik bel je op, pero omdat ik je opbel.
+- **T13** (Progreso, una regla): Verbo al final en subordinadas. …omdat ik moe ben, …dat ik het heb gezien.
+- **T14** (Progreso, una regla): Subordinada delante. Als het regent, neem ik de tram.
+- **T15** (Progreso, una regla): Pasado simple. werkte, woonden, ging, was.
+- **T16** (Progreso, lo que falta para B2): Relativas (de man die…, het huis dat…)
+- **T17** (Progreso, lo que falta para B2): Om te + infinitivo y te con los verbos que lo piden
+- **T18** (Progreso, lo que falta para B2): Er en todos sus usos
+- **T19** (Progreso, lo que falta para B2): Pasiva (worden, zijn + participio)
+- **T20** (Progreso, lo que falta para B2): Cuándo pasado simple y cuándo perfectum al contar
+- **T21** (Progreso, lo que falta para B2): Escuchar y responder a velocidad normal
+- **T22** (Hoy, la parte de orden): Dónde va el verbo: inversión, modales, perfectum, separables, niet, preguntas y subordinadas.
+- **T23** (Hoy, la parte de verbos): Conjugar sin pensarlo: presente, perfectum con hebben o zijn, separables y pasado simple.
+- **T24** (Hoy, la parte de vocabulario): Palabras y expresiones de la vida diaria, siempre con su de o het.
+- **T25** (Ajustes, el botón Probar de la voz): Goedemorgen! Hoe gaat het met je?
+
+## Ya revisado
+
+Nada todavía.

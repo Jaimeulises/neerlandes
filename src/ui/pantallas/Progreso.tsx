@@ -101,7 +101,7 @@ function Nivel({ niveles, historial, ahora }: { readonly niveles: ReadonlyMap<st
 
       <div className="columna" style={{ gap: 4 }}>
         <span className="etiqueta-nivel">B2</span>
-        <p className="texto-3">Aún no está en la app: {FALTA_PARA_B2.join('; ')}.</p>
+        <p className="texto-3">Aún no está en la app: {FALTA_PARA_B2.map((f) => f.texto).join('; ')}.</p>
       </div>
 
       <p className="texto-3">
