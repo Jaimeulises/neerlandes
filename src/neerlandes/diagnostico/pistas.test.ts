@@ -16,12 +16,28 @@ function contienePalabra(texto: string, palabra: string): boolean {
   return normalizar(texto).split(' ').includes(normalizar(palabra));
 }
 
+/** Palabras neerlandesas frecuentes que no son también españolas: fuera de «» se leerían con voz española. */
+const NEERLANDES_SUELTO = ['niet', 'geen', 'zijn', 'hebben', 'wij', 'jullie', 'zij', 'het', 'een', 'jij', 'je', 'ik', 'hij', 'kofschip', 'blijven', 'morgen'];
+
+/** Las palabras neerlandesas que hay fuera de «» (lo que va entre “” es inglés o español citado). */
+export function neerlandesSuelto(texto: string): string[] {
+  const sinCitas = texto.replace(/«[^»]*»/g, ' ').replace(/“[^”]*”/g, ' ');
+  return normalizar(sinCitas)
+    .split(' ')
+    .filter((w) => NEERLANDES_SUELTO.includes(w));
+}
+
+/** Una pista corta: unas 25 palabras sin contar lo citado, con margen para la nota sobre «je» detrás del verbo. */
+const PALABRAS_MAXIMO = 30;
+
 function comprobarPista(d: Diagnostico, prohibidas: readonly string[], donde: string): void {
   expect(d.pista, `${donde}: ${d.titulo}`).toBeTruthy();
   const pista = d.pista ?? '';
-  // Una pregunta al final: la pista pide que se intente, no lo explica todo.
+  // Una pregunta: la pista pide que se intente, no lo explica todo.
   expect(pista.trim().endsWith('?') || pista.includes('¿'), `${donde}: ${pista}`).toBe(true);
   for (const p of prohibidas) expect(contienePalabra(pista, p), `${donde}: «${p}» en «${pista}»`).toBe(false);
+  expect(neerlandesSuelto(pista), `${donde}: ${pista}`).toEqual([]);
+  expect(pista.replace(/«[^»]*»/g, '«»').split(/\s+/).length, `${donde}: ${pista}`).toBeLessThanOrEqual(PALABRAS_MAXIMO);
 }
 
 describe('las pistas del segundo intento', () => {
@@ -32,8 +48,10 @@ describe('las pistas del segundo intento', () => {
       for (let i = 0; i < 12; i++) {
         const respuesta = azar.barajar(f.fichas).join(' ');
         for (const d of orden.diagnosticar?.(ejercicio, respuesta) ?? []) {
-          expect(d.pista, `${f.codigo} ${respuesta}: ${d.titulo}`).toBeTruthy();
+          comprobarPista(d, [], `${f.codigo} ${respuesta}`);
           for (const v of f.validas) expect(normalizar(d.pista ?? ''), `${f.codigo}: ${d.pista ?? ''}`).not.toContain(normalizar(v));
+          // Nunca qué palabra mover ni adónde: en fichas, eso ya sería la respuesta.
+          expect(d.pista ?? '', `${f.codigo}: ${d.pista ?? ''}`).not.toMatch(/¿Dónde va «|¿Qué tienes que mover/);
         }
       }
     }
@@ -103,13 +121,27 @@ describe('cuándo se pide otro intento', () => {
     expect(pistasDeReintento(traducir, [conPista], 'orden')).toEqual(['Una pista. ¿Dónde va?']);
     expect(pistasDeReintento(ordenar, [], 'orden')).toEqual([PISTAS_GENERALES.ordenar]);
     expect(pistasDeReintento(traducir, [], 'orden')).toEqual([PISTAS_GENERALES.traducirOrden]);
-    expect(pistasDeReintento(traducir, [], 'distinta')).toEqual([PISTAS_GENERALES.traducir]);
     expect(pistasDeReintento(completar, [], 'distinta')).toEqual([PISTAS_GENERALES.completar]);
   });
 
-  it('como mucho dos pistas, sin repetir', () => {
-    const otras = [conPista, conPista, { ...conPista, destreza: 'presente', pista: 'Otra. ¿Cuál?' }, { ...conPista, destreza: 'niet', pista: 'Y otra. ¿Dónde?' }];
-    expect(pistasDeReintento(traducir, otras, 'distinta')).toEqual(['Una pista. ¿Dónde va?', 'Otra. ¿Cuál?']);
+  it('sin diagnóstico, escribir la frase con otras palabras no se reintenta: la pista no podría señalar nada', () => {
+    expect(pistasDeReintento(traducir, [], 'distinta')).toEqual([]);
+    expect(pistasDeReintento(traducir, [conPista], 'distinta')).toEqual(['Una pista. ¿Dónde va?']);
+  });
+
+  it('una sola pista, y primero la del sitio del verbo', () => {
+    const otras = [
+      { ...conPista, destreza: 'presente', pista: 'Otra. ¿Cuál?' },
+      { ...conPista, destreza: 'niet', pista: 'Y otra. ¿Dónde?' },
+      conPista,
+      { ...conPista, destreza: 'desconocida', pista: 'La última. ¿Qué?' },
+    ];
+    expect(pistasDeReintento(traducir, otras, 'distinta')).toEqual(['Una pista. ¿Dónde va?']);
+    expect(pistasDeReintento(traducir, otras.slice(0, 2), 'distinta')).toEqual(['Y otra. ¿Dónde?']);
+  });
+
+  it('las pistas generales tampoco dejan neerlandés suelto', () => {
+    for (const p of Object.values(PISTAS_GENERALES)) expect(neerlandesSuelto(p), p).toEqual([]);
   });
 
   it('no se reintenta lo que está bien, el dictado, decir ni las opciones', () => {

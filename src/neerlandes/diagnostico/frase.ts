@@ -141,7 +141,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     const verbo = u[iVerbo] ?? p.verbo;
     const verboBueno = formaPorOrden ? p.verbo : verbo;
     const notaJij = formaPorOrden ? ` Con ${cita(p.sujeto)} detrás, ${cita(verbo)} pierde la -t: ${cita([p.verbo, ...p.sujeto])}.` : '';
-    const pistaJij = formaPorOrden ? ` Y con ${cita(p.sujeto)} detrás, mira bien la forma del verbo.` : '';
+    const pistaJij = formaPorOrden ? ` Y con ${cita(p.sujeto)} detrás, ojo con la forma del verbo.` : '';
     if (p.pregunta) {
       if (iSujeto < iVerbo) {
         const conInterrogativa = p.interrogativa.length > 0;
@@ -153,8 +153,8 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
             ? `Después de ${cita(p.interrogativa)} va el verbo (${cita(verboBueno)}) y luego el sujeto (${cita(p.sujeto)}): ${frase} Con el sujeto delante, suena a subordinada (como en «Ik weet niet waar je zus woont»), no a pregunta.${notaJij}`
             : `En una pregunta de sí o no, el verbo (${cita(verboBueno)}) va delante del sujeto (${cita(p.sujeto)}): ${frase} En inglés se usa do o se cambia el orden con el auxiliar; en neerlandés siempre se pone delante el verbo, sea el que sea.${notaJij}`,
           pista: conInterrogativa
-            ? `En inglés el sujeto va detrás de do o does (“Where does your sister live?”); en neerlandés no hay do, y es el verbo el que va delante del sujeto. ¿Dónde va ${cita(verbo)}?${pistaJij}`
-            : `En inglés, la pregunta de sí o no empieza por do o por el auxiliar (“Do you work tomorrow?”); en neerlandés, por el verbo, sea el que sea. ¿Dónde va ${cita(verbo)}?${pistaJij}`,
+            ? `En inglés, la pregunta se apoya en “do” o “does”. En neerlandés no existen: ¿qué hace entonces el verbo conjugado?${pistaJij}`
+            : `Tal como está, es una afirmación. En inglés empezarías por “do” o por el auxiliar; en neerlandés, ¿qué va primero?${pistaJij}`,
         });
       }
     } else if (p.delante.length > 0 && buscar(u, p.delante) === 0 && iSujeto < iVerbo) {
@@ -163,7 +163,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
         destreza: 'inversion',
         titulo: `Tras ${cita(p.delante)}, el verbo va antes que el sujeto`,
         texto: `Empezaste por ${cita(p.delante)}, así que eso ocupa la primera posición: el verbo (${cita(verboBueno)}) va segundo y el sujeto (${cita(p.sujeto)}) justo detrás: ${frase}${fin} En inglés el sujeto iría delante del verbo (como en “Tomorrow I go”); por eso sale así.${notaJij}`,
-        pista: `Has empezado por ${cita(p.delante)}, y eso ya ocupa la primera posición. En inglés iría ahora el sujeto (como en “Tomorrow I go”); en neerlandés, el verbo conjugado. ¿Dónde va ${cita(verbo)}?${pistaJij}`,
+        pista: `Has empezado por ${cita(p.delante)} y has seguido con el sujeto, como en inglés. ¿Qué cambia en neerlandés cuando la frase no empieza por el sujeto?${pistaJij}`,
       });
     } else if (iSujeto > 0 && iSujeto < iVerbo && !iguales(u[0], p.sujeto[0]) && !u.slice(0, iSujeto).some((w) => p.finales.includes(w) || TONICAS[w] !== undefined)) {
       const primero = u.slice(0, iSujeto);
@@ -175,7 +175,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
         destreza: 'inversion',
         titulo: `Tras ${cita(primero)}, el verbo va antes que el sujeto`,
         texto: `Si la frase empieza por ${cita(primero)}, eso ocupa la primera posición y el verbo (${cita(verboBueno)}) tiene que ir segundo, antes del sujeto (${cita(p.sujeto)}): ${conPrimero ? `${conPrimero}${fin}` : `${cita([...primero, verboBueno, ...p.sujeto])}…`}${conSujeto ? ` O empieza por el sujeto: ${conSujeto}${fin}` : ''}${notaJij}`,
-        pista: `Si empiezas por ${cita(primero)}, eso ocupa la primera posición y el verbo conjugado tiene que ir segundo, antes que el sujeto. ¿Dónde va ${cita(verbo)}?${conSujeto ? ' También puedes empezar por el sujeto.' : ''}${pistaJij}`,
+        pista: `Has empezado por ${cita(primero)}, que no es el sujeto. ¿Qué tiene que ir justo detrás de lo que ocupa la primera posición?${conSujeto ? ' También puedes empezar por el sujeto.' : ''}${pistaJij}`,
       });
     } else if (iSujeto === 0 && iVerbo > p.sujeto.length) {
       const entre = u.slice(p.sujeto.length, iVerbo);
@@ -189,7 +189,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           destreza: 'inversion',
           titulo: 'El verbo conjugado va en segunda posición',
           texto: `${principio}, y niet después: ${conSujeto ?? frase}${fin} En español el «no» va delante del verbo; en neerlandés, niet nunca va entre el sujeto y el verbo conjugado.`,
-          pista: `En español el «no» va delante del verbo, pero en neerlandés niet va detrás del verbo conjugado. ¿Dónde va ${cita(verbo)}?`,
+          pista: `Has puesto ${cita('niet')} delante del verbo, como el “no” del español. En neerlandés, ¿en qué posición va siempre el verbo conjugado?`,
         });
       } else {
         anadir({
@@ -197,7 +197,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           destreza: 'inversion',
           titulo: 'El verbo conjugado va en segunda posición',
           texto: `${principio}, y lo demás (cuándo, dónde) después: ${conSujeto ?? frase}${fin} En inglés el adverbio puede ir entre los dos (“I often go”); en neerlandés no.`,
-          pista: `Entre el sujeto y el verbo conjugado no se mete nada: en inglés sí (“I often go”), pero en neerlandés el cuándo y el cómo van detrás del verbo. ¿Dónde va ${cita(verbo)}?`,
+          pista: 'Has metido algo entre el sujeto y el verbo, como hace el inglés en “I often go”. En neerlandés, ¿en qué posición va el verbo conjugado?',
         });
       }
     }
@@ -214,7 +214,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
         destreza: 'separables',
         titulo: `${cita(pegada)} se separa en la frase principal`,
         texto: `Con el verbo conjugado en la principal, la partícula ${cita(particula)} se separa y se va al final: ${frase}${fin} Solo va pegada con un modal, en una subordinada y en el participio (con opbellen: «ik wil je opbellen», «omdat ik je opbel», «opgebeld»).`,
-        pista: `${cita(pegada)} es un verbo separable, y conjugado en la frase principal se parte en dos. ¿Qué parte va en segunda posición y cuál se va al final?`,
+        pista: `${cita(pegada)} es un verbo separable. ¿Qué le pasa a un separable cuando va conjugado en la frase principal?`,
       });
     }
   }
@@ -230,7 +230,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           destreza: 'perfectum-orden',
           titulo: `El participio ${cita(p.finales)} va al final`,
           texto: `En el perfectum, ${cita(verbo)} se queda en segunda posición y el participio cierra la frase: ${frase}${fin} En inglés el participio va pegado al auxiliar (“I have worked all day”); en neerlandés todo lo demás va en medio.`,
-          pista: `En el perfectum, ${cita(verbo)} va en segunda posición y el participio cierra la frase, con todo lo demás en medio. En inglés van juntos (“I have worked all day”). ¿Qué tienes que mover?`,
+          pista: 'Has dejado el participio junto al auxiliar, como en inglés. En el perfectum neerlandés, ¿dónde va el participio?',
         });
       } else if (p.tipoFinal === 'infinitivo') {
         anadir({
@@ -238,7 +238,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           destreza: 'modal',
           titulo: `El infinitivo ${cita(p.finales)} va al final`,
           texto: `Con ${cita(verbo)}, el infinitivo se va al final de la frase y todo lo demás queda en medio: ${frase}${fin} En inglés va pegado al modal (“I want to buy a bike tomorrow”).`,
-          pista: `Con ${cita(verbo)}, el infinitivo se va al final y todo lo demás queda en medio. En inglés va pegado al modal (“I want to buy a bike tomorrow”). ¿Qué tienes que mover?`,
+          pista: `Has dejado el infinitivo junto a ${cita(verbo)}, como en inglés. Con un verbo así, ¿dónde va el infinitivo en neerlandés?`,
         });
       } else {
         anadir({
@@ -246,7 +246,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           destreza: 'separables',
           titulo: `La partícula ${cita(p.finales)} va al final`,
           texto: `En la frase principal, la partícula se separa del verbo y se va al final: ${frase}${fin}`,
-          pista: 'En la frase principal, la partícula de un verbo separable cierra la frase. ¿Qué tienes que mover?',
+          pista: 'La partícula del verbo separable no está en su sitio. En la frase principal, ¿dónde va?',
         });
       }
     }
@@ -259,7 +259,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           destreza: 'separables',
           titulo: `Falta la partícula ${cita(particula)}`,
           texto: `El verbo es separable: la partícula ${cita(particula)} no desaparece, se va al final de la frase: ${frase}${fin}`,
-          pista: 'El verbo es separable y le falta su partícula: no desaparece al conjugarlo, se va al final de la frase. ¿Cuál es?',
+          pista: 'El verbo es separable y le falta algo: al conjugarlo, su partícula no desaparece. ¿Cuál es y dónde va?',
         });
       }
     }
@@ -292,7 +292,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           destreza: 'subordinada',
           titulo: `Después de ${cita(sub.conjuncion)}, el verbo va al final`,
           texto: `${cita(sub.conjuncion)} abre una subordinada, y en la subordinada ${verbos}: ${cita([sub.conjuncion, ...sub.resto, ...sub.verbos])}. Lo dejaste en medio, como en inglés${ingles ? ` (${ingles})` : ''}.`,
-          pista: `${cita(sub.conjuncion)} abre una subordinada, y en una subordinada ${sub.verbos.length > 1 ? 'los verbos se van juntos al final' : 'el verbo conjugado se va al final'}. En inglés se queda en medio${ingles ? ` (${ingles})` : ''}. ¿Qué tienes que mover?`,
+          pista: `Detrás de ${cita(sub.conjuncion)} has seguido el orden del inglés${ingles ? ` (${ingles})` : ''}. En esa parte de la frase, ¿dónde ${sub.verbos.length > 1 ? 'van los verbos' : 'va el verbo conjugado'}?`,
         });
       }
       if (sub.delante && iVerbo > iVerboSub) {
@@ -304,7 +304,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
             titulo: 'Tras la subordinada, primero el verbo y luego el sujeto',
             texto: `La subordinada entera (${cita([sub.conjuncion, ...sub.resto, ...sub.verbos])}) cuenta como primera posición, así que detrás va el verbo (${cita(verbo)}) y luego el sujeto (${cita(p.sujeto)}): ${frase}${fin} Es la misma regla que con «Morgen ga ik».`,
             // Sin citar la subordinada buena: si también está mal ordenada, la daría hecha.
-            pista: `Si la frase empieza por una subordinada (${cita(sub.conjuncion)}…), toda ella ocupa la primera posición, como «morgen» en «Morgen ga ik». ¿Qué va justo detrás de la coma?`,
+            pista: `Has empezado por una subordinada (${cita(sub.conjuncion)}…) y has seguido con el sujeto. ¿Qué pasa en neerlandés cuando la frase no empieza por el sujeto?`,
           });
         }
       }
@@ -320,7 +320,8 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
       destreza: 'niet',
       titulo: `Aquí va geen, no niet`,
       texto: `Con un sustantivo sin artículo o con een (${cita(modelo.slice(i + 1, i + 2))}), la negación es geen: ${frase}${fin} Niet niega el verbo, un adjetivo o algo definido (de, het, mijn…).`,
-      pista: 'En inglés dirías “I have no time”, no “I have not time”. En neerlandés pasa algo parecido: con un sustantivo sin artículo o con een, la negación no es niet. ¿Cuál es?',
+      // El mismo criterio sirve en las dos direcciones: la pista no dice cuál de las dos negaciones falla.
+      pista: `Mira qué niegas: ¿un sustantivo sin artículo o con ${cita('een')}, o un verbo, un adjetivo o algo definido? En neerlandés no se niegan igual.`,
     });
   } else if (modelo.includes('niet') && u.includes('niet')) {
     // Los vecinos de niet sin contar los verbos: si el verbo está mal puesto, eso ya se dice aparte.
@@ -342,7 +343,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
         destreza: 'niet',
         titulo: `Niet va ${donde}`,
         texto: `Niet va detrás del verbo, del cuándo (morgen, vandaag…) y del objeto definido (het, de film, hem), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar: ${frase}${fin} En inglés va pegado al auxiliar (“I have not seen it”); en neerlandés se mueve.`,
-        pista: 'Niet no va pegado al verbo como “not” en inglés. Va detrás del verbo, del cuándo y de lo definido (het, hem, de film), y delante del participio, del infinitivo, de la partícula, del adjetivo o del lugar. ¿Dónde va en esta frase?',
+        pista: `${cita('niet')} no va donde iría “not” en inglés. Piensa qué niega: ¿qué palabras de la frase tienen que quedar antes que ${cita('niet')}?`,
       });
     }
   }

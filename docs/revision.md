@@ -35,9 +35,9 @@ Al terminar un lote: aplica sus correcciones y marca el lote con la orden que ll
 | Verbos (V) | 58 | 0 | 58 |
 | Verbos separables (S) | 15 | 0 | 13 |
 | Vocabulario (P) | 128 | 0 | 25 |
-| Explicaciones de errores (E) | 43 | 0 | 44 |
-| Otros textos de la app (T) | 29 | 0 | 12 |
-| **Total** | **351** | **0** | **229** |
+| Explicaciones de errores (E) | 43 | 0 | 42 |
+| Otros textos de la app (T) | 28 | 0 | 11 |
+| **Total** | **350** | **0** | **226** |
 
 ## Lote 1 (unos 14 minutos)
 
@@ -836,130 +836,130 @@ Para marcarlo cuando esté corregido: `npm run revisado -- P55-P128`
 
 ## Lote 13 (unos 14 minutos)
 
-Para marcarlo cuando esté corregido: `npm run revisado -- E1-E12`
+Para marcarlo cuando esté corregido: `npm run revisado -- E1-E13`
 
 ### Explicaciones de errores
 
 **E1.** Sobre O1: «Morgen ga ik naar mijn schoonouders.» → respuesta: «Morgen ik ga naar mijn schoonouders»
 
 - **Tras «morgen», el verbo va antes que el sujeto.** Empezaste por «morgen», así que eso ocupa la primera posición: el verbo («ga») va segundo y el sujeto («ik») justo detrás: «Morgen ga ik naar mijn schoonouders». En inglés el sujeto iría delante del verbo (como en “Tomorrow I go”); por eso sale así.
-  - *Pista antes del segundo intento:* Has empezado por «morgen», y eso ya ocupa la primera posición. En inglés iría ahora el sujeto (como en “Tomorrow I go”); en neerlandés, el verbo conjugado. ¿Dónde va «ga»?
+  - *Pista antes del segundo intento:* Has empezado por «morgen» y has seguido con el sujeto, como en inglés. ¿Qué cambia en neerlandés cuando la frase no empieza por el sujeto?
 
 **E2.** Sobre O9: «Ik wil morgen een nieuwe fiets kopen.» → respuesta: «Ik wil kopen morgen een nieuwe fiets»
 
 - **El infinitivo «kopen» va al final.** Con «wil», el infinitivo se va al final de la frase y todo lo demás queda en medio: «Ik wil morgen een nieuwe fiets kopen». En inglés va pegado al modal (“I want to buy a bike tomorrow”).
-  - *Pista antes del segundo intento:* Con «wil», el infinitivo se va al final y todo lo demás queda en medio. En inglés va pegado al modal (“I want to buy a bike tomorrow”). ¿Qué tienes que mover?
+  - *Pista antes del segundo intento:* Has dejado el infinitivo junto a «wil», como en inglés. Con un verbo así, ¿dónde va el infinitivo en neerlandés?
 
 **E3.** Sobre O17: «Ik heb gisteren de hele dag gewerkt.» → respuesta: «Ik heb gewerkt gisteren de hele dag»
 
 - **El participio «gewerkt» va al final.** En el perfectum, «heb» se queda en segunda posición y el participio cierra la frase: «Ik heb gisteren de hele dag gewerkt». En inglés el participio va pegado al auxiliar (“I have worked all day”); en neerlandés todo lo demás va en medio.
-  - *Pista antes del segundo intento:* En el perfectum, «heb» va en segunda posición y el participio cierra la frase, con todo lo demás en medio. En inglés van juntos (“I have worked all day”). ¿Qué tienes que mover?
+  - *Pista antes del segundo intento:* Has dejado el participio junto al auxiliar, como en inglés. En el perfectum neerlandés, ¿dónde va el participio?
 
 **E4.** Sobre O17: «Ik heb gisteren de hele dag gewerkt.» → respuesta: «Ik heb gisteren de hele dag gewerkd»
 
 - **«gewerkd» no: «gewerkt».** ’t kofschip: en «werken» va «k» delante de -en, que está en ’t kofschip (t, k, f, s, ch, p), así que acaba en -t: «gewerkt». Se mira el infinitivo, no la raíz.
-  - *Pista antes del segundo intento:* ¿-t o -d? Mira qué letra va delante de -en en el infinitivo de «werken» y si está en ’t kofschip (t, k, f, s, ch, p). Se mira el infinitivo, no la raíz.
+  - *Pista antes del segundo intento:* ¿-t o -d? Mira qué letra va delante de -en en el infinitivo de «werken»: ¿está en «’t kofschip» (t, k, f, s, ch, p)?
 
 **E5.** Sobre O18: «We zijn in het weekend naar Utrecht gegaan.» → respuesta: «We hebben in het weekend naar Utrecht gegaan»
 
 - **«hebben» no: «zijn».** El perfectum de «gaan» va con zijn: «We zijn in het weekend naar Utrecht gegaan». Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, verhuizen, worden…), y además zijn y blijven.
-  - *Pista antes del segundo intento:* En inglés todo va con have, pero en neerlandés el movimiento hacia un sitio, el cambio de estado, zijn y blijven llevan otro auxiliar. ¿Cuál va aquí, y en qué forma?
+  - *Pista antes del segundo intento:* En inglés todo va con “have”. En neerlandés, ¿hay aquí movimiento hacia un sitio, cambio de estado, «zijn» o «blijven»? Según eso, ¿qué auxiliar va?
 
 **E6.** Sobre O19: «Heb je goed geslapen?» → respuesta: «Heb je goed geslaapt?»
 
 - **«geslaapt» no: «geslapen».** «slapen» tiene participio irregular: «geslapen». No sigue la regla de ge + raíz + t o d, así que hay que aprenderlo de memoria.
-  - *Pista antes del segundo intento:* «slapen» es irregular: su participio no sale de ge + raíz + t o d. Muchos acaban en -en, a menudo con otra vocal, y otros en -cht. ¿Cuál es?
+  - *Pista antes del segundo intento:* «slapen» tiene participio irregular, que no sale de ge + raíz + t o d. Muchos acaban en -en. ¿Cuál es?
 
 **E7.** Sobre O25: «Ik bel je morgen op.» → respuesta: «Ik opbel je morgen»
 
 - **«opbel» se separa en la frase principal.** Con el verbo conjugado en la principal, la partícula «op» se separa y se va al final: «Ik bel je morgen op». Solo va pegada con un modal, en una subordinada y en el participio (con opbellen: «ik wil je opbellen», «omdat ik je opbel», «opgebeld»).
-  - *Pista antes del segundo intento:* «opbel» es un verbo separable, y conjugado en la frase principal se parte en dos. ¿Qué parte va en segunda posición y cuál se va al final?
+  - *Pista antes del segundo intento:* «opbel» es un verbo separable. ¿Qué le pasa a un separable cuando va conjugado en la frase principal?
 
 **E8.** Sobre O34: «Ik heb het niet gezien.» → respuesta: «Ik heb niet het gezien»
 
 - **Niet va detrás de «het» y delante de «gezien».** Niet va detrás del verbo, del cuándo (morgen, vandaag…) y del objeto definido (het, de film, hem), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar: «Ik heb het niet gezien». En inglés va pegado al auxiliar (“I have not seen it”); en neerlandés se mueve.
-  - *Pista antes del segundo intento:* Niet no va pegado al verbo como “not” en inglés. Va detrás del verbo, del cuándo y de lo definido (het, hem, de film), y delante del participio, del infinitivo, de la partícula, del adjetivo o del lugar. ¿Dónde va en esta frase?
+  - *Pista antes del segundo intento:* «niet» no va donde iría “not” en inglés. Piensa qué niega: ¿qué palabras de la frase tienen que quedar antes que «niet»?
 
 **E9.** Sobre O39: «Ik heb vandaag geen tijd.» → respuesta: «Ik heb vandaag niet tijd»
 
 - **Aquí va geen, no niet.** Con un sustantivo sin artículo o con een («tijd»), la negación es geen: «Ik heb vandaag geen tijd». Niet niega el verbo, un adjetivo o algo definido (de, het, mijn…).
-  - *Pista antes del segundo intento:* En inglés dirías “I have no time”, no “I have not time”. En neerlandés pasa algo parecido: con un sustantivo sin artículo o con een, la negación no es niet. ¿Cuál es?
+  - *Pista antes del segundo intento:* Mira qué niegas: ¿un sustantivo sin artículo o con «een», o un verbo, un adjetivo o algo definido? En neerlandés no se niegan igual.
 
 **E10.** Sobre O42: «Waar woont je zus?» → respuesta: «Waar je zus woont?»
 
 - **En la pregunta, el verbo va justo detrás de «waar».** Después de «waar» va el verbo («woont») y luego el sujeto («je zus»): «Waar woont je zus?» Con el sujeto delante, suena a subordinada (como en «Ik weet niet waar je zus woont»), no a pregunta.
-  - *Pista antes del segundo intento:* En inglés el sujeto va detrás de do o does (“Where does your sister live?”); en neerlandés no hay do, y es el verbo el que va delante del sujeto. ¿Dónde va «woont»?
+  - *Pista antes del segundo intento:* En inglés, la pregunta se apoya en “do” o “does”. En neerlandés no existen: ¿qué hace entonces el verbo conjugado?
 
 **E11.** Sobre O41: «Werk jij morgen?» → respuesta: «Werkt jij morgen?»
 
 - **«werkt» no: «werk».** Cuando jij o je va detrás del verbo (en una pregunta o tras «morgen», por ejemplo), la -t se cae: «werk jij». Con jij delante sí lleva -t: «jij werkt».
-  - *Pista antes del segundo intento:* Aquí «jij» va detrás del verbo. Con jij o je detrás, el verbo pierde algo que lleva con jij delante. ¿Qué le sobra a «werkt»?
+  - *Pista antes del segundo intento:* Mira dónde va «jij»: detrás del verbo. Con «jij» y «je», ¿cambia algo la forma según vayan delante o detrás?
 
 **E12.** Sobre O2: «Vandaag werk ik thuis.» → respuesta: «Vandaag werkt ik thuis»
 
 - **«werkt» no: «werk».** Con ik va la raíz sola, sin -t: «ik werk». La -t es para jij, hij, zij y u.
-  - *Pista antes del segundo intento:* Con ik va la raíz sola, sin nada detrás. ¿Qué le sobra a «werkt»?
-
-## Lote 14 (unos 15 minutos)
-
-Para marcarlo cuando esté corregido: `npm run revisado -- E13-E25`
-
-### Explicaciones de errores
+  - *Pista antes del segundo intento:* Mira el sujeto: «ik». ¿Qué forma del presente va con «ik»?
 
 **E13.** Sobre O49: «Ik blijf thuis omdat ik niet lekker ben.» → respuesta: «Ik blijf thuis omdat ik ben niet lekker»
 
 - **Después de «omdat», el verbo va al final.** «omdat» abre una subordinada, y en la subordinada el verbo conjugado («ben») se va al final: «omdat ik niet lekker ben». Lo dejaste en medio, como en inglés (“because I am not well”).
-  - *Pista antes del segundo intento:* «omdat» abre una subordinada, y en una subordinada el verbo conjugado se va al final. En inglés se queda en medio (“because I am not well”). ¿Qué tienes que mover?
+  - *Pista antes del segundo intento:* Detrás de «omdat» has seguido el orden del inglés (“because I am not well”). En esa parte de la frase, ¿dónde va el verbo conjugado?
+
+## Lote 14 (unos 15 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- E14-E27`
+
+### Explicaciones de errores
 
 **E14.** Sobre O50: «Ik denk dat het morgen gaat regenen.» → respuesta: «Ik denk dat het gaat regenen morgen»
 
 - **Después de «dat», el verbo va al final.** «dat» abre una subordinada, y en la subordinada los verbos («gaat regenen») van juntos al final: «dat het morgen gaat regenen». Lo dejaste en medio, como en inglés (“that it is going to rain”).
-  - *Pista antes del segundo intento:* «dat» abre una subordinada, y en una subordinada los verbos se van juntos al final. En inglés se queda en medio (“that it is going to rain”). ¿Qué tienes que mover?
+  - *Pista antes del segundo intento:* Detrás de «dat» has seguido el orden del inglés (“that it is going to rain”). En esa parte de la frase, ¿dónde van los verbos?
 
 **E15.** Sobre O57: «Als ik tijd heb, kom ik langs.» → respuesta: «Als ik tijd heb, ik kom langs»
 
 - **Tras la subordinada, primero el verbo y luego el sujeto.** La subordinada entera («als ik tijd heb») cuenta como primera posición, así que detrás va el verbo («kom») y luego el sujeto («ik»): «Als ik tijd heb, kom ik langs». Es la misma regla que con «Morgen ga ik».
-  - *Pista antes del segundo intento:* Si la frase empieza por una subordinada («als»…), toda ella ocupa la primera posición, como «morgen» en «Morgen ga ik». ¿Qué va justo detrás de la coma?
+  - *Pista antes del segundo intento:* Has empezado por una subordinada («als»…) y has seguido con el sujeto. ¿Qué pasa en neerlandés cuando la frase no empieza por el sujeto?
 
 **E16.** Sobre O57: «Als ik tijd heb, kom ik langs.» → respuesta: «Als ik heb tijd, kom ik langs»
 
 - **Después de «als», el verbo va al final.** «als» abre una subordinada, y en la subordinada el verbo conjugado («heb») se va al final: «als ik tijd heb». Lo dejaste en medio, como en inglés (“if I have time”).
-  - *Pista antes del segundo intento:* «als» abre una subordinada, y en una subordinada el verbo conjugado se va al final. En inglés se queda en medio (“if I have time”). ¿Qué tienes que mover?
+  - *Pista antes del segundo intento:* Detrás de «als» has seguido el orden del inglés (“if I have time”). En esa parte de la frase, ¿dónde va el verbo conjugado?
 
 **E17.** Sobre O13: «Mag ik je iets vragen?» → respuesta: «Ik mag je iets vragen?»
 
 - **En la pregunta, el verbo va primero.** En una pregunta de sí o no, el verbo («mag») va delante del sujeto («ik»): «Mag ik je iets vragen?» En inglés se usa do o se cambia el orden con el auxiliar; en neerlandés siempre se pone delante el verbo, sea el que sea.
-  - *Pista antes del segundo intento:* En inglés, la pregunta de sí o no empieza por do o por el auxiliar (“Do you work tomorrow?”); en neerlandés, por el verbo, sea el que sea. ¿Dónde va «mag»?
+  - *Pista antes del segundo intento:* Tal como está, es una afirmación. En inglés empezarías por “do” o por el auxiliar; en neerlandés, ¿qué va primero?
 
 **E18.** Sobre O46: «Kom jij ook naar het feest?» → respuesta: «Jij komt ook naar het feest?»
 
 - **En la pregunta, el verbo va primero.** En una pregunta de sí o no, el verbo («kom») va delante del sujeto («jij»): «Kom jij ook naar het feest?» En inglés se usa do o se cambia el orden con el auxiliar; en neerlandés siempre se pone delante el verbo, sea el que sea. Con «jij» detrás, «komt» pierde la -t: «kom jij».
-  - *Pista antes del segundo intento:* En inglés, la pregunta de sí o no empieza por do o por el auxiliar (“Do you work tomorrow?”); en neerlandés, por el verbo, sea el que sea. ¿Dónde va «komt»? Y con «jij» detrás, mira bien la forma del verbo.
+  - *Pista antes del segundo intento:* Tal como está, es una afirmación. En inglés empezarías por “do” o por el auxiliar; en neerlandés, ¿qué va primero? Y con «jij» detrás, ojo con la forma del verbo.
 
 **E19.** Sobre O8: «Meestal eten we om zes uur.» → respuesta: «Om zes uur we eten meestal»
 
 - **Tras «om zes uur», el verbo va antes que el sujeto.** Si la frase empieza por «om zes uur», eso ocupa la primera posición y el verbo («eten») tiene que ir segundo, antes del sujeto («we»): «Om zes uur eten we meestal». O empieza por el sujeto: «We eten meestal om zes uur».
-  - *Pista antes del segundo intento:* Si empiezas por «om zes uur», eso ocupa la primera posición y el verbo conjugado tiene que ir segundo, antes que el sujeto. ¿Dónde va «eten»? También puedes empezar por el sujeto.
+  - *Pista antes del segundo intento:* Has empezado por «om zes uur», que no es el sujeto. ¿Qué tiene que ir justo detrás de lo que ocupa la primera posición? También puedes empezar por el sujeto.
 
 **E20.** Sobre O33: «Ik kom morgen niet.» → respuesta: «Ik morgen kom niet»
 
 - **El verbo conjugado va en segunda posición.** Empezando por el sujeto («ik»), el verbo («kom») va justo detrás, y lo demás (cuándo, dónde) después: «Ik kom morgen niet». En inglés el adverbio puede ir entre los dos (“I often go”); en neerlandés no.
-  - *Pista antes del segundo intento:* Entre el sujeto y el verbo conjugado no se mete nada: en inglés sí (“I often go”), pero en neerlandés el cuándo y el cómo van detrás del verbo. ¿Dónde va «kom»?
+  - *Pista antes del segundo intento:* Has metido algo entre el sujeto y el verbo, como hace el inglés en “I often go”. En neerlandés, ¿en qué posición va el verbo conjugado?
 
 **E21.** Sobre O35: «Dat is niet waar.» → respuesta: «Dat niet is waar»
 
 - **El verbo conjugado va en segunda posición.** Empezando por el sujeto («dat»), el verbo («is») va justo detrás, y niet después: «Dat is niet waar». En español el «no» va delante del verbo; en neerlandés, niet nunca va entre el sujeto y el verbo conjugado.
-  - *Pista antes del segundo intento:* En español el «no» va delante del verbo, pero en neerlandés niet va detrás del verbo conjugado. ¿Dónde va «is»?
+  - *Pista antes del segundo intento:* Has puesto «niet» delante del verbo, como el “no” del español. En neerlandés, ¿en qué posición va siempre el verbo conjugado?
 
 **E22.** Sobre O25: «Ik bel je morgen op.» → respuesta: «Ik bel je op morgen»
 
 - **La partícula «op» va al final.** En la frase principal, la partícula se separa del verbo y se va al final: «Ik bel je morgen op».
-  - *Pista antes del segundo intento:* En la frase principal, la partícula de un verbo separable cierra la frase. ¿Qué tienes que mover?
+  - *Pista antes del segundo intento:* La partícula del verbo separable no está en su sitio. En la frase principal, ¿dónde va?
 
 **E23.** Sobre O30: «Ik nodig mijn vrienden voor zaterdag uit.» → respuesta: «Ik nodig mijn vrienden voor zaterdag»
 
 - **Falta la partícula «uit».** El verbo es separable: la partícula «uit» no desaparece, se va al final de la frase: «Ik nodig mijn vrienden voor zaterdag uit».
-  - *Pista antes del segundo intento:* El verbo es separable y le falta su partícula: no desaparece al conjugarlo, se va al final de la frase. ¿Cuál es?
+  - *Pista antes del segundo intento:* El verbo es separable y le falta algo: al conjugarlo, su partícula no desaparece. ¿Cuál es y dónde va?
 
 **E24.** Sobre V1: «Vroeger werkte ik in een restaurant.» → respuesta: «Vroeger werk ik in een restaurant»
 
@@ -969,23 +969,23 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E13-E25`
 **E25.** Sobre V2: «Toen woonden we in Madrid.» → respuesta: «Toen woonde we in Madrid»
 
 - **«woonde» no: «woonden».** En pasado, el plural («we») lleva -n: «woonden». Sin -n es el singular (ik, jij, hij).
-  - *Pista antes del segundo intento:* «woonde» es el pasado del singular, y «we» es plural. ¿Qué le falta?
-
-## Lote 15 (unos 15 minutos)
-
-Para marcarlo cuando esté corregido: `npm run revisado -- E26-E42`
-
-### Explicaciones de errores
+  - *Pista antes del segundo intento:* Mira el sujeto: «we». En pasado simple, ¿en qué se distingue el singular del plural?
 
 **E26.** Sobre V3: «Mijn moeder maakte altijd paella.» → respuesta: «Mijn moeder maakten altijd paella»
 
 - **«maakten» no: «maakte».** Con «mijn moeder» (singular), el pasado va sin -n: «maakte». La -n es para el plural (wij, jullie, zij).
-  - *Pista antes del segundo intento:* «maakten» es el pasado del plural, y «mijn moeder» es singular. ¿Qué le sobra?
+  - *Pista antes del segundo intento:* Mira el sujeto: «mijn moeder». En pasado simple, ¿en qué se distingue el singular del plural?
 
 **E27.** Sobre V2: «Toen woonden we in Madrid.» → respuesta: «Toen woonten we in Madrid»
 
 - **«woonten» no: «woonden».** En los regulares, -te o -de sale de la misma regla que el participio, ’t kofschip: si en el infinitivo de «wonen» va t, k, f, s, ch o p delante de -en, -te; si no, -de. Aquí: «woonden».
-  - *Pista antes del segundo intento:* ¿-te o -de? Sale de la misma regla que el participio: mira qué letra va delante de -en en el infinitivo de «wonen» y si está en ’t kofschip (t, k, f, s, ch, p).
+  - *Pista antes del segundo intento:* ¿-te o -de? Mira qué letra va delante de -en en el infinitivo de «wonen»: ¿está en «’t kofschip» (t, k, f, s, ch, p)?
+
+## Lote 15 (unos 15 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- E28-E43 T1-T4`
+
+### Explicaciones de errores
 
 **E28.** Sobre V21: «Hij kwam om negen uur thuis.» → respuesta: «Hij komde om negen uur thuis»
 
@@ -995,22 +995,22 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E26-E42`
 **E29.** Sobre V1: «Hij werkt thuis.» → respuesta: «Hij werk thuis.»
 
 - **«werk» no: «werkt».** Con «hij» (él, ella, eso o un nombre en singular) va raíz + t: «hij werkt». Solo se cae la -t si jij o je va detrás del verbo.
-  - *Pista antes del segundo intento:* Con «hij» (él, ella, eso o un nombre en singular), la raíz sola no basta. Como en inglés “he works” lleva -s, aquí la raíz también lleva algo detrás. ¿Qué le falta a «werk»?
+  - *Pista antes del segundo intento:* Mira el sujeto: «hij». En inglés dirías “he works”, no “he work”. ¿Qué forma del presente le toca?
 
 **E30.** Sobre O42: «Waar woont je zus?» → respuesta: «Waar woon je zus?»
 
 - **«woon» no: «woont».** Aquí «je» es «tu», no el sujeto «tú»: el sujeto es «je zus», que va en tercera persona, así que el verbo lleva -t: «woont je zus». La -t solo se cae si el sujeto es jij o je y va detrás del verbo.
-  - *Pista antes del segundo intento:* Aquí «je» no es el sujeto «tú» sino «tu» («je zus»): el sujeto va en tercera persona. ¿Qué le falta a «woon»?
+  - *Pista antes del segundo intento:* Aquí «je» no es el sujeto “tú” sino “tu”: el sujeto es «je zus». ¿Qué forma va con ese sujeto?
 
 **E31.** Sobre O11: «We moeten om acht uur bij mijn ouders zijn.» → respuesta: «We moet om acht uur bij mijn ouders zijn»
 
 - **«moet» no: «moeten».** Con «we» (plural), el verbo va en infinitivo: «we moeten».
-  - *Pista antes del segundo intento:* «we» es plural. ¿Qué forma lleva el verbo con wij, jullie y zij?
+  - *Pista antes del segundo intento:* Mira el sujeto: «we», que es plural. ¿Qué forma lleva el verbo en plural?
 
 **E32.** Sobre O37: «Ik begrijp het niet.» → respuesta: «Ik begrijpen het niet»
 
 - **«begrijpen» no: «begrijp».** Has dejado el verbo sin conjugar. Con «ik», «begrijpen» es «begrijp»; el infinitivo solo va con wij, jullie y zij (plural).
-  - *Pista antes del segundo intento:* «begrijpen» es el infinitivo, que solo va con wij, jullie y zij. ¿Qué forma lleva con «ik»?
+  - *Pista antes del segundo intento:* «begrijpen» está sin conjugar. Mira el sujeto, «ik»: ¿qué forma del presente le toca?
 
 **E33.** Sobre O2: «Vandaag werk ik thuis.» → respuesta: «Vandaag werkte ik thuis»
 
@@ -1030,12 +1030,12 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E26-E42`
 **E36.** Sobre V9: «Ik heb de rekening al betaald.» → respuesta: «Ik heb de rekening al gebetaald»
 
 - **«gebetaald» no: «betaald».** «betalen» empieza por un prefijo átono (be-, ver-, ge-, her-, ont-, er-), y con ellos el participio no lleva ge-: «betaald».
-  - *Pista antes del segundo intento:* «betalen» empieza por un prefijo átono (be-, ver-, ge-, her-, ont-, er-). Con esos prefijos, ¿qué le sobra a «gebetaald»?
+  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «betalen»? Mira cómo empieza el infinitivo: los que empiezan por be-, ver-, ge-, her-, ont- o er- no lo llevan.
 
 **E37.** Sobre V10: «De kinderen hebben de hele middag buiten gespeeld.» → respuesta: «De kinderen hebben de hele middag buiten speeld»
 
 - **«speeld» no: «gespeeld».** El participio regular empieza por ge-: ge + raíz + t o d. «spelen» da «gespeeld».
-  - *Pista antes del segundo intento:* El participio regular tiene tres partes: ge + raíz + t o d. ¿Qué le falta a «speeld»?
+  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «spelen»? Mira cómo empieza el infinitivo: los que empiezan por be-, ver-, ge-, her-, ont- o er- no lo llevan.
 
 **E38.** Sobre V4: «Ik heb lang met mijn schoonvader gepraat.» → respuesta: «Ik heb lang met mijn schoonvader gepraatt»
 
@@ -1045,12 +1045,12 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E26-E42`
 **E39.** Sobre V13: «Ze hebben veel gereisd.» → respuesta: «Ze hebben veel gereist»
 
 - **«gereist» no: «gereisd».** ’t kofschip: en «reizen» va «z» delante de -en, que no está en ’t kofschip (t, k, f, s, ch, p), así que acaba en -d: «gereisd». Se mira el infinitivo, no la raíz.
-  - *Pista antes del segundo intento:* ¿-t o -d? Mira qué letra va delante de -en en el infinitivo de «reizen» y si está en ’t kofschip (t, k, f, s, ch, p). Se mira el infinitivo, no la raíz.
+  - *Pista antes del segundo intento:* ¿-t o -d? Mira qué letra va delante de -en en el infinitivo de «reizen»: ¿está en «’t kofschip» (t, k, f, s, ch, p)?
 
 **E40.** Sobre O19: «Heb je goed geslapen?» → respuesta: «Ben je goed geslapen?»
 
 - **«ben» no: «heb».** El perfectum de «slapen» va con hebben: «Heb je goed geslapen?» La gran mayoría van con hebben; zijn es solo para el movimiento hacia un sitio, el cambio de estado, zijn y blijven.
-  - *Pista antes del segundo intento:* Con zijn solo van el movimiento hacia un sitio, el cambio de estado, zijn y blijven, y aquí no hay nada de eso. ¿Qué auxiliar va, y en qué forma?
+  - *Pista antes del segundo intento:* En inglés todo va con “have”. En neerlandés, ¿hay aquí movimiento hacia un sitio, cambio de estado, «zijn» o «blijven»? Según eso, ¿qué auxiliar va?
 
 **E41.** Sobre P18: «het meisje» → respuesta: «de meisje»
 
@@ -1059,12 +1059,6 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E26-E42`
 **E42.** Sobre P21: «het huis» → respuesta: «de huis»
 
 - **Es «het huis», no «de huis».** Es de las palabras con het: hay menos que con de, así que conviene aprenderlas con su artículo, como una sola palabra.
-
-## Lote 16 (unos 13 minutos)
-
-Para marcarlo cuando esté corregido: `npm run revisado -- E43 T1-T29`
-
-### Explicaciones de errores
 
 **E43.** Sobre P20: «de baby» → respuesta: «het baby»
 
@@ -1076,6 +1070,13 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E43 T1-T29`
 - **T2** (Progreso, una regla): Verbo en segunda posición. Morgen ga ik…: si la frase no empieza por el sujeto, el verbo va antes que él.
 - **T3** (Progreso, una regla): Modal + infinitivo al final. Ik wil morgen een fiets kopen.
 - **T4** (Progreso, una regla): Perfectum: participio al final. Ik heb gisteren de hele dag gewerkt.
+
+## Lote 16 (unos 9 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- T5-T27 T29`
+
+### Otros textos de la app
+
 - **T5** (Progreso, una regla): Participio regular. ge + raíz + t o d (’t kofschip).
 - **T6** (Progreso, una regla): Hebben o zijn. Ik heb gewerkt, pero ik ben gegaan.
 - **T7** (Progreso, una regla): Niet y geen. Dónde va niet y cuándo se dice geen.
@@ -1097,10 +1098,9 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E43 T1-T29`
 - **T23** (Hoy, la parte de verbos): Conjugar sin pensarlo: presente, perfectum con hebben o zijn, separables y pasado simple.
 - **T24** (Hoy, la parte de vocabulario): Palabras y expresiones de la vida diaria, siempre con su de o het.
 - **T25** (Ajustes, el botón Probar de la voz): Goedemorgen! Hoe gaat het met je?
-- **T26** (Pista del primer fallo al ordenar, si no se sabe qué regla falla): Las palabras son esas; falla el orden. Empieza por el verbo conjugado: segundo en la frase principal, primero en una pregunta de sí o no y al final en una subordinada. Lo demás se coloca a su alrededor.
-- **T27** (Pista del primer fallo al escribir la frase con las palabras buenas en otro orden): Tienes las palabras buenas, pero no en su sitio. Empieza por el verbo conjugado: segundo en la frase principal, primero en una pregunta de sí o no y al final en una subordinada.
-- **T28** (Pista del primer fallo al escribir la frase con otras palabras): Alguna palabra no es la que toca, o falta o sobra alguna. Repasa también la forma de cada verbo.
-- **T29** (Pista del primer fallo al completar una forma): Esa forma no es la que va aquí. Fíjate en quién hace la acción y en el tiempo de la frase.
+- **T26** (Pista del primer fallo al ordenar, si no se sabe qué regla falla): Las palabras son esas; falla el orden. Empieza por el verbo conjugado: ¿qué tipo de frase es, y dónde va el verbo en ella?
+- **T27** (Pista del primer fallo al escribir la frase con las palabras buenas en otro orden): Tienes las palabras buenas, pero no en su sitio. Empieza por el verbo conjugado: ¿qué tipo de frase es, y dónde va el verbo en ella?
+- **T29** (Pista del primer fallo al completar una forma): Esa forma no es la buena. Revisa cómo se escribe y si va con este sujeto y en este tiempo.
 
 ## Ya revisado
 

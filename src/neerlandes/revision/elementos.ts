@@ -233,7 +233,7 @@ function textos(): ElementoRevision[] {
     // La pista del primer fallo cuando no se sabe qué regla ha fallado (las demás van con su explicación, en E).
     texto('T26', 'Pista del primer fallo al ordenar, si no se sabe qué regla falla', PISTAS_GENERALES.ordenar),
     texto('T27', 'Pista del primer fallo al escribir la frase con las palabras buenas en otro orden', PISTAS_GENERALES.traducirOrden),
-    texto('T28', 'Pista del primer fallo al escribir la frase con otras palabras', PISTAS_GENERALES.traducir),
+    // T28 era la pista general al escribir la frase con otras palabras: ya no hay reintento sin diagnóstico. Su código no se reutiliza.
     texto('T29', 'Pista del primer fallo al completar una forma', PISTAS_GENERALES.completar),
   ];
 }
