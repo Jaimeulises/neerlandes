@@ -6,7 +6,6 @@
 // no tenga audio grabado lo lee la voz del dispositivo.
 
 import datos from './audio-manifiesto.json';
-import { huella } from './comun';
 
 export interface ManifiestoAudio {
   /** La voz de Azure, por ejemplo nl-NL-FennaNeural. Vacía si no hay nada grabado. */
@@ -24,9 +23,17 @@ const MANIFIESTO: ManifiestoAudio = datos;
 /** Lo que suena al tocar Probar en Ajustes. */
 export const FRASE_DE_PRUEBA = 'Goedemorgen! Hoe gaat het met je?';
 
-/** Huella FNV-1a de 32 bits del texto, en hexadecimal. La usa también el script que graba. */
+/**
+ * Huella FNV-1a de 32 bits del texto (sobre UTF-8), en hexadecimal: el nombre de su archivo. La usa también el script
+ * que graba. Es solo del audio: la revisión tiene la suya, y cambiar esta no devuelve nada a pendiente.
+ */
 export function huellaAudio(texto: string): string {
-  return huella(texto);
+  let h = 0x811c9dc5;
+  for (const byte of new TextEncoder().encode(texto)) {
+    h ^= byte;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
 }
 
 /** Nombre de la voz grabada, o null si no hay audio grabado. */

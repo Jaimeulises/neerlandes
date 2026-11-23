@@ -4,12 +4,13 @@
 // explicaciones de errores (E) y los demás textos con neerlandés (T). Los
 // códigos de los datos van en los datos; los de las reglas y los textos, aquí.
 //
-// De cada elemento sale lo que ve quien revisa, en Markdown. Su huella se saca
-// de ese texto sin las marcas de formato: si cambia algo de lo que se lee,
-// vuelve a estar pendiente; si solo cambia el formato, no (ver estado.ts).
+// De cada elemento se guarda solo su contenido: texto de los datos o calculado
+// por el código, sin etiquetas ni formato. El documento lo pinta (documento.ts)
+// y la huella sale del contenido: si cambia algo de lo que se lee, vuelve a
+// pendiente; si solo cambia cómo se pinta, no (decisión 0007).
 
 import { FRASE_DE_PRUEBA } from '../audio';
-import { alternativas, comoFrase, huella, primera } from '../comun';
+import { alternativas, comoFrase, primera } from '../comun';
 import { DESTREZAS, FALTA_PARA_B2, type IdDestreza } from '../destrezas';
 import { PISTAS_GENERALES } from '../diagnostico';
 import { diagnosticarEjemplos } from '../diagnostico/ejemplos';
@@ -23,18 +24,69 @@ import { ELEMENTOS_VOCABULARIO, vocabulario } from '../vocabulario/pista';
 /** O frases de orden, R reglas, V verbos, S separables, P palabras, E explicaciones de errores, T otros textos. */
 export type Tipo = 'O' | 'R' | 'V' | 'S' | 'P' | 'E' | 'T';
 
-/** Cómo se pinta un elemento: fila de una de las dos tablas, punto de una lista o bloque suelto. */
-export type Formato = 'tabla-orden' | 'tabla-palabras' | 'lista' | 'bloque';
-
-export interface ElementoRevision {
-  readonly codigo: string;
-  readonly tipo: Tipo;
-  /** El apartado del documento donde va (el grupo, en las frases y las palabras). */
-  readonly apartado: string;
-  readonly formato: Formato;
-  /** Lo que se ve, en Markdown: una fila de tabla o las líneas de un bloque. */
-  readonly lineas: readonly string[];
+export interface ContenidoFrase {
+  readonly frase: string;
+  /** Las demás formas buenas. */
+  readonly otras: readonly string[];
+  readonly es: string;
+  /** La pista que sale al traducirla, que a veces trae neerlandés. */
+  readonly pista?: string;
 }
+
+export interface ContenidoVerbo {
+  readonly inf: string;
+  readonly es: string;
+  /** Las seis formas (ik, jij, hij, wij, jullie, zij), la frase con ik, la pregunta con jij y sus otras formas. */
+  readonly presente?: { readonly formas: readonly string[]; readonly frase: string; readonly pregunta?: string; readonly otrasConJij: readonly string[] };
+  /** Con lo que se montan en español las frases de presente: las seis formas, lo que sigue y la pregunta. */
+  readonly presenteEs?: { readonly formas: readonly string[]; readonly resto: string; readonly pregunta?: string };
+  /** El presente de un verbo que no se practica: solo sale como opción mala en el pasado. */
+  readonly presenteOpcion?: readonly string[];
+  readonly perfectum?: { readonly auxiliar: string; readonly participio: string; readonly frase: string; readonly es: string; readonly otras: readonly string[] };
+  readonly pasado?: { readonly singular: string; readonly plural: string; readonly frase?: string; readonly es?: string; readonly otras: readonly string[] };
+  readonly nota?: string;
+}
+
+export interface ContenidoSeparable {
+  readonly inf: string;
+  readonly es: string;
+  readonly presente: { readonly frase: string; readonly es: string; readonly otras: readonly string[] };
+  readonly perfectum: { readonly auxiliar: string; readonly participio: string; readonly frase: string; readonly es: string };
+}
+
+export interface ContenidoPalabra {
+  readonly nl: string;
+  readonly otras: readonly string[];
+  readonly es: string;
+  readonly nota?: string;
+}
+
+export interface ContenidoExplicacion {
+  /** La frase o la palabra buena, y lo que se ha respondido. */
+  readonly frase: string;
+  readonly respuesta: string;
+  readonly diagnosticos: readonly { readonly titulo: string; readonly texto: string; readonly pista?: string }[];
+}
+
+interface Base {
+  readonly codigo: string;
+  /** El apartado del documento donde va: el grupo, en las frases y las palabras. */
+  readonly apartado: string;
+  /** Para situarse, sin ser parte de lo revisado (no entra en la huella): de qué va una regla o dónde sale un texto. */
+  readonly contexto?: string;
+  /** 1 si se revisa en la fase 1 (orden, verbos y pistas); 2, lo demás (palabras y textos). */
+  readonly fase: 1 | 2;
+}
+
+export type ElementoRevision =
+  | (Base & { readonly tipo: 'O'; readonly contenido: ContenidoFrase })
+  | (Base & { readonly tipo: 'R'; readonly contenido: { readonly texto: string } })
+  | (Base & { readonly tipo: 'V'; readonly contenido: ContenidoVerbo })
+  | (Base & { readonly tipo: 'S'; readonly contenido: ContenidoSeparable })
+  | (Base & { readonly tipo: 'P'; readonly contenido: ContenidoPalabra })
+  /** de: el código del elemento sobre el que va el fallo. */
+  | (Base & { readonly tipo: 'E'; readonly de: string; readonly contenido: ContenidoExplicacion })
+  | (Base & { readonly tipo: 'T'; readonly contenido: { readonly texto: string } });
 
 export const NOMBRES_TIPO: Readonly<Record<Tipo, string>> = {
   O: 'Orden de la frase',
@@ -95,131 +147,146 @@ const CODIGOS_DESTREZAS: Readonly<Record<IdDestreza, string>> = {
   pasado: 'T15',
 };
 
-/** Un texto dentro de una celda de tabla: sin barras que la rompan. */
-function celda(texto: string): string {
-  return texto.replaceAll('|', '\\|');
+function frasesDeOrden(grupo: GrupoOrden): ElementoRevision[] {
+  const apartado = `${NOMBRES_TIPO.O}: ${NOMBRES_GRUPO_ORDEN[grupo]}`;
+  const regla: ElementoRevision = { codigo: CODIGOS_REGLAS_ORDEN[grupo], tipo: 'R', apartado, fase: 1, contenido: { texto: REGLAS_ORDEN[grupo] } };
+  const frases = ELEMENTOS_ORDEN.filter((e) => e.grupo === grupo).map(
+    (f): ElementoRevision => ({
+      codigo: f.codigo,
+      tipo: 'O',
+      apartado,
+      fase: 1,
+      contenido: { frase: f.frase, otras: f.validas.slice(1), es: f.es, ...(f.pista ? { pista: f.pista } : {}) },
+    }),
+  );
+  return [regla, ...frases];
 }
 
-/** « También: «…», «…»» con las otras formas buenas, o nada. */
-function tambien(otras: readonly string[] | undefined): string {
-  return otras && otras.length > 0 ? ` También: ${otras.map((o) => `«${comoFrase(o)}»`).join(', ')}` : '';
-}
-
-function presenteEnLinea(v: DatosVerbo): string {
-  const f = formasPresente(v);
-  const [ik, jij, hij, wij, jullie, zij] = f;
-  const plural = wij === jullie && jullie === zij ? `wij, jullie, zij ${wij}` : `wij ${wij}, jullie ${jullie}, zij ${zij}`;
-  return `ik ${ik}, jij ${jij}, hij ${hij}, ${plural}`;
-}
-
-function regla(codigo: string, apartado: string, titulo: string | null, texto: string): ElementoRevision {
-  return { codigo, tipo: 'R', apartado, formato: 'bloque', lineas: [`> **${codigo}.** ${titulo ? `**${titulo}.** ` : ''}${texto}`] };
-}
-
-function frasesDeOrden(): ElementoRevision[] {
-  return GRUPOS_ORDEN.flatMap((grupo) => {
-    const apartado = `${NOMBRES_TIPO.O}: ${NOMBRES_GRUPO_ORDEN[grupo]}`;
-    const frases = ELEMENTOS_ORDEN.filter((e) => e.grupo === grupo).map((f): ElementoRevision => {
-      const otras = f.validas.slice(1);
-      const nl = otras.length > 0 ? `${f.frase}<br>*También:* ${otras.join(' / ')}` : f.frase;
-      // La pista sale al traducir y a veces trae neerlandés: también se revisa.
-      const es = f.pista ? `${f.es}<br>*Pista:* ${f.pista}` : f.es;
-      return { codigo: f.codigo, tipo: 'O', apartado, formato: 'tabla-orden', lineas: [`| ${f.codigo} | ${celda(nl)} | ${celda(es)} |`] };
-    });
-    return [regla(CODIGOS_REGLAS_ORDEN[grupo], apartado, null, REGLAS_ORDEN[grupo]), ...frases];
-  });
-}
-
-function bloqueVerbo(v: DatosVerbo): ElementoRevision {
-  const lineas = [`**${v.codigo}. ${v.inf}**: ${v.es}`, ''];
+function contenidoVerbo(v: DatosVerbo): ContenidoVerbo {
+  let presente: ContenidoVerbo['presente'];
+  let presenteEs: ContenidoVerbo['presenteEs'];
   if (v.comp !== undefined) {
-    const f = formasPresente(v);
-    let presente = `- Presente: ${presenteEnLinea(v)}. «${comoFrase(`ik ${primera(f[0])} ${v.comp}`)}»`;
-    if (!v.sinPregunta) {
-      const [conJij, ...otras] = alternativas(formaConJij(v));
-      presente += ` «${comoFrase(`${conJij ?? ''} jij ${v.comp}`, '?')}»`;
-      if (otras.length > 0) presente += ` (también ${otras.map((o) => `«${o} jij»`).join(', ')})`;
-    }
-    lineas.push(presente);
+    const formas = formasPresente(v);
+    const [conJij = '', ...otrasConJij] = v.sinPregunta ? [] : alternativas(formaConJij(v));
+    presente = {
+      formas,
+      frase: comoFrase(`ik ${primera(formas[0] ?? '')} ${v.comp}`),
+      ...(v.sinPregunta ? {} : { pregunta: comoFrase(`${conJij} jij ${v.comp}`, '?') }),
+      otrasConJij,
+    };
     // Las frases de presente salen traducidas: el sujeto, la forma en español y lo que sigue.
     if (v.presenteEs && v.compEs !== undefined) {
-      const pregunta = v.sinPregunta ? '' : ` La pregunta: «${preguntaPresenteEs(v) ?? ''}»`;
-      lineas.push(`- En español: ${v.presenteEs.join(', ')} + «${v.compEs}».${pregunta}`);
+      const pregunta = v.sinPregunta ? undefined : preguntaPresenteEs(v);
+      presenteEs = { formas: v.presenteEs, resto: v.compEs, ...(pregunta ? { pregunta } : {}) };
     }
-  } else if (v.raiz && v.pasado) {
+  }
+  return {
+    inf: v.inf,
+    es: v.es,
+    ...(presente ? { presente } : {}),
+    ...(presenteEs ? { presenteEs } : {}),
     // No se practica, pero sale como opción mala en el pasado: también hay que revisarlo.
-    lineas.push(`- Presente (solo sale como opción mala en el pasado): ${presenteEnLinea(v)}.`);
-  }
-  if (v.participio && v.perf) {
-    lineas.push(`- Perfectum: ${v.aux === 'zijn' ? 'is' : 'heeft'} ${v.participio}. «${comoFrase(v.perf[0])}» ${v.perf[1]}${tambien(v.perfOtras)}`);
-  }
-  if (v.pasado) {
-    const ejemplo = v.pasadoEj ? ` «${comoFrase(v.pasadoEj[0])}» ${v.pasadoEj[1]}${tambien(v.pasadoOtras)}` : '';
-    lineas.push(`- Pasado: ${v.pasado[0]}, ${v.pasado[1]}.${ejemplo}`);
-  }
-  if (v.nota) lineas.push(`- Nota: ${v.nota}`);
-  return { codigo: v.codigo, tipo: 'V', apartado: NOMBRES_TIPO.V, formato: 'bloque', lineas };
+    ...(v.comp === undefined && v.raiz && v.pasado ? { presenteOpcion: formasPresente(v) } : {}),
+    ...(v.participio && v.perf
+      ? {
+          perfectum: {
+            auxiliar: v.aux === 'zijn' ? 'is' : 'heeft',
+            participio: v.participio,
+            frase: comoFrase(v.perf[0]),
+            es: v.perf[1],
+            otras: (v.perfOtras ?? []).map((o) => comoFrase(o)),
+          },
+        }
+      : {}),
+    ...(v.pasado
+      ? {
+          pasado: {
+            singular: v.pasado[0],
+            plural: v.pasado[1],
+            ...(v.pasadoEj ? { frase: comoFrase(v.pasadoEj[0]), es: v.pasadoEj[1] } : {}),
+            otras: (v.pasadoOtras ?? []).map((o) => comoFrase(o)),
+          },
+        }
+      : {}),
+    ...(v.nota ? { nota: v.nota } : {}),
+  };
 }
 
-function verbosYSeparables(): ElementoRevision[] {
-  const reglasVerbos = (Object.keys(REGLAS_VERBOS) as (keyof typeof REGLAS_VERBOS)[])
-    .filter((k) => k !== 'separables')
-    .map((k) => regla(CODIGOS_REGLAS_VERBOS[k], NOMBRES_TIPO.V, NOMBRES_REGLAS_VERBOS[k], REGLAS_VERBOS[k]));
-  const separables = SEPARABLES.map((s): ElementoRevision => {
-    const otras = (s.otras ?? []).map((o) => `«${comoFrase(o)}»`);
-    return {
+function reglaDeVerbos(k: keyof typeof REGLAS_VERBOS, apartado: string): ElementoRevision {
+  return { codigo: CODIGOS_REGLAS_VERBOS[k], tipo: 'R', apartado, contexto: NOMBRES_REGLAS_VERBOS[k], fase: 1, contenido: { texto: REGLAS_VERBOS[k] } };
+}
+
+function verbosConSusReglas(): ElementoRevision[] {
+  const reglas = (Object.keys(REGLAS_VERBOS) as (keyof typeof REGLAS_VERBOS)[]).filter((k) => k !== 'separables').map((k) => reglaDeVerbos(k, NOMBRES_TIPO.V));
+  return [...reglas, ...VERBOS.map((v): ElementoRevision => ({ codigo: v.codigo, tipo: 'V', apartado: NOMBRES_TIPO.V, fase: 1, contenido: contenidoVerbo(v) }))];
+}
+
+function separablesConSuRegla(): ElementoRevision[] {
+  const separables = SEPARABLES.map(
+    (s): ElementoRevision => ({
       codigo: s.codigo,
       tipo: 'S',
       apartado: NOMBRES_TIPO.S,
-      formato: 'bloque',
-      lineas: [
-        `**${s.codigo}. ${s.inf}**: ${s.es}`,
-        '',
-        `- Presente: «${comoFrase(s.presente.replaceAll('|', ' '))}» ${s.presenteEs}${otras.length > 0 ? ` También: ${otras.join(', ')}` : ''}`,
-        `- Perfectum: ${s.aux === 'zijn' ? 'is' : 'heeft'} ${s.participio}. «${comoFrase(s.perf[0])}» ${s.perf[1]}`,
-      ],
-    };
-  });
-  return [
-    ...reglasVerbos,
-    ...VERBOS.map(bloqueVerbo),
-    regla(CODIGOS_REGLAS_VERBOS.separables, NOMBRES_TIPO.S, null, REGLAS_VERBOS.separables),
-    ...separables,
-  ];
+      fase: 1,
+      contenido: {
+        inf: s.inf,
+        es: s.es,
+        presente: { frase: comoFrase(s.presente.replaceAll('|', ' ')), es: s.presenteEs, otras: (s.otras ?? []).map((o) => comoFrase(o)) },
+        perfectum: { auxiliar: s.aux === 'zijn' ? 'is' : 'heeft', participio: s.participio, frase: comoFrase(s.perf[0]), es: s.perf[1] },
+      },
+    }),
+  );
+  return [reglaDeVerbos('separables', NOMBRES_TIPO.S), ...separables];
 }
 
 function palabras(): ElementoRevision[] {
   return GRUPOS_VOCABULARIO.flatMap((grupo) =>
-    ELEMENTOS_VOCABULARIO.filter((e) => e.grupo === grupo).map((p): ElementoRevision => {
-      const nl = p.otras.length > 0 ? `${p.nl}<br>*También:* ${p.otras.join(' / ')}` : p.nl;
-      return {
+    ELEMENTOS_VOCABULARIO.filter((e) => e.grupo === grupo).map(
+      (p): ElementoRevision => ({
         codigo: p.codigo,
         tipo: 'P',
         apartado: `${NOMBRES_TIPO.P}: ${NOMBRES_GRUPO_VOCABULARIO[grupo]}`,
-        formato: 'tabla-palabras',
-        lineas: [`| ${p.codigo} | ${celda(nl)} | ${celda(p.es)} | ${celda(p.nota ?? '')} |`],
-      };
-    }),
+        fase: 2,
+        contenido: { nl: p.nl, otras: p.otras, es: p.es, ...(p.nota ? { nota: p.nota } : {}) },
+      }),
+    ),
   );
 }
 
-function explicaciones(): ElementoRevision[] {
-  return diagnosticarEjemplos().map((e) => ({
-    codigo: e.codigo,
-    tipo: 'E',
-    apartado: NOMBRES_TIPO.E,
-    formato: 'bloque',
-    lineas: [
-      `**${e.codigo}.** Sobre ${e.de}: «${e.frase}» → respuesta: «${e.respuesta}»`,
-      '',
-      ...e.diagnosticos.flatMap((d) => [`- **${d.titulo}.** ${d.texto}`, ...(d.pista ? [`  - *Pista antes del segundo intento:* ${d.pista}`] : [])]),
-    ],
-  }));
+/** Cada explicación de error, con el apartado del elemento sobre el que va, para revisarla justo después de él. */
+function explicaciones(sobre: ReadonlyMap<string, ElementoRevision>): ElementoRevision[] {
+  return diagnosticarEjemplos().map((e): ElementoRevision => {
+    const origen = sobre.get(e.de);
+    if (!origen) throw new Error(`${e.codigo}: no está en la revisión el elemento ${e.de}`);
+    const nombre = origen.tipo === 'O' ? (origen.apartado.split(': ')[1] ?? origen.apartado) : NOMBRES_TIPO[origen.tipo].toLowerCase();
+    return {
+      codigo: e.codigo,
+      tipo: 'E',
+      de: e.de,
+      apartado: `${NOMBRES_TIPO.E}: ${nombre}`,
+      fase: origen.fase,
+      contenido: {
+        frase: e.frase,
+        respuesta: e.respuesta,
+        diagnosticos: e.diagnosticos.map((d) => ({ titulo: d.titulo, texto: d.texto, ...(d.pista ? { pista: d.pista } : {}) })),
+      },
+    };
+  });
 }
 
-/** Un texto suelto: dónde sale y qué dice. */
-function texto(codigo: string, donde: string, contenido: string): ElementoRevision {
-  return { codigo, tipo: 'T', apartado: NOMBRES_TIPO.T, formato: 'lista', lineas: [`- **${codigo}** (${donde}): ${contenido}`] };
+/** Un texto suelto: qué dice y, como contexto, dónde sale. */
+function texto(codigo: string, donde: string, contenido: string, fase: 1 | 2 = 2): ElementoRevision {
+  return { codigo, tipo: 'T', apartado: NOMBRES_TIPO.T, contexto: donde, fase, contenido: { texto: contenido } };
+}
+
+/** Las pistas del primer fallo cuando no se sabe qué regla ha fallado (las demás van con su explicación, en E). */
+function pistasGenerales(): ElementoRevision[] {
+  return [
+    texto('T26', 'Pista del primer fallo al ordenar, si no se sabe qué regla falla', PISTAS_GENERALES.ordenar, 1),
+    texto('T27', 'Pista del primer fallo al escribir la frase con las palabras buenas en otro orden', PISTAS_GENERALES.traducirOrden, 1),
+    // T28 era la pista general al escribir la frase con otras palabras: ya no hay reintento sin diagnóstico. Su código no se reutiliza.
+    texto('T29', 'Pista del primer fallo al completar una forma', PISTAS_GENERALES.completar, 1),
+  ].map((t) => ({ ...t, apartado: 'Pistas del primer fallo' }));
 }
 
 function textos(): ElementoRevision[] {
@@ -230,36 +297,62 @@ function textos(): ElementoRevision[] {
     texto('T23', 'Hoy, la parte de verbos', verbos.descripcion),
     texto('T24', 'Hoy, la parte de vocabulario', vocabulario.descripcion),
     texto('T25', 'Ajustes, el botón Probar de la voz', FRASE_DE_PRUEBA),
-    // La pista del primer fallo cuando no se sabe qué regla ha fallado (las demás van con su explicación, en E).
-    texto('T26', 'Pista del primer fallo al ordenar, si no se sabe qué regla falla', PISTAS_GENERALES.ordenar),
-    texto('T27', 'Pista del primer fallo al escribir la frase con las palabras buenas en otro orden', PISTAS_GENERALES.traducirOrden),
-    // T28 era la pista general al escribir la frase con otras palabras: ya no hay reintento sin diagnóstico. Su código no se reutiliza.
-    texto('T29', 'Pista del primer fallo al completar una forma', PISTAS_GENERALES.completar),
   ];
 }
 
-/** Todo lo revisable, en el orden en que se revisa: orden, verbos y separables primero, que es lo que más se practica. */
+/**
+ * Todo lo revisable, en el orden en que se revisa: primero lo de la fase 1 (cada grupo de orden con su regla, sus
+ * frases y sus explicaciones de errores; después los verbos, los separables y las pistas generales) y al final las
+ * palabras y los demás textos, que pueden esperar a la fase 2.
+ */
 export function elementosDeRevision(): ElementoRevision[] {
-  return [...frasesDeOrden(), ...verbosYSeparables(), ...palabras(), ...explicaciones(), ...textos()];
+  const bloques = [...GRUPOS_ORDEN.map(frasesDeOrden), verbosConSusReglas(), separablesConSuRegla(), palabras()];
+  const sobre = new Map(bloques.flat().map((e) => [e.codigo, e]));
+  const errores = explicaciones(sobre);
+  const conSusErrores = bloques.map((bloque) => {
+    const codigos = new Set(bloque.map((e) => e.codigo));
+    return [...bloque, ...errores.filter((e) => e.tipo === 'E' && codigos.has(e.de))];
+  });
+  const palabrasConErrores = conSusErrores.pop() ?? [];
+  return [...conSusErrores.flat(), ...pistasGenerales(), ...palabrasConErrores, ...textos()];
 }
 
-/** Lo que se lee de un elemento, sin marcas de formato: de aquí sale su huella. */
-export function textoVisible(e: ElementoRevision): string {
-  return e.lineas
-    .join('\n')
-    .replaceAll('<br>', ' ')
-    .replaceAll('\\|', '|')
-    .replaceAll(/\*\*|\*/g, '')
-    .replaceAll(/^\s*(?:[-|>]\s*)+/gm, '')
-    .replaceAll(/\s*\|\s*/g, ' | ')
-    .replaceAll(/\s+/g, ' ')
-    .trim();
+/** El contenido como listas de cadenas, en el orden en que se construye y sin los nombres de los campos. */
+function segmentos(valor: unknown): unknown {
+  if (typeof valor === 'string') return valor.normalize('NFC');
+  if (Array.isArray(valor)) return valor.map(segmentos);
+  if (typeof valor === 'object' && valor !== null) return Object.values(valor).filter((v) => v !== undefined).map(segmentos);
+  throw new Error(`El contenido revisable solo lleva texto, no ${typeof valor}`);
 }
 
+/**
+ * FNV-1a de 32 bits sobre UTF-8, en hexadecimal. La revisión tiene la suya y el audio la suya: si algún día hay que
+ * cambiar la del audio, lo revisado no vuelve entero a pendiente.
+ */
+function fnv1a(texto: string): string {
+  let h = 0x811c9dc5;
+  for (const byte of new TextEncoder().encode(texto)) {
+    h ^= byte;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
+
+/** La huella de lo que se revisa de un elemento: su contenido, normalizado (NFC), sin formato ni etiquetas. */
 export function huellaDe(e: ElementoRevision): string {
-  return huella(textoVisible(e));
+  return fnv1a(JSON.stringify(segmentos(e.contenido)));
 }
 
+/** Todas las cadenas del contenido de un elemento, seguidas. */
+export function textosDe(e: ElementoRevision): string[] {
+  const planos = (v: unknown): string[] => (typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(planos) : []);
+  return planos(segmentos(e.contenido));
+}
+
+/** Las palabras del contenido (sin etiquetas ni códigos): con ellas se estima lo que se tarda en leerlo. */
 export function palabrasDe(e: ElementoRevision): number {
-  return textoVisible(e).split(' ').filter((p) => /\p{L}/u.test(p)).length;
+  return textosDe(e)
+    .join(' ')
+    .split(/\s+/)
+    .filter((p) => /\p{L}/u.test(p)).length;
 }

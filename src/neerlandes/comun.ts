@@ -21,16 +21,6 @@ export function idFijo(codigo: string): string {
   return IDS_FIJOS[codigo] ?? codigo;
 }
 
-/** Huella FNV-1a de 32 bits de un texto (sobre UTF-8), en hexadecimal: nombra el audio grabado y dice si algo revisado ha cambiado. */
-export function huella(texto: string): string {
-  let h = 0x811c9dc5;
-  for (const byte of new TextEncoder().encode(texto)) {
-    h ^= byte;
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h.toString(16).padStart(8, '0');
-}
-
 /** Una frase con un hueco donde estaba una palabra. null si la palabra no está una sola vez. */
 export function hueco(frase: string, palabra: string, final = '.'): { antes: string; despues: string } | null {
   const palabras = frase.trim().split(/\s+/);

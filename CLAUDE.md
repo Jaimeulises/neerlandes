@@ -15,7 +15,7 @@ Stap (nombre provisional) es una app personal para practicar neerlandés hablado
 - Guardar claves en archivos o en el chat.
 - Copiar código, frases, textos, diseño o datos de otras apps o cursos de idiomas, ni material ajeno sin una licencia que lo permita.
 - Añadir dependencias que recojan datos, muestren anuncios o hablen con servidores. Sin cuentas, sin anuncios, sin analítica.
-- Dar por buena una frase «porque suena bien»: nadie del equipo es nativo. Todo el contenido sale en `docs/revision.md` (`npm run revision`) y queda pendiente de revisión nativa.
+- Dar por buena una frase «porque suena bien»: nadie del equipo es nativo. Todo el contenido pasa por `docs/revision.md` (`npm run revision`) y queda pendiente hasta que lo revisa una persona nativa.
 
 ## El neerlandés, con cuidado
 
@@ -24,7 +24,7 @@ Stap (nombre provisional) es una app personal para practicar neerlandés hablado
 - Cada frase de orden lleva en `otras` las demás formas naturales de decirla: si falta una, el corrector suspende una respuesta buena.
 - Los participios regulares siguen la regla de ’t kofschip y las pruebas lo comprueban; los irregulares van marcados.
 - Lo regular se intenta sin enseñarlo antes; se presenta la regla al abrir su grupo (ver `docs/decisiones/0001-arranque.md`).
-- `docs/revision.md` muestra solo lo pendiente, en lotes de unos 15 minutos. Al terminar un lote se aplican sus correcciones y se marca con la orden que lleva (`npm run revisado -- O1-O12`); si algo revisado cambia, vuelve solo a pendiente (decisión 0007).
+- `docs/revision.md` muestra solo lo pendiente, en lotes de unos 15 minutos que se llaman por sus códigos. Al terminar un lote, primero se marca con la orden que lleva y los códigos de la copia que se leyó (`npm run revisado -- O1-O9 R1`), y después se aplican sus correcciones: lo corregido vuelve solo a pendiente y sale en el lote siguiente para confirmarlo (decisión 0007). Los códigos no se reutilizan: lo nuevo lleva el siguiente número (`ULTIMO_CODIGO`) y lo borrado va a `RETIRADOS`, en `src/neerlandes/ids-fijos.ts`.
 
 ## Dónde va cada cosa
 

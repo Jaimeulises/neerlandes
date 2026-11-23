@@ -123,7 +123,8 @@ async function principal(): Promise<void> {
   mkdirSync(CARPETA, { recursive: true });
   const textos = textosEnVozAlta();
   const huellas = new Map(textos.map((t) => [huellaAudio(t), t]));
-  if (huellas.size !== textos.length) throw new Error('Dos textos con la misma huella: hay que cambiar de huella.');
+  // Si pasa, se cambia huellaAudio (src/neerlandes/audio.ts) y se graba todo otra vez; la huella de la revisión es otra y no se toca.
+  if (huellas.size !== textos.length) throw new Error('Dos textos con la misma huella de audio: hay que cambiar huellaAudio en src/neerlandes/audio.ts.');
 
   // Con otra voz u otra velocidad se regraba todo; lo que ya no suena en la app se borra.
   const mismaVoz = anterior.voz === voz && anterior.velocidad === VELOCIDAD;

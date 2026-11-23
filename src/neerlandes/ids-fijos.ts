@@ -5,9 +5,10 @@
 // datos (O12, V7, S3, P40) y su id sale de aquí, aunque el texto cambie
 // (decisión 0007).
 //
-// Se generó una vez y no se edita: cambiar un id aquí deja sin historial a su
-// elemento. Lo nuevo no se apunta aquí, porque usa su código como id. Si se
-// borra un elemento, su código pasa a RETIRADOS y no se vuelve a usar.
+// IDS_FIJOS se generó una vez y no se toca nunca: cambiar un id aquí deja sin
+// historial a su elemento, y si una prueba pide tocarlo, el error está en los
+// datos. Lo nuevo no se apunta aquí, porque usa su código como id. Lo que sí
+// cambia, y solo crece: ULTIMO_CODIGO, al añadir algo, y RETIRADOS, al borrarlo.
 
 /** Por código, el id de antes de la fase 1: de la frase o la palabra entero, del verbo y del separable, su infinitivo. */
 export const IDS_FIJOS: Readonly<Record<string, string>> = {
@@ -278,5 +279,15 @@ export const IDS_FIJOS: Readonly<Record<string, string>> = {
   P128: 'como-es:samen',
 };
 
-/** Códigos de elementos que ya no están: no se vuelven a usar, para que nada nuevo herede su historial. */
-export const RETIRADOS: readonly string[] = [];
+/**
+ * El último código dado de cada tipo, también de lo que solo se revisa (R reglas, E explicaciones, T textos). Lo nuevo
+ * lleva el siguiente número y se sube aquí; nunca se baja. Con RETIRADOS, garantiza que un código borrado no vuelve a
+ * usarse para otra cosa: lo nuevo no hereda el historial ni lo revisado de lo que hubo antes.
+ */
+export const ULTIMO_CODIGO: Readonly<Record<'O' | 'R' | 'V' | 'S' | 'P' | 'E' | 'T', number>> = { O: 64, R: 14, V: 58, S: 15, P: 128, E: 43, T: 29 };
+
+/** Códigos de lo que ya no está: no se vuelven a usar, para que nada nuevo herede su historial ni su revisión. */
+export const RETIRADOS: readonly string[] = [
+  // La pista general al escribir la frase con otras palabras: desde la fase 1, sin diagnóstico no se reintenta.
+  'T28',
+];

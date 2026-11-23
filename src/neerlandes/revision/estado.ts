@@ -1,7 +1,8 @@
 // Qué está revisado y qué falta. De cada elemento revisado se guarda en
 // revisado.json la huella de lo que se leyó y el día: si después cambia lo que
 // se lee, la huella deja de coincidir y vuelve solo a pendiente. Lo apunta
-// `npm run revisado -- O1-O12 V3` (scripts/revisado.ts).
+// `npm run revisado -- O1-O12 V3` (scripts/revisado.ts), antes de aplicar las
+// correcciones del lote: así lo corregido vuelve a pendiente por sí solo.
 
 import { huellaDe, type ElementoRevision, type Tipo } from './elementos';
 
@@ -70,6 +71,37 @@ export function marcar(registro: Registro, elementos: readonly ElementoRevision[
     nuevo[c] = { huella: huellaDe(e), el };
   }
   return ordenado(nuevo);
+}
+
+/**
+ * De los códigos que se van a marcar, los que ya se revisaron una vez y han cambiado desde entonces: solo se deben
+ * marcar si la persona nativa ha visto el texto de ahora.
+ */
+export function cambiadosDesdeSuRevision(registro: Registro, elementos: readonly ElementoRevision[], codigos: readonly string[]): string[] {
+  const porCodigo = new Map(elementos.map((e) => [e.codigo, e]));
+  return codigos.filter((c) => {
+    const e = porCodigo.get(c);
+    return e !== undefined && registro[c] !== undefined && !estaRevisado(e, registro);
+  });
+}
+
+/**
+ * Lo que impide marcar, de la salida de `git status --porcelain`: cambios sin guardar en el contenido. Si se marcara
+ * con ellos, quedaría como revisado un texto que la persona nativa no ha visto. No cuentan revisado.json ni las pruebas.
+ */
+export function cambiosQueImpidenMarcar(estadoGit: string): string[] {
+  return estadoGit
+    .split('\n')
+    .map((linea) => linea.slice(3).trim())
+    .filter((ruta) => ruta.startsWith('src/neerlandes/') && !ruta.endsWith('revision/revisado.json') && !/\.test\.tsx?$/.test(ruta));
+}
+
+/** revisado.json con un código por línea: dos lotes marcados en ramas distintas casi nunca chocan. */
+export function serializarRegistro(registro: Registro): string {
+  const codigos = ordenarCodigos(Object.keys(registro));
+  if (codigos.length === 0) return '{}\n';
+  const lineas = codigos.map((c) => `  ${JSON.stringify(c)}: ${JSON.stringify(registro[c])}`);
+  return `{\n${lineas.join(',\n')}\n}\n`;
 }
 
 export function quitar(registro: Registro, codigos: readonly string[]): Registro {
