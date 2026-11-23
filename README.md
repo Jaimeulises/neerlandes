@@ -16,7 +16,7 @@ Sin cuentas, sin anuncios y sin enviar nada fuera del dispositivo: el progreso s
 
 ## Instalarla en el iPhone
 
-Se instala como app por cable desde un Mac con Xcode (ver [docs/decisiones/0004-app-de-iphone.md](docs/decisiones/0004-app-de-iphone.md)).
+Se instala como app por cable desde un Mac con Xcode (ver [docs/decisiones/0005-app-de-iphone.md](docs/decisiones/0005-app-de-iphone.md)).
 
 ```sh
 npm ci          # la primera vez
@@ -45,7 +45,7 @@ npm ci
 npm run dev   # http://localhost:5181, se recarga al cambiar el código
 ```
 
-Lo que la app lee en voz alta va grabado dentro de la app con una voz neuronal de Azure (ver [docs/decisiones/0005-voz-grabada.md](docs/decisiones/0005-voz-grabada.md)). Si cambia el contenido, `npm run audio` graba lo nuevo; mientras tanto, eso lo lee la voz neerlandesa del dispositivo, si la tiene (en iPhone: Ajustes, Accesibilidad, Contenido leído, Voces, Neerlandés).
+Lo que la app lee en voz alta va grabado dentro de la app con una voz neuronal de Azure (ver [docs/decisiones/0006-voz-grabada.md](docs/decisiones/0006-voz-grabada.md)). Si cambia el contenido, `npm run audio` graba lo nuevo; mientras tanto, eso lo lee la voz neerlandesa del dispositivo, si la tiene (en iPhone: Ajustes, Accesibilidad, Contenido leído, Voces, Neerlandés).
 
 ## Antes de subir un cambio
 

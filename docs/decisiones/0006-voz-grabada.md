@@ -1,6 +1,8 @@
-# 0005. Voz grabada con Azure dentro de la app
+# 0006. Voz grabada con Azure dentro de la app
 
 20 de noviembre de 2026. El dueño del repositorio encontró robótica la voz del iPhone y pidió las voces de Azure; la forma la decidió Claude.
+
+**Sustituye el punto 6 de la decisión 0001** (voz del dispositivo, sin audio grabado ni claves). La voz del dispositivo queda solo de reserva para lo que aún no esté grabado, y el dictado ya no depende de que el dispositivo tenga voz neerlandesa. La clave de Azure solo se usa en el ordenador al grabar y nunca va en el repositorio ni en la app.
 
 ## Qué se decidió
 
