@@ -143,7 +143,7 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
           />
         </label>
         <p id="explica-grupos" className="texto-2 pequeno">
-          Para quien ya conoce lo básico. Cada ronda abre como mucho un grupo, empezando por su regla, sin esperar a ver entero el anterior, y lo nuevo se escribe en vez de ordenarse con fichas, salvo que la regla esté floja.
+          Para quien ya conoce lo básico. Cada ronda abre como mucho un grupo nuevo de cada parte (orden, verbos y vocabulario) sin esperar a ver entero el anterior; en orden y en verbos, empezando por su regla. Lo nuevo de orden y de verbos se escribe en vez de ordenarse con fichas o elegirse, salvo que su regla esté floja.
         </p>
       </section>
 
@@ -196,7 +196,7 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
       <section className="tarjeta">
         <h2>Ejercicios en los repasos</h2>
         <p className="texto-2 pequeno" style={{ marginTop: 8 }}>
-          Lo nuevo empieza siempre igual: las frases y los separables con fichas, las palabras con opciones y los verbos eligiendo o completando la forma. Aquí eliges qué más sale en los repasos. Si ninguna de las elegidas sirve para un ejercicio, sale el de siempre: fichas en las frases y los separables, completar en los verbos y escribir la palabra en el vocabulario.
+          Lo nuevo suele empezar con fichas en las frases y los separables y eligiendo o completando la forma en los verbos; con “Abrir todos los grupos”, se escribe, salvo que su regla esté floja. Las palabras empiezan siempre por “¿Qué significa?”, también con ese ajuste: no salen de ninguna regla, y una palabra hay que reconocerla antes de escribirla. Aquí eliges qué más sale en los repasos. Si ninguna de las elegidas sirve para un ejercicio, sale el de siempre: fichas en las frases y los separables, completar en los verbos y escribir la palabra en el vocabulario.
         </p>
         {ORDEN_FORMAS.map((forma) => (
           <label key={forma} className="ajuste">

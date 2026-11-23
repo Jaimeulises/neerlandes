@@ -2,10 +2,11 @@
 // detrás de los repasos, con lo que abre cada grupo (la regla) antes que lo que sale de ella.
 
 import { describe, expect, it } from 'vitest';
-import { clave, crearAzar, PROGRESO_VACIO, registrarRespuesta, RONDA_POR_DEFECTO, type OpcionesRonda, type Progreso } from '../motor';
+import { clave, crearAzar, PROGRESO_VACIO, registrarRespuesta, RONDA_POR_DEFECTO, TODAS_LAS_FORMAS, type OpcionesRonda, type Pista, type Progreso } from '../motor';
 import { PISTAS } from '../neerlandes/paquete';
 import { vocabulario } from '../neerlandes/vocabulario/pista';
-import { construirRondaDe, preverRonda, repartir, type PasoMixto } from './ronda';
+import { AJUSTES_POR_DEFECTO, NUEVOS_POR_RONDA } from './ajustes';
+import { construirRondaDe, opcionesDeRonda, preverRonda, repartir, type PasoMixto } from './ronda';
 
 const AHORA = new Date(2026, 10, 19, 12);
 const OPCIONES: OpcionesRonda = { ...RONDA_POR_DEFECTO, tamano: 12, nuevosMaximo: 4 };
@@ -75,25 +76,40 @@ describe('la ronda de hoy', () => {
     expect(new Set(primeros).size).toBe(3);
   });
 
-  it('con todos los grupos abiertos, cada ronda abre como mucho una regla de orden y en pocas rondas han empezado todas', () => {
-    const orden = PISTAS.find((p) => p.id === 'orden');
-    if (!orden) throw new Error('falta la pista de orden');
-    const jugar = (gruposAbiertos: boolean, rondas: number): { grupos: Set<string>; reglasPorRonda: number[] } => {
+  it('con todos los grupos abiertos, cada ronda abre como mucho un grupo nuevo de cada parte y en pocas rondas han empezado todos', () => {
+    const empezados = (pista: Pista, progreso: Progreso): Set<string> =>
+      new Set(pista.elementos.filter((e) => progreso.has(clave(pista.id, e.id))).map((e) => e.grupo));
+    /** Rondas de hoy acertándolo todo, con los ajustes de la app; de cada ronda, cuántos grupos ha empezado cada parte. */
+    const jugar = (gruposAbiertos: boolean, nuevosPorRonda: number, rondas: number): { progreso: Progreso; abiertos: Record<string, number>[] } => {
       let progreso: Progreso = PROGRESO_VACIO;
-      const reglasPorRonda: number[] = [];
+      const abiertos: Record<string, number>[] = [];
       for (let i = 0; i < rondas; i++) {
-        const opciones: OpcionesRonda = { ...OPCIONES, nuevosMaximo: 4, gruposAbiertos, sinAndamiaje: gruposAbiertos };
+        const opciones = opcionesDeRonda({ ...AJUSTES_POR_DEFECTO, gruposAbiertos, nuevosPorRonda }, TODAS_LAS_FORMAS);
         const nuevos = construirRondaDe(PISTAS, progreso, AHORA, crearAzar(i + 1), opciones).filter(esNuevoEn(progreso));
-        reglasPorRonda.push(nuevos.filter((p) => p.pistaId === 'orden' && p.paso.presentacion !== null).length);
+        const porParte = PISTAS.map((pista) => {
+          const antes = empezados(pista, progreso);
+          const suyos = new Set(nuevos.filter((p) => p.pistaId === pista.id).map((p) => pista.elementos.find((e) => e.id === p.paso.ejercicio.elementoId)?.grupo));
+          return [pista.id, [...suyos].filter((g) => g !== undefined && !antes.has(g)).length] as const;
+        });
+        abiertos.push(Object.fromEntries(porParte));
         for (const p of nuevos) progreso = registrarRespuesta(progreso, p.pistaId, p.paso.ejercicio.elementoId, 'bien', AHORA);
       }
-      return { grupos: new Set(orden.elementos.filter((e) => progreso.has(clave('orden', e.id))).map((e) => e.grupo)), reglasPorRonda };
+      return { progreso, abiertos };
     };
-    const abiertos = jugar(true, 12);
-    expect(abiertos.grupos.size).toBe(orden.grupos.length);
-    expect(Math.max(...abiertos.reglasPorRonda)).toBe(1);
-    // En orden, en las mismas rondas solo han empezado los primeros grupos.
-    expect(jugar(false, 12).grupos.size).toBeLessThan(4);
+    for (const nuevosPorRonda of NUEVOS_POR_RONDA) {
+      for (const [i, ronda] of jugar(true, nuevosPorRonda, 10).abiertos.entries()) {
+        for (const pista of PISTAS) expect(ronda[pista.id], `${pista.id}, ronda ${String(i + 1)} con ${String(nuevosPorRonda)} nuevos`).toBeLessThanOrEqual(1);
+      }
+    }
+    // El límite es de cada parte, no de la ronda: con el interruptor o sin él, la primera ronda ya empieza un grupo de cada una.
+    const unoDeCada = Object.fromEntries(PISTAS.map((p) => [p.id, 1]));
+    expect(jugar(true, 4, 1).abiertos).toEqual([unoDeCada]);
+    expect(jugar(false, 4, 1).abiertos).toEqual([unoDeCada]);
+    // En pocas rondas han empezado todos los grupos de todas las partes; en orden, solo los primeros.
+    const conInterruptor = jugar(true, 4, 8).progreso;
+    for (const pista of PISTAS) expect(empezados(pista, conInterruptor).size, pista.id).toBe(pista.grupos.length);
+    const sinInterruptor = jugar(false, 4, 8).progreso;
+    for (const pista of PISTAS) expect(empezados(pista, sinInterruptor).size, pista.id).toBeLessThan(pista.grupos.length);
   });
 
   it('quien pide menos ayuda empieza lo nuevo de orden escribiendo, no con fichas', () => {
@@ -106,6 +122,15 @@ describe('la ronda de hoy', () => {
     // Si la regla está floja, vuelven las fichas.
     const floja = construirRondaDe([orden], PROGRESO_VACIO, AHORA, crearAzar(3), { ...OPCIONES, nuevosMaximo: 2, gruposAbiertos: true, sinAndamiaje: true, dominio: () => 0.2 });
     expect(new Set(floja.map((p) => p.paso.ejercicio.forma))).toEqual(new Set(['ordenar']));
+  });
+
+  it('quien pide menos ayuda sigue empezando las palabras por “¿Qué significa?”: hay que reconocerlas antes de escribirlas', () => {
+    const opciones = opcionesDeRonda({ ...AJUSTES_POR_DEFECTO, gruposAbiertos: true, nuevosPorRonda: 6 }, TODAS_LAS_FORMAS);
+    for (let semilla = 1; semilla <= 5; semilla++) {
+      const pasos = construirRondaDe([vocabulario], PROGRESO_VACIO, AHORA, crearAzar(semilla), opciones);
+      expect(pasos.length, String(semilla)).toBe(6);
+      expect(new Set(pasos.map((p) => p.paso.ejercicio.tipo)), String(semilla)).toEqual(new Set(['vocabulario.significado']));
+    }
   });
 
   it('la previsión cuenta lo que trae la ronda', () => {
