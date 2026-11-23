@@ -22,7 +22,10 @@ export interface OpcionesRonda {
   readonly incluirNoVencidos?: boolean;
   /** Lo que domina el alumno cada destreza (ver ContextoEjercicio). */
   readonly dominio?: (destreza: string) => number | null;
-  /** Todos los grupos abiertos desde el principio, sin esperar a ver entero el anterior (como mucho uno nuevo por ronda). */
+  /**
+   * Todos los grupos abiertos desde el principio, sin esperar a ver entero el anterior: cada ronda empieza como mucho
+   * uno nuevo de cada pista (ver `nuevosEnOrden`).
+   */
   readonly gruposAbiertos?: boolean;
   /** Menos ayuda para quien ya conoce lo básico: lo nuevo empieza sin andamiaje (ver ContextoEjercicio). */
   readonly sinAndamiaje?: boolean;
@@ -105,10 +108,11 @@ function contexto<E extends Elemento>(
  *
  * Con los grupos en orden, lo que queda sin ver de los grupos abiertos, en el orden del paquete.
  *
- * Con todos abiertos, como mucho una regla nueva por ronda: primero el elemento que abre el siguiente grupo
- * sin empezar (el que presenta su regla) y después lo que sigue en los grupos ya empezados, en rueda y
- * empezando por el que menos lleva visto. Abrir varias reglas en la misma ronda diluiría la presentación de
- * cada una; repartir lo demás entre los grupos empezados mantiene la práctica intercalada.
+ * Con todos abiertos, como mucho un grupo nuevo de la pista por ronda: primero el elemento que abre el siguiente
+ * grupo sin empezar (el que presenta su regla) y después lo que sigue en los grupos ya empezados, en rueda y
+ * empezando por el que menos lleva visto. Abrir a la vez varias reglas de la misma pista diluiría la presentación
+ * de cada una; repartir lo demás entre los grupos empezados mantiene la práctica intercalada. El límite es de cada
+ * pista: una ronda que mezcla varias puede empezar un grupo de cada una.
  */
 function nuevosEnOrden<E extends Elemento>(
   pista: Pista<E>,

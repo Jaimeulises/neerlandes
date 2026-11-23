@@ -206,7 +206,9 @@ export function Escrito({ ejercicio, repeticion, voz, diagnosticar, pistasDeRein
               <Boton
                 variante="texto"
                 onClick={() => {
-                  onTerminar('bien');
+                  // Tras la pista, dar por buena la segunda respuesta es acertar a la segunda, como si estuviera apuntada.
+                  if (primero) onTerminar('otra_vez', primero.diagnosticos, true);
+                  else onTerminar('bien');
                 }}
               >
                 Mi respuesta también vale

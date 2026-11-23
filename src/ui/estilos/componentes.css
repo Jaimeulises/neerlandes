@@ -335,6 +335,11 @@
   background: var(--tarjeta-2);
 }
 
+/* El botón secundario es del color de este panel: sin otro fondo, “Me he equivocado” no parecería un botón. */
+.resultado--neutro .boton--secundario {
+  background: var(--tarjeta);
+}
+
 .otras-formas ul {
   margin: 4px 0 0;
   padding-left: 1.2em;

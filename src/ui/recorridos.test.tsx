@@ -4,6 +4,8 @@
 // frase escrita o de unas fichas con el orden del inglés, y lo que pasa con lo
 // guardado: restaurar una copia, no poder abrirlo y volver a la app otro día.
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NOMBRE_APP } from '../estado/app';
@@ -387,9 +389,32 @@ describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () 
     expect(terminados).toEqual([['otra_vez', ['inversion'], false]]);
   });
 
-  it('al ordenar, las fichas se quedan donde estaban para moverlas', async () => {
+  it('si el segundo intento no está en la lista y se da por bueno, cuenta como bien a la segunda; tras ver la solución, como bien', async () => {
     prepararNavegador();
-    const terminados: Terminado[] = [];
+    const segundo: Terminado[] = [];
+    const campo = await montarEscrito(segundo);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    escribirEn(campo, 'Morgen ga ik naar mijn schoonfamilie');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('No es así');
+    await pulsar(boton('Mi respuesta también vale'));
+    // Lo mismo que si esa respuesta estuviera apuntada: lo espontáneo no salió.
+    expect(segundo).toEqual([['otra_vez', ['inversion'], true]]);
+
+    // Tras ver la solución, lo que se da por bueno es el primer intento, que no tuvo pista.
+    prepararNavegador();
+    const primero: Terminado[] = [];
+    const otroCampo = await montarEscrito(primero);
+    escribirEn(otroCampo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    await pulsar(boton('Ver la solución'));
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(primero).toEqual([['bien', [], false]]);
+  });
+
+  /** Ordenar la frase de morgen, apuntando cómo termina. */
+  async function montarOrdenar(terminados: Terminado[]): Promise<Frase> {
     const f = fraseDeMorgen();
     const ejercicio = ejercicioDeFrase(f, 'ordenar', { azar: crearAzar(1), vistos: new Set(), repeticiones: 0, formas: new Set(['ordenar']) }) as EjercicioOrdenar;
     await montar(
@@ -404,12 +429,20 @@ describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () 
         }}
       />,
     );
+    return f;
+  }
+
+  const puestas = (): HTMLButtonElement[] => [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Tu frase"] button')];
+
+  it('al ordenar, las fichas se quedan donde estaban para moverlas', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const f = await montarOrdenar(terminados);
     // El orden del inglés: morgen ik ga…
     const [morgen, ga, ik, ...resto] = f.fichas;
     for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
     await pulsar(boton('Comprobar'));
     expect(enPantalla()).toContain('Inténtalo otra vez');
-    const puestas = () => [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Tu frase"] button')];
     expect(puestas().map((b) => b.textContent)).toEqual([morgen, ik, ga, ...resto]);
     // Se quitan desde ik y se vuelven a poner en su orden.
     for (const b of puestas().slice(1)) await pulsar(b);
@@ -418,6 +451,30 @@ describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () 
     expect(enPantalla()).toContain('Bien a la segunda');
     await pulsar(boton('Siguiente'));
     expect(terminados).toEqual([['otra_vez', ['inversion'], true]]);
+  });
+
+  it('al ordenar, dar por bueno el segundo orden cuenta como bien a la segunda; tras ver la solución, como bien', async () => {
+    prepararNavegador();
+    const segundo: Terminado[] = [];
+    const f = await montarOrdenar(segundo);
+    const [morgen, ga, ik, ...resto] = f.fichas;
+    for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    for (const b of puestas()) await pulsar(b);
+    for (const texto of [ik, morgen, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('No va en ese orden');
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(segundo).toEqual([['otra_vez', ['inversion'], true]]);
+
+    prepararNavegador();
+    const primero: Terminado[] = [];
+    await montarOrdenar(primero);
+    for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    await pulsar(boton('Ver la solución'));
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(primero).toEqual([['bien', [], false]]);
   });
 });
 
@@ -496,6 +553,7 @@ describe('decir la frase con cuenta atrás', () => {
     await montarDecir(dichas);
     expect(document.querySelector('[role="timer"]')?.getAttribute('aria-label')).toBe(`Quedan ${String(total)} segundos`);
     pasan(total - 1);
+    expect(document.querySelector('[role="timer"]')?.getAttribute('aria-label')).toBe('Queda 1 segundo');
     expect(enPantalla()).not.toContain('Vandaag werk ik thuis.');
     expect(dichas).toEqual([]);
     pasan(1);
@@ -506,6 +564,19 @@ describe('decir la frase con cuenta atrás', () => {
     expect(dichas).toEqual(['Vandaag werk ik thuis.']);
     pasan(10);
     expect(dichas).toHaveLength(1);
+  });
+
+  it('si en la pausa se toca el altavoz, suena enseguida y no vuelve a sonar al acabarse la pausa', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas);
+    pasan(total);
+    // La pausa: la frase ya se ve, con su altavoz, pero aún no ha sonado.
+    expect(enPantalla()).toContain('Vandaag werk ik thuis.');
+    expect(dichas).toEqual([]);
+    await pulsar(boton('Escuchar'));
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+    pasan(PAUSA_ANTES_DE_SONAR / 1000 + 5);
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
   });
 
   it('se puede ver antes, y suena enseguida', async () => {
@@ -552,6 +623,26 @@ describe('decir la frase con cuenta atrás', () => {
     expect(document.querySelector('.resultado--neutro')).not.toBeNull();
   });
 
+  it('“Me he equivocado” se ve como un botón sobre el panel, en el tema claro y en el oscuro', async () => {
+    await montarDecir([]);
+    await pulsar(boton('Ya la he dicho'));
+    const panel = document.querySelector('.resultado--neutro');
+    if (!panel) throw new Error('falta el panel');
+    const equivocado = boton('Me he equivocado');
+    const colores = (['claro', 'oscuro'] as const).map((tema) => {
+      const quitar = ponerEstilos(tema);
+      try {
+        return { tema, panel: getComputedStyle(panel).backgroundColor, boton: getComputedStyle(equivocado).backgroundColor };
+      } finally {
+        quitar();
+      }
+    });
+    // Los estilos se han aplicado, cada tema con sus colores: si no, la comparación no diría nada.
+    expect(colores[0]?.panel).not.toBe('rgba(0, 0, 0, 0)');
+    expect(colores[0]?.panel).not.toBe(colores[1]?.panel);
+    for (const c of colores) expect(c.boton, c.tema).not.toBe(c.panel);
+  });
+
   it('tras equivocarse se dice otra vez con la buena antes de seguir, y cuenta como fallo', async () => {
     const calificaciones: string[] = [];
     await montarDecir([], { calificaciones });
@@ -563,6 +654,31 @@ describe('decir la frase con cuenta atrás', () => {
     expect(calificaciones).toEqual(['otra_vez']);
   });
 });
+
+/**
+ * Pone en la página los estilos de la app con los colores de un tema y devuelve cómo quitarlos. jsdom no aplica lo
+ * que va dentro de @media, así que el tema oscuro se pone copiando sus colores detrás de los claros. La ruta no va
+ * con new URL(…, import.meta.url): Vite lo convierte en una dirección web y se leería otra cosa.
+ */
+function ponerEstilos(tema: 'claro' | 'oscuro'): () => void {
+  const hojas = ['tokens.css', 'base.css', 'componentes.css'].map((archivo) => {
+    const hoja = document.createElement('style');
+    hoja.textContent = readFileSync(join(import.meta.dirname, 'estilos', archivo), 'utf8');
+    document.head.append(hoja);
+    return hoja;
+  });
+  if (tema === 'oscuro') {
+    const oscuro = [...(hojas[0]?.sheet?.cssRules ?? [])].find((r): r is CSSMediaRule => r instanceof CSSMediaRule && r.media.mediaText.includes('dark'));
+    if (!oscuro) throw new Error('faltan los colores del tema oscuro');
+    const hoja = document.createElement('style');
+    hoja.textContent = [...oscuro.cssRules].map((r) => r.cssText).join('\n');
+    document.head.append(hoja);
+    hojas.push(hoja);
+  }
+  return () => {
+    for (const hoja of hojas) hoja.remove();
+  };
+}
 
 function fraseDeMorgen(): Frase {
   const f = ELEMENTOS_ORDEN.find((e) => e.frase.startsWith('Morgen ga ik'));

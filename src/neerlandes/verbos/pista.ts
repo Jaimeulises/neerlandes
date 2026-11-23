@@ -161,10 +161,13 @@ function ejercicioPresente(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio)
 
   // La primera vez se elige; en los repasos, solo si elegir está activado (y siempre, si completar no lo está).
   // Si el presente ya se domina, ni la primera vez: se escribe. Tampoco si se pide menos ayuda y no está flojo.
+  // Sin completar activado, la primera vez siempre se elige: lo nuevo no sale con una forma quitada.
   const domina = (contexto.dominio?.('presente') ?? 0) >= UMBRAL_DOMINADA && contexto.formas.has('completar');
   const sinElegir = domina || (contexto.sinAndamiaje === true && (contexto.dominio?.('presente') ?? 1) >= UMBRAL_FLOJA && contexto.formas.has('completar'));
   const elegir =
-    (contexto.repeticiones === 0 && !sinElegir) || (contexto.formas.has('opcion') && (!contexto.formas.has('completar') || (!domina && azar.siguiente() < 0.2)));
+    contexto.repeticiones === 0
+      ? !sinElegir
+      : contexto.formas.has('opcion') && (!contexto.formas.has('completar') || (!domina && azar.siguiente() < 0.2));
   if (elegir) {
     // Elegir: solo con sujetos cuya forma no tiene alternativa, para que no haya dos respuestas buenas.
     const sujetos = SUJETOS.filter((s) => !formaDe(formas, s.i).includes('/'));

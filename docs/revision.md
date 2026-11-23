@@ -922,8 +922,8 @@ Se marca con: `npm run revisado -- O60-O64 R9-R12 R14 V1-V3 E15-E16 --lote acf5f
 
 ## Lote V4 a V19 (unos 14 minutos)
 
-Se marca con: `npm run revisado -- V4-V19 --lote eac34282`
-<!-- lote eac34282: V4 19535a26, V5 6f0c3e82, V6 a168a57f, V7 f96d641b, V8 20533138, V9 1b375519, V10 44526a8c, V11 fddcf7af, V12 2d8afa3a, V13 4dc2ae40, V14 46681803, V15 4c953f6f, V16 6203612b, V17 592c8574, V18 273b1bc3, V19 e069a8ab -->
+Se marca con: `npm run revisado -- V4-V19 --lote 9710949b`
+<!-- lote 9710949b: V4 19535a26, V5 6f0c3e82, V6 a168a57f, V7 f96d641b, V8 20533138, V9 95ab97b9, V10 44526a8c, V11 fddcf7af, V12 2d8afa3a, V13 4dc2ae40, V14 46681803, V15 4c953f6f, V16 6203612b, V17 592c8574, V18 273b1bc3, V19 e069a8ab -->
 
 ### Verbos
 
@@ -963,7 +963,7 @@ Se marca con: `npm run revisado -- V4-V19 --lote eac34282`
 - Presente: ik betaal, jij betaalt, hij betaalt, wij, jullie, zij betalen. «Ik betaal de rekening.» «Betaal jij de rekening?»
 - En español: pago, pagas, paga, pagamos, pagáis, pagan + «la cuenta». La pregunta: «¿Pagas la cuenta?»
 - Perfectum: heeft betaald. «Ik heb de rekening al betaald.» Ya he pagado la cuenta.
-- Nota: Aquí be- es un prefijo átono (el acento cae en ta), por eso «betaald» no lleva ge-.
+- Nota: Aquí be- es un prefijo átono (el acento cae en «ta»), por eso «betaald» no lleva ge-.
 
 **V10. spelen**: jugar
 
@@ -1123,8 +1123,8 @@ Se marca con: `npm run revisado -- V20-V33 --lote c3d8c4b4`
 
 ## Lote V34 a V52 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- V34-V52 --lote bc77ad08`
-<!-- lote bc77ad08: V34 f33f1eed, V35 1924e733, V36 e4fc06f9, V37 1c0f446d, V38 5d2693a1, V39 6266b305, V40 e2798c9e, V41 69342a5a, V42 bf984573, V43 3c1e5e36, V44 bdd0fd08, V45 405d5629, V46 2cc2627b, V47 185f6176, V48 379ade82, V49 12bde102, V50 7afdbdcf, V51 2c13eab9, V52 6debbe12 -->
+Se marca con: `npm run revisado -- V34-V52 --lote 987d8c47`
+<!-- lote 987d8c47: V34 f33f1eed, V35 1924e733, V36 e4fc06f9, V37 1c0f446d, V38 5d2693a1, V39 6266b305, V40 e2798c9e, V41 69342a5a, V42 bf984573, V43 3c1e5e36, V44 bdd0fd08, V45 405d5629, V46 2cc2627b, V47 185f6176, V48 379ade82, V49 12bde102, V50 7afdbdcf, V51 2c13eab9, V52 fb098470 -->
 
 ### Verbos
 
@@ -1236,7 +1236,7 @@ Se marca con: `npm run revisado -- V34-V52 --lote bc77ad08`
 - Presente (solo sale como opción mala en el pasado): ik zeg, jij zegt, hij zegt, wij, jullie, zij zeggen.
 - Perfectum: heeft gezegd. «Ze heeft niets gezegd.» Ella no ha dicho nada.
 - Pasado: zei, zeiden. «Hij zei dat hij moe was.» Dijo que estaba cansado.
-- Nota: El participio es regular (ge + zeg + d); lo irregular es el pasado: «zei, zeiden».
+- Nota: El participio es regular (ge + «zeg» + d); lo irregular es el pasado: «zei, zeiden».
 
 ## Lote R13, V53 a V58, S1, E24 a E29, E36 a E39, T30, T33 (unos 15 minutos)
 

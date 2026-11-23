@@ -115,7 +115,7 @@ export const VERBOS: readonly DatosVerbo[] = [
   { codigo: 'V6', inf: 'koken', es: 'cocinar', raiz: 'kook', comp: 'vanavond', compEs: 'esta noche', presenteEs: ['cocino', 'cocinas', 'cocina', 'cocinamos', 'cocináis', 'cocinan'], participio: 'gekookt', aux: 'hebben', perf: ['hij heeft voor iedereen gekookt', 'Él ha cocinado para todos.'] },
   { codigo: 'V7', inf: 'leren', es: 'aprender', raiz: 'leer', comp: 'Nederlands', compEs: 'neerlandés', presenteEs: ['aprendo', 'aprendes', 'aprende', 'aprendemos', 'aprendéis', 'aprenden'], participio: 'geleerd', aux: 'hebben', perf: ['ik heb veel nieuwe woorden geleerd', 'He aprendido muchas palabras nuevas.'] },
   { codigo: 'V8', inf: 'wachten', es: 'esperar', raiz: 'wacht', comp: 'op de bus', compEs: 'el autobús', presenteEs: ['espero', 'esperas', 'espera', 'esperamos', 'esperáis', 'esperan'], participio: 'gewacht', aux: 'hebben', perf: ['we hebben een half uur gewacht', 'Hemos esperado media hora.'] },
-  { codigo: 'V9', inf: 'betalen', es: 'pagar', raiz: 'betaal', comp: 'de rekening', compEs: 'la cuenta', presenteEs: ['pago', 'pagas', 'paga', 'pagamos', 'pagáis', 'pagan'], participio: 'betaald', aux: 'hebben', perf: ['ik heb de rekening al betaald', 'Ya he pagado la cuenta.'], nota: 'Aquí be- es un prefijo átono (el acento cae en ta), por eso «betaald» no lleva ge-.' },
+  { codigo: 'V9', inf: 'betalen', es: 'pagar', raiz: 'betaal', comp: 'de rekening', compEs: 'la cuenta', presenteEs: ['pago', 'pagas', 'paga', 'pagamos', 'pagáis', 'pagan'], participio: 'betaald', aux: 'hebben', perf: ['ik heb de rekening al betaald', 'Ya he pagado la cuenta.'], nota: 'Aquí be- es un prefijo átono (el acento cae en «ta»), por eso «betaald» no lleva ge-.' },
   { codigo: 'V10', inf: 'spelen', es: 'jugar', raiz: 'speel', comp: 'met de kinderen', compEs: 'con los niños', presenteEs: ['juego', 'juegas', 'juega', 'jugamos', 'jugáis', 'juegan'], participio: 'gespeeld', aux: 'hebben', perf: ['de kinderen hebben de hele middag buiten gespeeld', 'Los niños han jugado fuera toda la tarde.'] },
   { codigo: 'V11', inf: 'bellen', es: 'llamar por teléfono', raiz: 'bel', comp: 'de huisarts', compEs: 'al médico de cabecera', presenteEs: ['llamo', 'llamas', 'llama', 'llamamos', 'llamáis', 'llaman'], participio: 'gebeld', aux: 'hebben', perf: ['mijn moeder heeft gisteren gebeld', 'Mi madre llamó ayer.'], perfOtras: ['gisteren heeft mijn moeder gebeld'] },
   {
@@ -598,7 +598,7 @@ export const VERBOS: readonly DatosVerbo[] = [
     perf: ['ze heeft niets gezegd', 'Ella no ha dicho nada.'],
     pasado: ['zei', 'zeiden'],
     pasadoEj: ['hij zei dat hij moe was', 'Dijo que estaba cansado.'],
-    nota: 'El participio es regular (ge + zeg + d); lo irregular es el pasado: «zei, zeiden».',
+    nota: 'El participio es regular (ge + «zeg» + d); lo irregular es el pasado: «zei, zeiden».',
   },
   {
     codigo: 'V53',

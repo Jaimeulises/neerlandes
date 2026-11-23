@@ -23,8 +23,10 @@ export interface Ajustes {
   readonly vozLenta: boolean;
   readonly formas: readonly Forma[];
   /**
-   * Para quien ya conoce lo básico: lo nuevo entra de todos los grupos sin esperar a ver entero el anterior
-   * (como mucho un grupo nuevo por ronda) y empieza escribiendo, salvo que su regla esté floja.
+   * Para quien ya conoce lo básico: lo nuevo entra de todos los grupos sin esperar a ver entero el anterior (cada ronda
+   * abre como mucho un grupo nuevo de cada parte: orden, verbos y vocabulario), y lo de orden y de verbos empieza
+   * escribiendo, salvo que su regla esté floja. Las palabras siguen empezando por “¿Qué significa?”: no salen de ninguna
+   * regla, y una palabra hay que reconocerla antes de escribirla.
    */
   readonly gruposAbiertos: boolean;
   readonly tiempoDecir: TiempoDecir;

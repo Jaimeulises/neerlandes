@@ -44,3 +44,5 @@ Una última pasada sobre esos arreglos, también con un escéptico por hallazgo,
 ## Lo que queda abierto: los ids salen del texto
 
 Los ids de las frases y las palabras salen de su texto (las seis primeras palabras). Corregir una frase cambia su id: su tarjeta de repaso queda huérfana, la frase vuelve como nueva y, hasta que se vea otra vez, su grupo puede contar como no empezado. De momento se deja así, porque hoy no hay progreso que perder. Cuando llegue la revisión nativa, antes de aplicarla hay que elegir entre ids fijos en los datos o una tabla de ids viejos a nuevos que se aplique al cargar el progreso.
+
+*Resuelto en la decisión 0007: cada elemento lleva un código fijo y su id ya no sale del texto, sino de `src/neerlandes/ids-fijos.ts` (el de antes, congelado) o, si es nuevo, de su código. Corregir una frase ya no cambia su id; pasar un verbo a otro grupo, sí.*

@@ -161,7 +161,9 @@ export interface ContextoEjercicio {
   readonly dominio?: (destreza: string) => number | null;
   /**
    * El alumno ya conoce lo básico y pide menos ayuda: lo nuevo empieza sin andamiaje (escribiendo, en vez de
-   * eligiendo u ordenando fichas), salvo que su destreza esté floja.
+   * eligiendo u ordenando fichas), salvo que su destreza esté floja. Lo que no sale de ninguna regla puede seguir
+   * empezando con opciones, como las palabras del paquete de neerlandés, que empiezan por “¿Qué significa?”: una
+   * palabra hay que reconocerla antes de escribirla.
    */
   readonly sinAndamiaje?: boolean;
 }
