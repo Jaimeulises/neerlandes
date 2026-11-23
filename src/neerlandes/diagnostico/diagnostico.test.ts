@@ -551,5 +551,25 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     // Con el auxiliar, lo que va detrás sí es su participio, y se sigue diagnosticando.
     expect(casos(verbos.diagnosticar?.(perfectum, 'Ik heb de hele dag werken') ?? [])).toEqual(['participio-sin-ge']);
     expect(casos(verbos.diagnosticar?.(perfectum, 'Ik heb de hele dag gewerkd') ?? [])).toEqual(['participio-kofschip']);
+    // Sin auxiliar, tampoco lo que se escribe como una forma conjugada, aunque los datos no traigan ese pasado
+    // («belde», «trouwden») o sea el presente («spelen»).
+    const perfectumDe = (inf: string): Ejercicio => {
+      const v = ELEMENTOS_VERBOS.find((x) => x.grupo === 'perfectum' && x.verbo?.inf === inf);
+      if (!v) throw new Error(`falta ${inf}`);
+      return verbos.crearEjercicio(v, contexto);
+    };
+    for (const [inf, r] of [
+      ['bellen', 'Mijn moeder belde gisteren'],
+      ['bellen', 'Gisteren belde mijn moeder'],
+      ['trouwen', 'Ze trouwden in juni'],
+      ['koken', 'Hij kookte voor iedereen'],
+      ['spelen', 'De kinderen speelden de hele middag buiten'],
+      ['spelen', 'De kinderen spelen de hele middag buiten'],
+    ] as const) {
+      expect(verbos.diagnosticar?.(perfectumDe(inf), r), r).toEqual([]);
+    }
+    // Con el auxiliar, o sin él pero con ge-, sí intenta ser el participio.
+    expect(casos(verbos.diagnosticar?.(perfectumDe('bellen'), 'Mijn moeder heeft gisteren belt') ?? [])).toEqual(['participio-sin-ge']);
+    expect(casos(verbos.diagnosticar?.(perfectumDe('bellen'), 'Mijn moeder gisteren gebelt') ?? [])).toEqual(['participio-kofschip']);
   });
 });

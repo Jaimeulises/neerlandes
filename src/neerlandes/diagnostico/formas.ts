@@ -91,6 +91,18 @@ function pareceDe(palabra: string, formas: readonly FormaVerbal[]): boolean {
 }
 
 /**
+ * Si una palabra se escribe como una forma conjugada del verbo de otra: una forma de presente o de pasado de los
+ * datos, el infinitivo, o su raíz sola o con -t, -en, -te, -de, -ten o -den («belde», «trouwden», «spelen»). Con
+ * ge- delante no lo parece, salvo que el propio verbo empiece así.
+ */
+export function pareceConjugada(palabra: string, de: string): boolean {
+  const w = normalizar(palabra);
+  const formas = formasDe(de);
+  if (formasDe(w).some((f) => f.tipo !== 'participio' && formas.some((g) => g.inf === f.inf))) return true;
+  return [...raicesDe(formas)].some((r) => w === r || ['t', 'en', 'te', 'de', 'ten', 'den'].some((t) => w === `${r}${t}`));
+}
+
+/**
  * Si dos palabras son formas del mismo verbo. Con los verbos de los datos se mira el índice, y una forma
  * inventada vale si sale de la raíz de uno de ellos; con los demás, se acepta que difieran en una -t, una -en
  * o una -n final (kijk, kijkt, kijken).

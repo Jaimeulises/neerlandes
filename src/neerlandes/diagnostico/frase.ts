@@ -11,7 +11,7 @@
 
 import { comoFrase, palabras } from '../../motor';
 import type { DiagnosticoNl } from './casos';
-import { FORMAS_HEBBEN, FORMAS_ZIJN, formasDe, mismoVerbo, presenteDelVerbo } from './formas';
+import { FORMAS_HEBBEN, FORMAS_ZIJN, formasDe, mismoVerbo, pareceConjugada, presenteDelVerbo } from './formas';
 import type { Papeles } from './papeles';
 import { explicarAuxiliar, explicarConjugacion, explicarParticipio } from './verbo';
 
@@ -137,12 +137,16 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
   /** Si delante de esa posición (o en toda la principal, si es -1) va un verbo conjugado que no es el de la frase. */
   const otroVerboAntes = (i: number): boolean => iOtroVerbo >= 0 && (i < 0 || iOtroVerbo < i);
 
-  // El participio, si lo hay. Dicha en otro tiempo («Ik werkte de hele dag») o con otro verbo conjugado («Ik ga de
-  // hele dag werken»), lo que lleva del verbo no intenta ser el participio.
+  // El participio, si lo hay. Dicha en otro tiempo («Ik werkte de hele dag», «Mijn moeder belde gisteren») o con
+  // otro verbo conjugado («Ik ga de hele dag werken»), lo que lleva del verbo no intenta ser el participio. Sin
+  // auxiliar, una forma que se escribe como conjugada tampoco.
   if (p.tipoFinal === 'participio' && !otroVerboAntes(iVerbo)) {
     const participio = p.finales.at(-1) ?? '';
     if (!u.includes(participio)) {
-      const dado = u.find((w, i) => i > iVerbo && w !== participio && (mismoVerbo(w, participio) || formasDe(w).some((f) => formasDe(participio).some((g) => g.inf === f.inf)) || (w.startsWith('ge') && i >= u.length - 2)));
+      const otroTiempo = (w: string): boolean => iVerbo < 0 && pareceConjugada(w, participio);
+      const dado = u.find(
+        (w, i) => i > iVerbo && w !== participio && !otroTiempo(w) && (mismoVerbo(w, participio) || formasDe(w).some((f) => formasDe(participio).some((g) => g.inf === f.inf)) || (w.startsWith('ge') && i >= u.length - 2)),
+      );
       if (dado && !enAlgunaValida(validas, dado)) anadir(explicarParticipio(participio, dado));
     }
   }
