@@ -27,6 +27,8 @@ const PRUDENCIA = 1.5;
 export const MINIMO_PARA_NIVEL = 3;
 /** A partir de aquí una destreza se da por dominada. */
 export const UMBRAL_DOMINADA = 0.75;
+/** Por debajo de aquí una destreza está floja: vuelve más ayuda (por ejemplo, las fichas). */
+export const UMBRAL_FLOJA = 0.45;
 
 export interface EstadoDestreza {
   /** De 0 a 1. */

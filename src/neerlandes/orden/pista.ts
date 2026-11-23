@@ -3,7 +3,7 @@
 // escribiéndola al oído. Es donde se trabaja lo de no hablar con el orden del
 // inglés.
 
-import { UMBRAL_DOMINADA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
+import { UMBRAL_DOMINADA, UMBRAL_FLOJA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
 import { barajarFichas, comoFrase, conFormasTonicas, elegirForma, idFijo } from '../comun';
 import { diagnosticarConFrase, pistasDeReintento } from '../diagnostico';
 import type { IdDestreza } from '../destrezas';
@@ -123,7 +123,7 @@ export const orden: Pista<Frase> = {
   // (se escriben o se dicen directamente); si está floja, vuelven más las fichas.
   crearEjercicio(e, contexto) {
     const dominio = contexto.dominio?.(DESTREZA_DE_GRUPO[e.grupo]) ?? null;
-    const nivel = dominio === null ? 'normal' : dominio >= UMBRAL_DOMINADA ? 'alto' : dominio < 0.45 ? 'bajo' : 'normal';
+    const nivel = dominio === null ? 'normal' : dominio >= UMBRAL_DOMINADA ? 'alto' : dominio < UMBRAL_FLOJA ? 'bajo' : 'normal';
     const { azar, formas } = contexto;
     let forma: Ejercicio['forma'];
     if (nivel === 'alto') {
@@ -141,7 +141,8 @@ export const orden: Pista<Frase> = {
               'ordenar',
             );
     } else if (contexto.repeticiones === 0) {
-      forma = 'ordenar';
+      // Quien ya conoce lo básico empieza escribiendo, con la pista del reintento como red; las fichas, si la regla está floja.
+      forma = contexto.sinAndamiaje === true && nivel === 'normal' ? elegirForma(azar, formas, [['traducir', 1]], 'ordenar') : 'ordenar';
     } else if (contexto.repeticiones === 1) {
       forma = elegirForma(azar, formas, [['traducir', 1]], 'ordenar');
     } else {

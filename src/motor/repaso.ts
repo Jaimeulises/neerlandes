@@ -63,7 +63,11 @@ export function registrarRespuesta(
   // Solo cuenta el primer intento de cada día de estudio: acertar a la segunda, con la respuesta recién
   // vista, es memoria de hace un momento y no dice nada de si se recordará otro día.
   const primeroDelDia = !tarjeta.last_review || diaDe(cuando) > diaDe(new Date(ultimo));
-  const dias = (tarjeta.dias ?? 0) + (primeroDelDia && calificacion !== 'otra_vez' ? 1 : 0);
+  // Fallar algo que ya estaba en repaso espaciado es haberlo olvidado: los días acertados vuelven a cero, y
+  // para darlo otra vez por asentado hacen falta otros dos días acertando a la primera. Sin esto, acertarlo
+  // en la vuelta de la misma ronda lo dejaría asentado aunque se acabe de fallar.
+  const olvido = calificacion === 'otra_vez' && tarjeta.state === State.Review;
+  const dias = olvido ? 0 : (tarjeta.dias ?? 0) + (primeroDelDia && calificacion !== 'otra_vez' ? 1 : 0);
   const siguiente = new Map(progreso);
   siguiente.set(k, { ...card, dias });
   return siguiente;

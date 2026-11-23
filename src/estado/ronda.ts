@@ -37,7 +37,8 @@ export function opcionesDeRonda(
     formas,
     ...(extra ? { incluirNoVencidos: true } : {}),
     ...(dominio ? { dominio } : {}),
-    ...(ajustes.gruposAbiertos ? { gruposAbiertos: true } : {}),
+    // El interruptor es para quien ya conoce lo básico: abre todos los grupos y quita el andamiaje de lo nuevo.
+    ...(ajustes.gruposAbiertos ? { gruposAbiertos: true, sinAndamiaje: true } : {}),
   };
 }
 

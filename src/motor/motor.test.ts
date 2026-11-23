@@ -139,18 +139,34 @@ describe('asentado: aciertos en días distintos', () => {
     p = registrarRespuesta(p, 'letras', 'a', 'otra_vez', AL_DIA_SIGUIENTE);
     p = registrarRespuesta(p, 'letras', 'a', 'bien', new Date(AL_DIA_SIGUIENTE.getTime() + 60_000));
     p = registrarRespuesta(p, 'letras', 'a', 'bien', new Date(AL_DIA_SIGUIENTE.getTime() + 20 * 60_000));
-    expect(tarjetaDe(p).dias).toBe(1);
+    // Y como el «fácil» ya la había pasado a repaso, el fallo es un olvido: tampoco cuenta el día de antes.
+    expect(tarjetaDe(p).dias).toBe(0);
     expect(asentada(tarjetaDe(p))).toBe(false);
   });
 
-  it('un fallo la saca de asentada hasta que vuelve al repaso espaciado, sin perder los días ganados', () => {
+  it('fallar algo asentado es olvidarlo: acertarlo en la vuelta de la ronda no lo asienta, hacen falta otros dos días', () => {
     let p = registrarRespuesta(PROGRESO_VACIO, 'letras', 'a', 'facil', TARDE);
     p = registrarRespuesta(p, 'letras', 'a', 'bien', AL_DIA_SIGUIENTE);
     expect(asentada(tarjetaDe(p))).toBe(true);
     const tercerDia = new Date(2026, 10, 20, 18, 0);
     p = registrarRespuesta(p, 'letras', 'a', 'otra_vez', tercerDia);
     expect(asentada(tarjetaDe(p))).toBe(false);
+    expect(tarjetaDe(p).dias).toBe(0);
+    // La vuelta al final de la ronda, unos minutos después.
+    p = registrarRespuesta(p, 'letras', 'a', 'bien', new Date(tercerDia.getTime() + 15 * 60_000));
+    expect(asentada(tarjetaDe(p))).toBe(false);
+    p = registrarRespuesta(p, 'letras', 'a', 'bien', new Date(2026, 10, 21, 18, 0));
+    expect(asentada(tarjetaDe(p))).toBe(false);
+    p = registrarRespuesta(p, 'letras', 'a', 'bien', new Date(2026, 10, 23, 18, 0));
     expect(tarjetaDe(p).dias).toBe(2);
+    expect(asentada(tarjetaDe(p))).toBe(true);
+  });
+
+  it('un fallo mientras aún se aprende no borra los días ganados', () => {
+    let p = registrarRespuesta(PROGRESO_VACIO, 'letras', 'a', 'bien', TARDE);
+    expect(tarjetaDe(p).state).not.toBe(State.Review);
+    p = registrarRespuesta(p, 'letras', 'a', 'otra_vez', AL_DIA_SIGUIENTE);
+    expect(tarjetaDe(p).dias).toBe(1);
   });
 
   it('con el reloj atrasado no se gana un día', () => {
@@ -250,16 +266,32 @@ describe('rondas y desbloqueos', () => {
     expect(gruposDesbloqueados(pista, p)).toEqual(['uno', 'dos']);
   });
 
-  it('con los grupos abiertos, todos lo están desde el principio y lo nuevo entra en rueda, cada grupo por su primero', () => {
-    const pista = pistaDePrueba('abcdef', ['uno', 'dos', 'tres'], 2);
+  it('con los grupos abiertos, cada ronda abre como mucho un grupo y lo demás sigue en rueda por los empezados', () => {
+    const pista = pistaDePrueba('abcdefghi', ['uno', 'dos', 'tres'], 3);
     expect(gruposDesbloqueados(pista, PROGRESO_VACIO, new Map(), true)).toEqual(['uno', 'dos', 'tres']);
-    const opciones = { ...RONDA_POR_DEFECTO, nuevosMaximo: 4, gruposAbiertos: true };
-    const ronda = construirRonda(pista, PROGRESO_VACIO, AHORA, crearAzar(1), opciones);
-    expect(ronda.map((p) => p.ejercicio.elementoId)).toEqual(['a', 'c', 'e', 'b']);
-    expect(resumirPista(pista, PROGRESO_VACIO, AHORA, new Map(), true).nuevosDisponibles).toBe(6);
-    // Con los grupos en orden, lo de siempre: solo el primero, y en su orden.
-    expect(construirRonda(pista, PROGRESO_VACIO, AHORA, crearAzar(1), { ...opciones, gruposAbiertos: false }).map((p) => p.ejercicio.elementoId)).toEqual(['a', 'b']);
-    expect(resumirPista(pista, PROGRESO_VACIO, AHORA).nuevosDisponibles).toBe(2);
+    const rondas = (gruposAbiertos: boolean): string[][] => {
+      const resultado: string[][] = [];
+      let p: Progreso = PROGRESO_VACIO;
+      for (let i = 0; i < 5; i++) {
+        const ids = construirRonda(pista, p, AHORA, crearAzar(1), { ...RONDA_POR_DEFECTO, nuevosMaximo: 2, gruposAbiertos }).map((x) => x.ejercicio.elementoId);
+        resultado.push(ids);
+        for (const id of ids) p = registrarRespuesta(p, 'letras', id, 'bien', AHORA);
+      }
+      return resultado;
+    };
+    // Abre uno por ronda (a, d y g presentan su regla), y luego reparte por el grupo que menos lleva visto.
+    expect(rondas(true)).toEqual([['a', 'b'], ['d', 'e'], ['g', 'h'], ['c', 'f'], ['i']]);
+    // Con los grupos en orden, lo de siempre: un grupo detrás de otro.
+    expect(rondas(false)).toEqual([['a', 'b'], ['c'], ['d', 'e'], ['f'], ['g', 'h']]);
+  });
+
+  it('con los grupos abiertos, lo disponible es lo de los grupos empezados más el siguiente por empezar', () => {
+    const pista = pistaDePrueba('abcdefghi', ['uno', 'dos', 'tres'], 3);
+    expect(resumirPista(pista, PROGRESO_VACIO, AHORA, new Map(), true).nuevosDisponibles).toBe(3);
+    let p: Progreso = PROGRESO_VACIO;
+    for (const id of 'ab') p = registrarRespuesta(p, 'letras', id, 'bien', AHORA);
+    expect(resumirPista(pista, p, AHORA, new Map(), true).nuevosDisponibles).toBe(4);
+    expect(resumirPista(pista, p, AHORA).nuevosDisponibles).toBe(1);
   });
 
   it('una pista con requisito espera a otra pista', () => {

@@ -12,6 +12,7 @@ import type { Voz } from '../../estado/voz';
 import {
   crearAzar,
   practicarDestreza,
+  registrarRespuesta,
   repetirTrasFallo,
   semillaNueva,
   type Calificacion,
@@ -87,10 +88,13 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
       let practicadas = e.practicadas;
       if (calificacion === 'otra_vez') {
         const opciones = opcionesDeRonda(ajustes, formas, e.extra, dominio);
+        // El progreso de las props aún no trae esta respuesta. Con ella, la vuelta sabe que el elemento ya se ha
+        // hecho una vez (y no repite el mismo ejercicio de algo nuevo) y su grupo cuenta como empezado.
+        const progresoTras = registrarRespuesta(progreso, pista.id, ejercicio.elementoId, calificacion, new Date());
         const clave = `${pista.id}/${ejercicio.elementoId}`;
         const veces = e.repetidos.get(clave) ?? 0;
         const elemento = pista.elementos.find((x) => x.id === ejercicio.elementoId);
-        const vuelta = elemento ? repetirTrasFallo(pista, elemento, progreso, azar, veces, opciones) : null;
+        const vuelta = elemento ? repetirTrasFallo(pista, elemento, progresoTras, azar, veces, opciones) : null;
         if (vuelta) {
           pasos = [...pasos, { pistaId: pista.id, paso: vuelta }];
           repetidos = new Map(repetidos).set(clave, veces + 1);
@@ -100,7 +104,7 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
         if (destreza) {
           for (const p of [pista, ...pistas.filter((x) => x !== pista)]) {
             const enRonda = new Set(pasos.filter((x) => x.pistaId === p.id).map((x) => x.paso.ejercicio.elementoId));
-            const practica = practicarDestreza(p, destreza, enRonda, progreso, azar, opciones);
+            const practica = practicarDestreza(p, destreza, enRonda, progresoTras, azar, opciones);
             if (practica) {
               pasos = [...pasos.slice(0, e.indice + 1), { pistaId: p.id, paso: practica }, ...pasos.slice(e.indice + 1)];
               practicadas = new Set(practicadas).add(destreza);

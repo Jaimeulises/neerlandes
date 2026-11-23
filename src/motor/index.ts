@@ -63,4 +63,4 @@ export {
   VERSION_COPIA,
 } from './persistencia';
 export type { EstadoDestreza, NivelEstimado } from './nivel';
-export { dominioDe, estimarNivel, MINIMO_PARA_NIVEL, nivelPorDestreza, PESO_DE_FORMA, UMBRAL_DOMINADA } from './nivel';
+export { dominioDe, estimarNivel, MINIMO_PARA_NIVEL, nivelPorDestreza, PESO_DE_FORMA, UMBRAL_DOMINADA, UMBRAL_FLOJA } from './nivel';

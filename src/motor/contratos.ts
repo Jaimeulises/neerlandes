@@ -152,6 +152,11 @@ export interface ContextoEjercicio {
   readonly variante?: string;
   /** Lo que domina el alumno cada destreza, de 0 a 1, o null si aún no hay datos. Sirve para subir o bajar la dificultad. */
   readonly dominio?: (destreza: string) => number | null;
+  /**
+   * El alumno ya conoce lo básico y pide menos ayuda: lo nuevo empieza sin andamiaje (escribiendo, en vez de
+   * eligiendo u ordenando fichas), salvo que su destreza esté floja.
+   */
+  readonly sinAndamiaje?: boolean;
 }
 
 /**

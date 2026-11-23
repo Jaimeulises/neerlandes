@@ -12,7 +12,10 @@ export interface Ajustes {
   readonly voz: boolean;
   readonly vozLenta: boolean;
   readonly formas: readonly Forma[];
-  /** Lo nuevo entra de todos los grupos a la vez, sin esperar a ver entero el anterior. */
+  /**
+   * Para quien ya conoce lo básico: lo nuevo entra de todos los grupos sin esperar a ver entero el anterior
+   * (como mucho un grupo nuevo por ronda) y empieza escribiendo, salvo que su regla esté floja.
+   */
   readonly gruposAbiertos: boolean;
 }
 

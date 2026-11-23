@@ -75,13 +75,37 @@ describe('la ronda de hoy', () => {
     expect(new Set(primeros).size).toBe(3);
   });
 
-  it('con todos los grupos abiertos, lo nuevo de una pista sale de varios grupos y cada uno empieza por su regla', () => {
+  it('con todos los grupos abiertos, cada ronda abre como mucho una regla de orden y en pocas rondas han empezado todas', () => {
     const orden = PISTAS.find((p) => p.id === 'orden');
     if (!orden) throw new Error('falta la pista de orden');
-    const pasos = construirRondaDe([orden], PROGRESO_VACIO, AHORA, crearAzar(7), { ...OPCIONES, nuevosMaximo: 4, gruposAbiertos: true });
-    const grupos = pasos.map((p) => orden.elementos.find((e) => e.id === p.paso.ejercicio.elementoId)?.grupo);
-    expect(grupos).toEqual(orden.grupos.slice(0, 4));
-    for (const p of pasos) expect(p.paso.presentacion, p.paso.ejercicio.elementoId).not.toBeNull();
+    const jugar = (gruposAbiertos: boolean, rondas: number): { grupos: Set<string>; reglasPorRonda: number[] } => {
+      let progreso: Progreso = PROGRESO_VACIO;
+      const reglasPorRonda: number[] = [];
+      for (let i = 0; i < rondas; i++) {
+        const opciones: OpcionesRonda = { ...OPCIONES, nuevosMaximo: 4, gruposAbiertos, sinAndamiaje: gruposAbiertos };
+        const nuevos = construirRondaDe(PISTAS, progreso, AHORA, crearAzar(i + 1), opciones).filter(esNuevoEn(progreso));
+        reglasPorRonda.push(nuevos.filter((p) => p.pistaId === 'orden' && p.paso.presentacion !== null).length);
+        for (const p of nuevos) progreso = registrarRespuesta(progreso, p.pistaId, p.paso.ejercicio.elementoId, 'bien', AHORA);
+      }
+      return { grupos: new Set(orden.elementos.filter((e) => progreso.has(clave('orden', e.id))).map((e) => e.grupo)), reglasPorRonda };
+    };
+    const abiertos = jugar(true, 12);
+    expect(abiertos.grupos.size).toBe(orden.grupos.length);
+    expect(Math.max(...abiertos.reglasPorRonda)).toBe(1);
+    // En orden, en las mismas rondas solo han empezado los primeros grupos.
+    expect(jugar(false, 12).grupos.size).toBeLessThan(4);
+  });
+
+  it('quien pide menos ayuda empieza lo nuevo de orden escribiendo, no con fichas', () => {
+    const orden = PISTAS.find((p) => p.id === 'orden');
+    if (!orden) throw new Error('falta la pista de orden');
+    const formas = (sinAndamiaje: boolean): string[] =>
+      construirRondaDe([orden], PROGRESO_VACIO, AHORA, crearAzar(3), { ...OPCIONES, nuevosMaximo: 4, gruposAbiertos: true, sinAndamiaje }).map((p) => p.paso.ejercicio.forma);
+    expect(new Set(formas(true))).toEqual(new Set(['traducir']));
+    expect(new Set(formas(false))).toEqual(new Set(['ordenar']));
+    // Si la regla está floja, vuelven las fichas.
+    const floja = construirRondaDe([orden], PROGRESO_VACIO, AHORA, crearAzar(3), { ...OPCIONES, nuevosMaximo: 2, gruposAbiertos: true, sinAndamiaje: true, dominio: () => 0.2 });
+    expect(new Set(floja.map((p) => p.paso.ejercicio.forma))).toEqual(new Set(['ordenar']));
   });
 
   it('la previsión cuenta lo que trae la ronda', () => {

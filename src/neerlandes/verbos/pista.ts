@@ -3,7 +3,7 @@
 // simple o, si es separable, dónde va la partícula. Casi todo se responde
 // escribiendo la forma, porque reconocerla no basta para decirla.
 
-import { UMBRAL_DOMINADA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
+import { UMBRAL_DOMINADA, UMBRAL_FLOJA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
 import { alternativas, comoFrase, conFormasTonicas, elegirForma, hueco, idFijo, opcionesCon, primera } from '../comun';
 import type { IdDestreza } from '../destrezas';
 import {
@@ -155,10 +155,11 @@ function ejercicioPresente(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio)
   const base = { elementoId: e.id, aclaracion: `${resumenPresente(v)} ${REGLA_PRESENTE}` };
 
   // La primera vez se elige; en los repasos, solo si elegir está activado (y siempre, si completar no lo está).
-  // Si el presente ya se domina, ni la primera vez: se escribe.
+  // Si el presente ya se domina, ni la primera vez: se escribe. Tampoco si se pide menos ayuda y no está flojo.
   const domina = (contexto.dominio?.('presente') ?? 0) >= UMBRAL_DOMINADA && contexto.formas.has('completar');
+  const sinElegir = domina || (contexto.sinAndamiaje === true && (contexto.dominio?.('presente') ?? 1) >= UMBRAL_FLOJA && contexto.formas.has('completar'));
   const elegir =
-    (contexto.repeticiones === 0 && !domina) || (contexto.formas.has('opcion') && (!contexto.formas.has('completar') || (!domina && azar.siguiente() < 0.2)));
+    (contexto.repeticiones === 0 && !sinElegir) || (contexto.formas.has('opcion') && (!contexto.formas.has('completar') || (!domina && azar.siguiente() < 0.2)));
   if (elegir) {
     // Elegir: solo con sujetos cuya forma no tiene alternativa, para que no haya dos respuestas buenas.
     const sujetos = SUJETOS.filter((s) => !formaDe(formas, s.i).includes('/'));
@@ -399,9 +400,13 @@ export function fraseDeSeparable(s: DatosSeparable): Frase {
 function ejercicioSeparable(e: Verbo, s: DatosSeparable, contexto: ContextoEjercicio): Ejercicio {
   const aclaracion = `${s.inf}: ${comoFrase(s.presente.replaceAll('|', ' '))} En perfectum: ${s.aux === 'zijn' ? 'is' : 'heeft'} ${s.participio}. ${REGLA_SEPARABLES}`;
   const frase = fraseDeSeparable(s);
+  // Si se pide menos ayuda y los separables no están flojos, la primera vez ya se escribe.
+  const sinFichas = contexto.sinAndamiaje === true && (contexto.dominio?.('separables') ?? 1) >= UMBRAL_FLOJA;
   const forma =
     contexto.repeticiones === 0
-      ? 'ordenar'
+      ? sinFichas
+        ? elegirForma(contexto.azar, contexto.formas, [['traducir', 1]], 'ordenar')
+        : 'ordenar'
       : elegirForma(
           contexto.azar,
           contexto.formas,

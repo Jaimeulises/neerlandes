@@ -129,7 +129,7 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
           />
         </label>
         <p id="explica-grupos" className="texto-2 pequeno">
-          Lo nuevo entra de todos los grupos a la vez, cada uno empezando por su regla, sin esperar a ver entero el anterior. Para quien ya conoce lo básico.
+          Para quien ya conoce lo básico. Cada ronda abre como mucho un grupo, empezando por su regla, sin esperar a ver entero el anterior, y lo nuevo se escribe en vez de ordenarse con fichas, salvo que la regla esté floja.
         </p>
       </section>
 
