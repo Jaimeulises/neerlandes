@@ -233,8 +233,9 @@ export function explicarParticipio(esperado: string, dado: string): DiagnosticoN
   }
 
   const conGe = esperado.startsWith('ge');
-  // Con ge- o sin él: la misma pregunta en las dos direcciones, para que haya que aplicar el criterio.
-  const preguntaGe = `¿Lleva ge- el participio de ${verbo}? Mira cómo empieza el infinitivo: los que empiezan por be-, ver-, ge-, her-, ont- o er- no lo llevan.`;
+  // Con ge- o sin él: la misma pregunta en las dos direcciones, para que haya que aplicar el criterio. Habla del
+  // prefijo átono y no de unas letras: «bellen» empieza por be y lleva ge- («gebeld»).
+  const preguntaGe = `¿Lleva ge- el participio de ${verbo}? Mira cómo empieza el infinitivo: los que empiezan por un prefijo átono (be-, ver-, ge-, her-, ont- o er-) no lo llevan.`;
   if (!conGe && dado.startsWith('ge')) {
     return {
       caso: 'participio-prefijo',

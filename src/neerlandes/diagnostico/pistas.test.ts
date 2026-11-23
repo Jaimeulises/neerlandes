@@ -102,6 +102,16 @@ describe('las pistas del segundo intento', () => {
     }
   });
 
+  it('la pista de ge- habla del prefijo átono, no de unas letras: «bellen» empieza por be y lleva ge-', () => {
+    const sinGe = explicarParticipio('gebeld', 'beld');
+    const conGe = explicarParticipio('verhuisd', 'geverhuisd');
+    expect(sinGe?.caso).toBe('participio-sin-ge');
+    expect(conGe?.caso).toBe('participio-prefijo');
+    expect(sinGe?.pista).toContain('prefijo átono');
+    // El mismo texto en los dos sentidos, para no delatar cuál toca (decisión 0007).
+    expect(conGe?.pista?.replace('«verhuizen»', '«bellen»')).toBe(sinGe?.pista);
+  });
+
   it('los ejemplos de revision.md traen su pista, salvo los del vocabulario, que no se reintenta', () => {
     for (const e of diagnosticarEjemplos()) for (const d of e.diagnosticos) if (d.destreza !== 'articulo') comprobarPista(d, [], `${e.codigo} ${e.respuesta}`);
   });

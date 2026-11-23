@@ -1302,12 +1302,12 @@ Se marca con: `npm run revisado -- R13 V53-V58 S1 E24-E29 E36-E39 T30 T33`
 **E36.** Sobre V9: «Ik heb de rekening al betaald.» → respuesta: «Ik heb de rekening al gebetaald»
 
 - **«gebetaald» no: «betaald».** «betalen» empieza por un prefijo átono (be-, ver-, ge-, her-, ont-, er-), y con ellos el participio no lleva ge-: «betaald».
-  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «betalen»? Mira cómo empieza el infinitivo: los que empiezan por be-, ver-, ge-, her-, ont- o er- no lo llevan.
+  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «betalen»? Mira cómo empieza el infinitivo: los que empiezan por un prefijo átono (be-, ver-, ge-, her-, ont- o er-) no lo llevan.
 
 **E37.** Sobre V10: «De kinderen hebben de hele middag buiten gespeeld.» → respuesta: «De kinderen hebben de hele middag buiten speeld»
 
 - **«speeld» no: «gespeeld».** El participio regular empieza por ge-: ge + raíz + t o d. «spelen» da «gespeeld».
-  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «spelen»? Mira cómo empieza el infinitivo: los que empiezan por be-, ver-, ge-, her-, ont- o er- no lo llevan.
+  - *Pista antes del segundo intento:* ¿Lleva ge- el participio de «spelen»? Mira cómo empieza el infinitivo: los que empiezan por un prefijo átono (be-, ver-, ge-, her-, ont- o er-) no lo llevan.
 
 **E38.** Sobre V4: «Ik heb lang met mijn schoonvader gepraat.» → respuesta: «Ik heb lang met mijn schoonvader gepraatt»
 
