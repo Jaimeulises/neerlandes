@@ -514,4 +514,17 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     // Un sustantivo que se escribe como un verbo («fiets», con un adjetivo detrás del artículo) no es otro verbo.
     expect(casos(diagnostico('Ik wil morgen', 'Een nieuwe fiets wil ik kopen morgen'))).toEqual(['infinitivo-al-final']);
   });
+
+  it('el perfectum dicho en otro tiempo o con otro verbo conjugado no lleva un participio sin ge-', () => {
+    // Lo contrario de «Vroeger heb ik … gewerkt»: «werkte» y el «werken» de «ik ga … werken» no intentan ser el participio.
+    const werken = ELEMENTOS_VERBOS.find((x) => x.grupo === 'perfectum' && x.verbo?.inf === 'werken');
+    if (!werken) throw new Error('falta werken');
+    const perfectum = verbos.crearEjercicio(werken, contexto);
+    expect(perfectum.forma).toBe('traducir');
+    expect(verbos.diagnosticar?.(perfectum, 'Ik werkte de hele dag')).toEqual([]);
+    expect(verbos.diagnosticar?.(perfectum, 'Ik ga de hele dag werken')).toEqual([]);
+    // Con el auxiliar, lo que va detrás sí es su participio, y se sigue diagnosticando.
+    expect(casos(verbos.diagnosticar?.(perfectum, 'Ik heb de hele dag werken') ?? [])).toEqual(['participio-sin-ge']);
+    expect(casos(verbos.diagnosticar?.(perfectum, 'Ik heb de hele dag gewerkd') ?? [])).toEqual(['participio-kofschip']);
+  });
 });

@@ -137,8 +137,9 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
   /** Si delante de esa posición (o en toda la principal, si es -1) va un verbo conjugado que no es el de la frase. */
   const otroVerboAntes = (i: number): boolean => iOtroVerbo >= 0 && (i < 0 || iOtroVerbo < i);
 
-  // El participio, si lo hay.
-  if (p.tipoFinal === 'participio') {
+  // El participio, si lo hay. Dicha en otro tiempo («Ik werkte de hele dag») o con otro verbo conjugado («Ik ga de
+  // hele dag werken»), lo que lleva del verbo no intenta ser el participio.
+  if (p.tipoFinal === 'participio' && !otroVerboAntes(iVerbo)) {
     const participio = p.finales.at(-1) ?? '';
     if (!u.includes(participio)) {
       const dado = u.find((w, i) => i > iVerbo && w !== participio && (mismoVerbo(w, participio) || formasDe(w).some((f) => formasDe(participio).some((g) => g.inf === f.inf)) || (w.startsWith('ge') && i >= u.length - 2)));
