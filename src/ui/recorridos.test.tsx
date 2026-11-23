@@ -4,6 +4,8 @@
 // frase escrita o de unas fichas con el orden del inglés, y lo que pasa con lo
 // guardado: restaurar una copia, no poder abrirlo y volver a la app otro día.
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NOMBRE_APP } from '../estado/app';
@@ -19,13 +21,17 @@ import {
   registrarRespuesta,
   serializarCopia,
   type Almacen,
+  type EjercicioDecir,
   type EjercicioOrdenar,
   type EjercicioTraducir,
 } from '../motor';
+import { vozGrabada } from '../neerlandes/audio';
 import { boton, buscarBoton, enPantalla, escribirEn, esperar, limpiar, montar, prepararNavegador, pulsar } from '../pruebas/pantalla';
+import type { TiempoDecir } from '../estado/ajustes';
 import type { Voz } from '../estado/voz';
 import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../neerlandes/orden/pista';
 import { App } from './App';
+import { Decir, PAUSA_ANTES_DE_SONAR, segundosParaDecir } from './ejercicios/Decir';
 import { Escrito } from './ejercicios/Escrito';
 import { Ordenar } from './ejercicios/Ordenar';
 
@@ -34,6 +40,12 @@ const SIN_VOZ: Voz = { disponible: false, nombre: null, decir: () => undefined }
 afterEach(() => {
   limpiar();
 });
+
+/** Tras un primer fallo con pista, ver la solución en vez de intentarlo otra vez. */
+async function rendirseSiHayPista(): Promise<void> {
+  const ver = buscarBoton('Ver la solución');
+  if (ver) await pulsar(ver);
+}
 
 /** Da un paso en la ronda, sea cual sea el ejercicio. Devuelve la forma que ha visto. */
 async function darUnPaso(): Promise<string> {
@@ -54,6 +66,7 @@ async function darUnPaso(): Promise<string> {
       await pulsar(suelta);
     }
     await pulsar(boton('Comprobar'));
+    await rendirseSiHayPista();
     await pulsar(boton('Siguiente'));
     return 'ordenar';
   }
@@ -61,6 +74,7 @@ async function darUnPaso(): Promise<string> {
   if (campo) {
     escribirEn(campo, 'ik weet het niet');
     await pulsar(boton('Comprobar'));
+    await rendirseSiHayPista();
     await pulsar(boton('Siguiente'));
     return campo instanceof HTMLTextAreaElement ? 'escrito' : 'completar';
   }
@@ -106,9 +120,44 @@ describe('la app de punta a punta', () => {
     expect(enPantalla()).toContain('Últimas dos semanas');
     await pulsar(boton('Ajustes'));
     expect(enPantalla()).toContain('Copia de seguridad');
-    expect(enPantalla()).toContain('no tiene voz neerlandesa');
     expect(enPantalla()).toContain('Ejercicios en los repasos');
-    expect(enPantalla()).toContain('Dictado (necesita la voz)');
+    // El navegador de las pruebas no tiene voz: si hay audio grabado, suena ese y hay dictado; si no, no hay voz.
+    if (vozGrabada()) {
+      expect(enPantalla()).toContain('grabada con Azure');
+      expect(enPantalla()).not.toContain('Dictado (necesita la voz)');
+    } else {
+      expect(enPantalla()).toContain('no tiene voz neerlandesa');
+      expect(enPantalla()).toContain('Dictado (necesita la voz)');
+    }
+  });
+
+  it('abrir todos los grupos se guarda y Progreso lo dice', async () => {
+    prepararNavegador();
+    await montar(<App almacen={almacenEnMemoria()} />);
+    await pulsar(boton('Ajustes'));
+    const interruptor = document.querySelector<HTMLInputElement>('input[aria-describedby="explica-grupos"]');
+    if (!interruptor) throw new Error('falta el interruptor');
+    expect(interruptor.checked).toBe(false);
+    await pulsar(interruptor);
+    expect(interruptor.checked).toBe(true);
+    expect(JSON.parse(localStorage.getItem('stap/ajustes') ?? '{}')).toMatchObject({ gruposAbiertos: true });
+    await pulsar(boton('Progreso'));
+    expect(enPantalla()).toContain('Todos los grupos están abiertos');
+  });
+
+  it('el tiempo para decir la frase se elige y se guarda; lo que no se entienda vuelve a normal', async () => {
+    prepararNavegador();
+    localStorage.setItem('stap/ajustes', JSON.stringify({ tiempoDecir: 'mucho' }));
+    await montar(<App almacen={almacenEnMemoria()} />);
+    await pulsar(boton('Ajustes'));
+    const grupo = document.querySelector('[role="group"][aria-label="Tiempo para decir la frase"]');
+    const pulsado = (): string | undefined => grupo?.querySelector('[aria-pressed="true"]')?.textContent ?? undefined;
+    expect(pulsado()).toBe('Normal');
+    const calma = [...(grupo?.querySelectorAll('button') ?? [])].find((b) => b.textContent === 'Con calma');
+    if (!calma) throw new Error('falta Con calma');
+    await pulsar(calma);
+    expect(pulsado()).toBe('Con calma');
+    expect(JSON.parse(localStorage.getItem('stap/ajustes') ?? '{}')).toMatchObject({ tiempoDecir: 'calma' });
   });
 });
 
@@ -241,6 +290,395 @@ describe('ordenar las fichas en pantalla', () => {
     expect(calificaciones).toEqual(['bien']);
   });
 });
+
+describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () => {
+  type Terminado = [string, string[], boolean];
+
+  async function montarEscrito(terminados: Terminado[]): Promise<HTMLTextAreaElement> {
+    const ejercicio = ejercicioDeFrase(fraseDeMorgen(), 'traducir', { azar: crearAzar(1), vistos: new Set(), repeticiones: 1, formas: new Set(['traducir']) });
+    await montar(
+      <Escrito
+        ejercicio={ejercicio as EjercicioTraducir}
+        repeticion={false}
+        voz={SIN_VOZ}
+        diagnosticar={(r) => orden.diagnosticar?.(ejercicio, r) ?? []}
+        pistasDeReintento={(ds, v) => orden.pistasDeReintento?.(ejercicio, ds, v) ?? []}
+        onTerminar={(c, ds, segunda) => {
+          terminados.push([c, (ds ?? []).map((d) => d.destreza), segunda ?? false]);
+        }}
+      />,
+    );
+    const campo = document.querySelector<HTMLTextAreaElement>('textarea');
+    if (!campo) throw new Error('falta el campo');
+    return campo;
+  }
+
+  it('el primer fallo da la pista sin la solución, y a la segunda se explica lo que falló y cuenta como fallo', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const campo = await montarEscrito(terminados);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('Inténtalo otra vez');
+    expect(enPantalla()).toContain('Has empezado por «morgen»');
+    // Ni la frase buena ni la explicación, y lo escrito sigue ahí para corregirlo.
+    expect(enPantalla()).not.toContain('Morgen ga ik naar mijn schoonouders');
+    expect(buscarBoton('Siguiente')).toBeNull();
+    expect(campo.readOnly).toBe(false);
+    expect(campo.value).toBe('morgen ik ga naar mijn schoonouders');
+    // Sin cambiar nada no se gasta el segundo intento.
+    expect(boton('Comprobar').disabled).toBe(true);
+    escribirEn(campo, 'Morgen ga ik naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('Bien a la segunda');
+    expect(enPantalla()).toContain('el verbo va antes que el sujeto');
+    await pulsar(boton('Siguiente'));
+    expect(terminados).toEqual([['otra_vez', ['inversion'], true]]);
+  });
+
+  it('en el móvil la pista se ve: va encima del campo, se desplaza hasta ella y no vuelve a abrir el teclado', async () => {
+    prepararNavegador();
+    const desplazados: Element[] = [];
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      value(this: Element) {
+        desplazados.push(this);
+      },
+      configurable: true,
+      writable: true,
+    });
+    const campo = await montarEscrito([]);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    // Como al tocar Comprobar en el móvil: el teclado se cierra.
+    campo.blur();
+    await pulsar(boton('Comprobar'));
+    const panel = document.querySelector('.reintento');
+    if (!panel) throw new Error('falta la pista');
+    expect(panel.compareDocumentPosition(campo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(desplazados).toEqual([panel]);
+    expect(document.activeElement).not.toBe(campo);
+    // Y queda dicho dónde se da por buena una respuesta que no está apuntada.
+    expect(enPantalla()).toContain('Si crees que la tuya también vale, en la solución puedes darla por buena.');
+  });
+
+  it('se puede ver la solución sin intentarlo otra vez: es la corrección del primer intento', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const campo = await montarEscrito(terminados);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    escribirEn(campo, 'morgen ik');
+    await pulsar(boton('Ver la solución'));
+    expect(campo.value).toBe('morgen ik ga naar mijn schoonouders');
+    expect(enPantalla()).toContain('el verbo va antes que el sujeto');
+    expect(enPantalla()).toContain('Mi respuesta también vale');
+    await pulsar(boton('Siguiente'));
+    expect(terminados).toEqual([['otra_vez', ['inversion'], false]]);
+  });
+
+  it('si el segundo intento también falla, se corrige ese y cuenta todo lo fallado', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const campo = await montarEscrito(terminados);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    escribirEn(campo, 'morgen ga ik naar mijn ouders');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).not.toContain('Bien a la segunda');
+    expect(enPantalla()).toContain('No es así');
+    await pulsar(boton('Siguiente'));
+    expect(terminados).toEqual([['otra_vez', ['inversion'], false]]);
+  });
+
+  it('si el segundo intento no está en la lista y se da por bueno, cuenta como bien a la segunda; tras ver la solución, como bien', async () => {
+    prepararNavegador();
+    const segundo: Terminado[] = [];
+    const campo = await montarEscrito(segundo);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    escribirEn(campo, 'Morgen ga ik naar mijn schoonfamilie');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('No es así');
+    await pulsar(boton('Mi respuesta también vale'));
+    // Lo mismo que si esa respuesta estuviera apuntada: lo espontáneo no salió.
+    expect(segundo).toEqual([['otra_vez', ['inversion'], true]]);
+
+    // Tras ver la solución, lo que se da por bueno es el primer intento, que no tuvo pista.
+    prepararNavegador();
+    const primero: Terminado[] = [];
+    const otroCampo = await montarEscrito(primero);
+    escribirEn(otroCampo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    await pulsar(boton('Ver la solución'));
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(primero).toEqual([['bien', [], false]]);
+  });
+
+  /** Ordenar la frase de morgen, apuntando cómo termina. */
+  async function montarOrdenar(terminados: Terminado[]): Promise<Frase> {
+    const f = fraseDeMorgen();
+    const ejercicio = ejercicioDeFrase(f, 'ordenar', { azar: crearAzar(1), vistos: new Set(), repeticiones: 0, formas: new Set(['ordenar']) }) as EjercicioOrdenar;
+    await montar(
+      <Ordenar
+        ejercicio={ejercicio}
+        repeticion={false}
+        voz={SIN_VOZ}
+        diagnosticar={(r) => orden.diagnosticar?.(ejercicio, r) ?? []}
+        pistasDeReintento={(ds, v) => orden.pistasDeReintento?.(ejercicio, ds, v) ?? []}
+        onTerminar={(c, ds, segunda) => {
+          terminados.push([c, (ds ?? []).map((d) => d.destreza), segunda ?? false]);
+        }}
+      />,
+    );
+    return f;
+  }
+
+  const puestas = (): HTMLButtonElement[] => [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Tu frase"] button')];
+
+  it('al ordenar, las fichas se quedan donde estaban para moverlas', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const f = await montarOrdenar(terminados);
+    // El orden del inglés: morgen ik ga…
+    const [morgen, ga, ik, ...resto] = f.fichas;
+    for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('Inténtalo otra vez');
+    expect(puestas().map((b) => b.textContent)).toEqual([morgen, ik, ga, ...resto]);
+    // Se quitan desde ik y se vuelven a poner en su orden.
+    for (const b of puestas().slice(1)) await pulsar(b);
+    for (const texto of [ga, ik, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('Bien a la segunda');
+    await pulsar(boton('Siguiente'));
+    expect(terminados).toEqual([['otra_vez', ['inversion'], true]]);
+  });
+
+  it('al ordenar, dar por bueno el segundo orden cuenta como bien a la segunda; tras ver la solución, como bien', async () => {
+    prepararNavegador();
+    const segundo: Terminado[] = [];
+    const f = await montarOrdenar(segundo);
+    const [morgen, ga, ik, ...resto] = f.fichas;
+    for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    for (const b of puestas()) await pulsar(b);
+    for (const texto of [ik, morgen, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('No va en ese orden');
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(segundo).toEqual([['otra_vez', ['inversion'], true]]);
+
+    prepararNavegador();
+    const primero: Terminado[] = [];
+    await montarOrdenar(primero);
+    for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    await pulsar(boton('Ver la solución'));
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(primero).toEqual([['bien', [], false]]);
+  });
+});
+
+describe('decir la frase con cuenta atrás', () => {
+  const ejercicio: EjercicioDecir = {
+    forma: 'decir',
+    tipo: 'prueba',
+    elementoId: 'x',
+    instruccion: 'Dila en voz alta antes de verla',
+    significado: 'Hoy trabajo en casa.',
+    texto: 'Vandaag werk ik thuis.',
+    otras: ['Ik werk vandaag thuis.'],
+  };
+  const total = segundosParaDecir(ejercicio) ?? 0;
+
+  async function montarDecir(dichas: string[], opciones: { tiempo?: TiempoDecir; calificaciones?: string[] } = {}): Promise<void> {
+    // Solo el reloj de la cuenta es de mentira: montar y esperar usan setTimeout de verdad.
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    prepararNavegador();
+    const voz: Voz = {
+      disponible: true,
+      nombre: 'prueba',
+      decir: (t) => {
+        dichas.push(t);
+      },
+    };
+    await montar(
+      <Decir
+        ejercicio={ejercicio}
+        repeticion={false}
+        voz={voz}
+        {...(opciones.tiempo ? { tiempo: opciones.tiempo } : {})}
+        onTerminar={(c) => {
+          opciones.calificaciones?.push(c);
+        }}
+      />,
+    );
+  }
+
+  function pasan(segundos: number): void {
+    act(() => {
+      vi.advanceTimersByTime(segundos * 1000);
+    });
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  });
+
+  it('da el tiempo de leer el español y decir la frase, entre 6 y 12 segundos', () => {
+    expect(segundosParaDecir({ texto: 'Ja.', significado: 'Sí.' })).toBe(6);
+    expect(segundosParaDecir({ texto: 'Vandaag werk ik thuis.', significado: 'Hoy trabajo en casa.' })).toBe(6);
+    // 2 + 0,25 por 6 palabras leídas + 0,7 por 7 dichas: 8,4.
+    expect(segundosParaDecir({ texto: 'Ik wil morgen een nieuwe fiets kopen.', significado: 'Mañana quiero comprar una bici nueva.' })).toBe(8);
+    // La pista también se lee.
+    expect(segundosParaDecir({ texto: 'Ik wil morgen een nieuwe fiets kopen.', significado: 'Mañana quiero comprar una bici nueva.', pista: 'Con el verbo willen, que es modal.' })).toBe(10);
+    expect(segundosParaDecir({ texto: 'In het weekend fietsen we vaak met de kinderen naar het strand.', significado: 'Los fines de semana vamos a menudo en bici a la playa con los niños.' })).toBe(12);
+  });
+
+  it('aprieta más con la regla dominada y menos con la regla floja', () => {
+    const frase = { texto: 'Ik wil morgen een nieuwe fiets kopen.', significado: 'Mañana quiero comprar una bici nueva.' };
+    expect(segundosParaDecir({ ...frase, dominio: 0.6 })).toBe(8);
+    expect(segundosParaDecir({ ...frase, dominio: 0.9 })).toBe(7);
+    expect(segundosParaDecir({ ...frase, dominio: 0.2 })).toBe(11);
+  });
+
+  it('con calma da la mitad más, y sin cuenta atrás no hay tiempo que contar', () => {
+    const frase = { texto: 'Ik wil morgen een nieuwe fiets kopen.', significado: 'Mañana quiero comprar una bici nueva.' };
+    expect(segundosParaDecir(frase, 'calma')).toBe(13);
+    expect(segundosParaDecir(frase, 'sin')).toBeNull();
+  });
+
+  it('al acabar la cuenta se ve la frase y, un momento después, suena una sola vez', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas);
+    expect(document.querySelector('[role="timer"]')?.getAttribute('aria-label')).toBe(`Quedan ${String(total)} segundos`);
+    pasan(total - 1);
+    expect(document.querySelector('[role="timer"]')?.getAttribute('aria-label')).toBe('Queda 1 segundo');
+    expect(enPantalla()).not.toContain('Vandaag werk ik thuis.');
+    expect(dichas).toEqual([]);
+    pasan(1);
+    expect(enPantalla()).toContain('Vandaag werk ik thuis.');
+    // Aún no: si se está acabando de decir, la voz no lo pisa.
+    expect(dichas).toEqual([]);
+    pasan(PAUSA_ANTES_DE_SONAR / 1000);
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+    pasan(10);
+    expect(dichas).toHaveLength(1);
+  });
+
+  it('si en la pausa se toca el altavoz, suena enseguida y no vuelve a sonar al acabarse la pausa', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas);
+    pasan(total);
+    // La pausa: la frase ya se ve, con su altavoz, pero aún no ha sonado.
+    expect(enPantalla()).toContain('Vandaag werk ik thuis.');
+    expect(dichas).toEqual([]);
+    await pulsar(boton('Escuchar'));
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+    pasan(PAUSA_ANTES_DE_SONAR / 1000 + 5);
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+  });
+
+  it('se puede ver antes, y suena enseguida', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas);
+    pasan(2);
+    await pulsar(boton('Ya la he dicho'));
+    expect(enPantalla()).toContain('Vandaag werk ik thuis.');
+    expect(document.querySelector('[role="timer"]')).toBeNull();
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+    pasan(10);
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+  });
+
+  it('sin cuenta atrás, la frase sale solo cuando se pide', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas, { tiempo: 'sin' });
+    expect(document.querySelector('[role="timer"]')).toBeNull();
+    pasan(60);
+    expect(enPantalla()).not.toContain('Vandaag werk ik thuis.');
+    await pulsar(boton('Ya la he dicho'));
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+  });
+
+  it('con la app en segundo plano la cuenta no avanza', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas);
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    pasan(total + 5);
+    expect(enPantalla()).not.toContain('Vandaag werk ik thuis.');
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    pasan(total + 1);
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+  });
+
+  it('pregunta por el sitio y la forma del verbo, enseña las otras formas buenas y no da nada por bueno antes de tiempo', async () => {
+    await montarDecir([]);
+    await pulsar(boton('Ya la he dicho'));
+    expect(enPantalla()).toContain('¿Has puesto el verbo en su sitio y bien conjugado?');
+    expect(enPantalla()).toContain('También vale');
+    const otra = [...document.querySelectorAll('.otras-formas li')];
+    expect(otra.map((li) => [li.textContent, li.getAttribute('lang')])).toEqual([['Ik werk vandaag thuis.', 'nl']]);
+    expect(document.querySelector('.resultado--bien')).toBeNull();
+    expect(document.querySelector('.resultado--neutro')).not.toBeNull();
+  });
+
+  it('“Me he equivocado” se ve como un botón sobre el panel, en el tema claro y en el oscuro', async () => {
+    await montarDecir([]);
+    await pulsar(boton('Ya la he dicho'));
+    const panel = document.querySelector('.resultado--neutro');
+    if (!panel) throw new Error('falta el panel');
+    const equivocado = boton('Me he equivocado');
+    const colores = (['claro', 'oscuro'] as const).map((tema) => {
+      const quitar = ponerEstilos(tema);
+      try {
+        return { tema, panel: getComputedStyle(panel).backgroundColor, boton: getComputedStyle(equivocado).backgroundColor };
+      } finally {
+        quitar();
+      }
+    });
+    // Los estilos se han aplicado, cada tema con sus colores: si no, la comparación no diría nada.
+    expect(colores[0]?.panel).not.toBe('rgba(0, 0, 0, 0)');
+    expect(colores[0]?.panel).not.toBe(colores[1]?.panel);
+    for (const c of colores) expect(c.boton, c.tema).not.toBe(c.panel);
+  });
+
+  it('tras equivocarse se dice otra vez con la buena antes de seguir, y cuenta como fallo', async () => {
+    const calificaciones: string[] = [];
+    await montarDecir([], { calificaciones });
+    await pulsar(boton('Ya la he dicho'));
+    await pulsar(boton('Me he equivocado'));
+    expect(calificaciones).toEqual([]);
+    expect(enPantalla()).toContain('Dila otra vez en voz alta, ahora con la buena.');
+    await pulsar(boton('Siguiente'));
+    expect(calificaciones).toEqual(['otra_vez']);
+  });
+});
+
+/**
+ * Pone en la página los estilos de la app con los colores de un tema y devuelve cómo quitarlos. jsdom no aplica lo
+ * que va dentro de @media, así que el tema oscuro se pone copiando sus colores detrás de los claros. La ruta no va
+ * con new URL(…, import.meta.url): Vite lo convierte en una dirección web y se leería otra cosa.
+ */
+function ponerEstilos(tema: 'claro' | 'oscuro'): () => void {
+  const hojas = ['tokens.css', 'base.css', 'componentes.css'].map((archivo) => {
+    const hoja = document.createElement('style');
+    hoja.textContent = readFileSync(join(import.meta.dirname, 'estilos', archivo), 'utf8');
+    document.head.append(hoja);
+    return hoja;
+  });
+  if (tema === 'oscuro') {
+    const oscuro = [...(hojas[0]?.sheet?.cssRules ?? [])].find((r): r is CSSMediaRule => r instanceof CSSMediaRule && r.media.mediaText.includes('dark'));
+    if (!oscuro) throw new Error('faltan los colores del tema oscuro');
+    const hoja = document.createElement('style');
+    hoja.textContent = [...oscuro.cssRules].map((r) => r.cssText).join('\n');
+    document.head.append(hoja);
+    hojas.push(hoja);
+  }
+  return () => {
+    for (const hoja of hojas) hoja.remove();
+  };
+}
 
 function fraseDeMorgen(): Frase {
   const f = ELEMENTOS_ORDEN.find((e) => e.frase.startsWith('Morgen ga ik'));

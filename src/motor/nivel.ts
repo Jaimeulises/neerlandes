@@ -13,7 +13,8 @@ export const PESO_DE_FORMA: Readonly<Record<string, number>> = {
   ordenar: 0.4,
   dictado: 0.6,
   completar: 0.7,
-  decir: 0.8,
+  // Decir se lo evalúa uno mismo, sin nada que lo compruebe: pesa poco hasta que haya grabación con la que compararse.
+  decir: 0.5,
   traducir: 1,
 };
 
@@ -27,6 +28,8 @@ const PRUDENCIA = 1.5;
 export const MINIMO_PARA_NIVEL = 3;
 /** A partir de aquí una destreza se da por dominada. */
 export const UMBRAL_DOMINADA = 0.75;
+/** Por debajo de aquí una destreza está floja: vuelve más ayuda (por ejemplo, las fichas). */
+export const UMBRAL_FLOJA = 0.45;
 
 export interface EstadoDestreza {
   /** De 0 a 1. */

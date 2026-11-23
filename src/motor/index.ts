@@ -2,6 +2,7 @@ export type { Azar } from './azar';
 export { crearAzar, semillaNueva } from './azar';
 export type {
   Calificacion,
+  CeldaDeTabla,
   ContextoEjercicio,
   Destreza,
   Diagnostico,
@@ -13,6 +14,7 @@ export type {
   EjercicioOpcion,
   EjercicioOrdenar,
   EjercicioTraducir,
+  Ejemplo,
   Elemento,
   ExplicacionFallo,
   Ficha,
@@ -62,4 +64,4 @@ export {
   VERSION_COPIA,
 } from './persistencia';
 export type { EstadoDestreza, NivelEstimado } from './nivel';
-export { dominioDe, estimarNivel, MINIMO_PARA_NIVEL, nivelPorDestreza, PESO_DE_FORMA, UMBRAL_DOMINADA } from './nivel';
+export { dominioDe, estimarNivel, MINIMO_PARA_NIVEL, nivelPorDestreza, PESO_DE_FORMA, UMBRAL_DOMINADA, UMBRAL_FLOJA } from './nivel';

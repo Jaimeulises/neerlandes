@@ -11,7 +11,7 @@ import { FRASES, GRUPOS_ORDEN, REGLAS_ORDEN } from './orden/datos';
 import { ejercicioDeFrase, ELEMENTOS_ORDEN, orden } from './orden/pista';
 import { PISTAS } from './paquete';
 import { SEPARABLES, VERBOS } from './verbos/datos';
-import { EJEMPLO_DE_REGLA, ELEMENTOS_VERBOS, formasPresente, REGLAS_VERBOS, verbos } from './verbos/pista';
+import { EJEMPLO_DE_REGLA, ELEMENTOS_VERBOS, formasPresente, frasePresenteEs, preguntaPresenteEs, REGLAS_VERBOS, SUJETOS, verbos } from './verbos/pista';
 import { ELEMENTOS_VOCABULARIO, vocabulario } from './vocabulario/pista';
 
 const AUX_HEBBEN = new Set(['heb', 'hebt', 'heeft', 'hebben']);
@@ -34,7 +34,7 @@ function textos(): string[] {
   return [
     ...FRASES.flatMap((f) => [f.fichas, f.es, ...(f.otras ?? []), f.pista ?? '']),
     ...Object.values(REGLAS_ORDEN),
-    ...VERBOS.flatMap((v) => [v.inf, v.es, ...(v.perf ?? []), ...(v.perfOtras ?? []), ...(v.pasadoEj ?? []), ...(v.pasadoOtras ?? []), v.nota ?? '', v.comp ?? '']),
+    ...VERBOS.flatMap((v) => [v.inf, v.es, ...(v.perf ?? []), ...(v.perfOtras ?? []), ...(v.pasadoEj ?? []), ...(v.pasadoOtras ?? []), v.nota ?? '', v.comp ?? '', v.compEs ?? '', ...(v.presenteEs ?? [])]),
     ...SEPARABLES.flatMap((s) => [s.inf, s.es, s.presente, s.presenteEs, ...(s.otras ?? []), ...s.perf]),
     ...ELEMENTOS_VOCABULARIO.flatMap((p) => [p.nl, p.es, ...p.otras, p.nota ?? '']),
     ...ELEMENTOS_VERBOS.flatMap((e) => [verbos.presentar?.(e)?.detalle ?? '']),
@@ -204,7 +204,7 @@ describe('qué se enseña antes de preguntarlo', () => {
       expect(ELEMENTOS_VERBOS.some((e) => e.grupo === grupo && e.verbo?.inf === ejemplo), grupo).toBe(true);
       const p = verbos.presentar?.(abre);
       expect(p?.etiqueta, grupo).toMatch(/^Regla nueva/);
-      const palabras = new Set(normalizar([p?.principal, p?.audio, p?.detalle, ...(p?.tabla ?? []).flat()].join(' ')).split(' '));
+      const palabras = new Set(normalizar([p?.principal, p?.audio, p?.detalle, ...(p?.tabla ?? []).flat().map((c) => (typeof c === 'string' ? c : c.etiqueta)), ...(p?.ejemplos ?? []).map((x) => x.texto)].join(' ')).split(' '));
       for (const e of ELEMENTOS_VERBOS.filter((x) => x.grupo === grupo && x.verbo?.inf !== ejemplo)) {
         const v = e.verbo;
         if (!v || (grupo === 'presente' && v.presente !== undefined)) continue;
@@ -381,6 +381,32 @@ describe('lo que se da por bueno al responder', () => {
   });
 });
 
+describe('decir la frase', () => {
+  it('enseña con la frase todas las formas que valdrían al escribirla, y el nivel de su regla para la cuenta atrás', () => {
+    const conDominio: ContextoEjercicio = { ...contextoDe(1, 3, new Set(['decir'])), dominio: () => 0.9 };
+    for (const f of ELEMENTOS_ORDEN) {
+      const e = ejercicioDeFrase(f, 'decir', conDominio);
+      if (e.forma !== 'decir') throw new Error(f.codigo);
+      expect([e.texto, ...(e.otras ?? [])], f.codigo).toEqual(f.validas);
+      expect(e.dominio, f.codigo).toBe(0.9);
+    }
+    let dichas = 0;
+    for (const e of ELEMENTOS_VERBOS.filter((x) => x.grupo === 'perfectum' || x.grupo === 'perfectum-irregular')) {
+      for (let semilla = 1; semilla <= 40; semilla++) {
+        const ej = verbos.crearEjercicio(e, { ...contextoDe(semilla, 3, new Set(['decir'])), dominio: () => 0.3 });
+        if (ej.forma !== 'decir') continue;
+        dichas++;
+        const traducir = verbos.crearEjercicio(e, contextoDe(semilla, 3, new Set(['traducir'])));
+        if (traducir.forma !== 'traducir') throw new Error(e.id);
+        // Al traducir también valen las formas tónicas de los pronombres; al decir se enseñan las apuntadas.
+        for (const forma of [ej.texto, ...(ej.otras ?? [])]) expect(traducir.respuestas, `${e.id}: ${forma}`).toContain(forma);
+        expect(ej.dominio, e.id).toBe(0.3);
+      }
+    }
+    expect(dichas).toBeGreaterThan(0);
+  });
+});
+
 describe('lo que se ofrece como opción', () => {
   it('las opciones malas se toman en el orden en que llegan, sin repetir', () => {
     for (let semilla = 1; semilla <= 20; semilla++) {
@@ -466,6 +492,54 @@ describe('las reglas', () => {
     for (const [grupo, regla] of [...Object.entries(REGLAS_ORDEN), ...Object.entries(REGLAS_VERBOS)]) {
       for (const [, ejemplo = ''] of regla.matchAll(/«([^»]+)»/g)) {
         expect(preguntadas.has(normalizar(ejemplo)), `${grupo}: ${ejemplo}`).toBe(false);
+      }
+    }
+  });
+});
+
+describe('nada en neerlandés se queda sin traducir', () => {
+  it('cada verbo de presente trae su frase en español', () => {
+    for (const v of VERBOS.filter((x) => x.comp !== undefined)) {
+      expect(v.compEs, v.inf).toBeTruthy();
+      expect(v.presenteEs?.filter((f) => f.trim() !== '').length, v.inf).toBe(6);
+    }
+    const werken = VERBOS.find((v) => v.inf === 'werken');
+    const padres = SUJETOS.find((s) => s.nl === 'mijn ouders');
+    if (!werken || !padres) throw new Error('faltan werken o mijn ouders');
+    expect(frasePresenteEs(werken, padres)).toBe('Mis padres trabajan en casa.');
+    expect(preguntaPresenteEs(werken)).toBe('¿Trabajas en casa?');
+  });
+
+  it('todo ejercicio con una frase en neerlandés dice qué significa', () => {
+    const conjuntos: readonly ReadonlySet<Ejercicio['forma']>[] = [TODAS_LAS_FORMAS, ...[...TODAS_LAS_FORMAS].map((f) => new Set([f]))];
+    for (const pista of PISTAS) {
+      for (const elemento of pista.elementos) {
+        for (const repeticiones of [0, 1, 2, 3, 5]) {
+          for (const formas of conjuntos) {
+            for (let semilla = 1; semilla <= 6; semilla++) {
+              const ej = pista.crearEjercicio(elemento, contextoDe(semilla, repeticiones, formas));
+              const donde = `${pista.id}/${elemento.id} ${ej.tipo}`;
+              // Si las opciones están en español, la buena ya es la traducción.
+              if (ej.forma === 'opcion' && ej.enunciadoEnIdioma && ej.opcionesEnIdioma) expect(ej.significado, donde).toBeTruthy();
+              if (ej.forma === 'completar') expect(ej.significado, donde).toBeTruthy();
+              if (ej.forma !== 'opcion') expect(ej.significado, donde).toBeTruthy();
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it('lo que suena al presentar algo se ve en pantalla con su traducción', () => {
+    for (const pista of PISTAS) {
+      for (const elemento of pista.elementos) {
+        const p = pista.presentar?.(elemento);
+        if (!p) continue;
+        const donde = `${pista.id}/${elemento.id}`;
+        for (const e of p.ejemplos ?? []) expect(e.significado.trim(), `${donde}: ${e.texto}`).not.toBe('');
+        if (p.audio === undefined) continue;
+        const visible = p.audio === p.principal ? p.significado : p.ejemplos?.find((e) => e.texto === p.audio)?.significado;
+        expect(visible, donde).toBeTruthy();
       }
     }
   });

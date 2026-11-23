@@ -5,7 +5,7 @@ import type { Historial, Respuesta } from './historial';
 import { dominioDe, estimarNivel, nivelPorDestreza, UMBRAL_DOMINADA } from './nivel';
 import { deserializarHistorial, serializarHistorial } from './persistencia';
 import { PROGRESO_VACIO, registrarRespuesta } from './repaso';
-import { construirRonda, practicarDestreza } from './ronda';
+import { construirRonda, practicarDestreza, RONDA_POR_DEFECTO } from './ronda';
 
 function respuestas(n: number, r: Omit<Respuesta, 't'>, desde = 0): Respuesta[] {
   return Array.from({ length: n }, (_, i) => ({ ...r, t: desde + i * 1000 }));
@@ -102,10 +102,16 @@ describe('practicar una destreza en caliente', () => {
     expect(practicarDestreza(pista, 'y', new Set(['tres']), progreso, crearAzar(1))).toBeNull();
   });
 
-  it('sin nada visto, vale algo nuevo de un grupo abierto que no necesite presentación', () => {
-    expect(practicarDestreza(pista, 'x', new Set(['uno']), PROGRESO_VACIO, crearAzar(1))?.ejercicio.elementoId).toBe('dos');
+  it('sin nada más visto, vale algo nuevo de un grupo ya empezado que no necesite presentación', () => {
+    const soloUno = registrarRespuesta(PROGRESO_VACIO, pista.id, 'uno', 'otra_vez', ahora);
+    expect(practicarDestreza(pista, 'x', new Set(['uno']), soloUno, crearAzar(1))?.ejercicio.elementoId).toBe('dos');
     const conPresentacion: Pista<Cosa> = { ...pista, presentar: () => ({ principal: '', nota: null }) };
-    expect(practicarDestreza(conPresentacion, 'x', new Set(['uno']), PROGRESO_VACIO, crearAzar(1))).toBeNull();
+    expect(practicarDestreza(conPresentacion, 'x', new Set(['uno']), soloUno, crearAzar(1))).toBeNull();
+  });
+
+  it('nada nuevo de un grupo sin empezar: su primero es el que presenta la regla', () => {
+    expect(practicarDestreza(pista, 'x', new Set(['uno']), PROGRESO_VACIO, crearAzar(1))).toBeNull();
+    expect(practicarDestreza(pista, 'x', new Set(['uno']), PROGRESO_VACIO, crearAzar(1), { ...RONDA_POR_DEFECTO, gruposAbiertos: true })).toBeNull();
   });
 
   it('los ejercicios de la ronda traen las destrezas del elemento', () => {

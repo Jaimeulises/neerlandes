@@ -3,14 +3,16 @@
 // escribiéndola al oído. Es donde se trabaja lo de no hablar con el orden del
 // inglés.
 
-import { UMBRAL_DOMINADA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
-import { barajarFichas, comoFrase, conFormasTonicas, elegirForma, idDe } from '../comun';
-import { diagnosticarConFrase } from '../diagnostico';
+import { UMBRAL_DOMINADA, UMBRAL_FLOJA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
+import { barajarFichas, comoFrase, conFormasTonicas, elegirForma, idFijo } from '../comun';
+import { diagnosticarConFrase, pistasDeReintento } from '../diagnostico';
 import type { IdDestreza } from '../destrezas';
 import { FRASES, GRUPOS_ORDEN, NOMBRES_GRUPO_ORDEN, REGLAS_ORDEN, type DatosFrase, type GrupoOrden } from './datos';
 
 export interface Frase extends Elemento {
   readonly grupo: GrupoOrden;
+  /** Su código permanente (O12; en los separables, S3). */
+  readonly codigo: string;
   /** Las fichas en su orden. */
   readonly fichas: readonly string[];
   /** La frase entera, con mayúscula y puntuación. */
@@ -26,7 +28,8 @@ export function crearFrase(d: DatosFrase): Frase {
   const final = d.final ?? '.';
   const frase = comoFrase(fichas.join(' '), final);
   return {
-    id: `${d.grupo}:${idDe(fichas.join(' '))}`,
+    id: idFijo(d.codigo),
+    codigo: d.codigo,
     grupo: d.grupo,
     fichas,
     frase,
@@ -60,16 +63,20 @@ export function ejercicioDeFrase(e: Frase, forma: Ejercicio['forma'], contexto: 
         respuestas: conFormasTonicas(e.validas),
         ...(e.pista ? { pista: e.pista } : {}),
       };
-    case 'decir':
+    case 'decir': {
+      const dominio = contexto.dominio?.(DESTREZA_DE_GRUPO[e.grupo]) ?? null;
       return {
         ...base,
         forma: 'decir',
         tipo: `${prefijo}.decir`,
-        instruccion: 'Dila en voz alta y luego compruébala',
+        instruccion: 'Dila en voz alta antes de verla',
         significado: e.es,
         texto: e.frase,
+        otras: e.validas.slice(1),
         ...(e.pista ? { pista: e.pista } : {}),
+        ...(dominio === null ? {} : { dominio }),
       };
+    }
     case 'dictado':
       return {
         ...base,
@@ -112,7 +119,7 @@ const POR_ID = new Map(ELEMENTOS_ORDEN.map((e) => [e.id, e]));
 export const orden: Pista<Frase> = {
   id: 'orden',
   nombre: 'Orden de la frase',
-  descripcion: 'Dónde va el verbo: inversión, modales, perfectum, separables, niet, preguntas y subordinadas.',
+  descripcion: 'Dónde va el verbo: inversión, modales, perfectum, separables, «niet», preguntas y subordinadas.',
   grupos: GRUPOS_ORDEN,
   nombresDeGrupo: NOMBRES_GRUPO_ORDEN,
   elementos: ELEMENTOS_ORDEN,
@@ -120,7 +127,7 @@ export const orden: Pista<Frase> = {
   // (se escriben o se dicen directamente); si está floja, vuelven más las fichas.
   crearEjercicio(e, contexto) {
     const dominio = contexto.dominio?.(DESTREZA_DE_GRUPO[e.grupo]) ?? null;
-    const nivel = dominio === null ? 'normal' : dominio >= UMBRAL_DOMINADA ? 'alto' : dominio < 0.45 ? 'bajo' : 'normal';
+    const nivel = dominio === null ? 'normal' : dominio >= UMBRAL_DOMINADA ? 'alto' : dominio < UMBRAL_FLOJA ? 'bajo' : 'normal';
     const { azar, formas } = contexto;
     let forma: Ejercicio['forma'];
     if (nivel === 'alto') {
@@ -138,7 +145,8 @@ export const orden: Pista<Frase> = {
               'ordenar',
             );
     } else if (contexto.repeticiones === 0) {
-      forma = 'ordenar';
+      // Quien ya conoce lo básico empieza escribiendo, con la pista del reintento como red; las fichas, si la regla está floja.
+      forma = contexto.sinAndamiaje === true && nivel === 'normal' ? elegirForma(azar, formas, [['traducir', 1]], 'ordenar') : 'ordenar';
     } else if (contexto.repeticiones === 1) {
       forma = elegirForma(azar, formas, [['traducir', 1]], 'ordenar');
     } else {
@@ -166,6 +174,7 @@ export const orden: Pista<Frase> = {
     const frase = POR_ID.get(ejercicio.elementoId);
     return frase ? diagnosticarConFrase(frase, ejercicio, respuesta) : [];
   },
+  pistasDeReintento,
   presentar(e): Presentacion | null {
     if (!ABRE_GRUPO.has(e.id)) return null;
     const ejemplo = ejemploDe(e.grupo) ?? e;

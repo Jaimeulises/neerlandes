@@ -4,10 +4,11 @@
 
 import { useRef, useState, type ReactElement } from 'react';
 import { VERSION_APP } from '../../estado/app';
-import { NOMBRES_FORMA, NUEVOS_POR_RONDA, TAMANOS_RONDA, type Ajustes as DatosAjustes, type Forma } from '../../estado/ajustes';
+import { NOMBRES_FORMA, NOMBRES_TIEMPO_DECIR, NUEVOS_POR_RONDA, TAMANOS_RONDA, TIEMPOS_DECIR, type Ajustes as DatosAjustes, type Forma } from '../../estado/ajustes';
 import { exportarCopia, leerCopia, MENSAJE_DE_ENTREGA, type CopiaLeida } from '../../estado/copia';
 import type { Voz } from '../../estado/voz';
 import { CopiaIlegible, HISTORIAL_VACIO, PROGRESO_VACIO, TODAS_LAS_FORMAS, type Datos } from '../../motor';
+import { FRASE_DE_PRUEBA } from '../../neerlandes/audio';
 import { Boton } from '../componentes/Boton';
 
 interface Props {
@@ -28,9 +29,23 @@ function resumen(d: Datos): string {
   return `${String(vistas)} ${vistas === 1 ? 'cosa vista' : 'cosas vistas'} y ${String(respuestas)} ${respuestas === 1 ? 'respuesta' : 'respuestas'}`;
 }
 
-function Segmentos<T extends number>({ valores, actual, etiqueta, onElegir }: { valores: readonly T[]; actual: T; etiqueta: string; onElegir: (v: T) => void }): ReactElement {
+function Segmentos<T extends string | number>({
+  valores,
+  actual,
+  etiqueta,
+  nombre,
+  ancho = false,
+  onElegir,
+}: {
+  valores: readonly T[];
+  actual: T;
+  etiqueta: string;
+  nombre?: (v: T) => string;
+  ancho?: boolean;
+  onElegir: (v: T) => void;
+}): ReactElement {
   return (
-    <div className="segmentos" role="group" aria-label={etiqueta}>
+    <div className={ancho ? 'segmentos segmentos--ancho' : 'segmentos'} role="group" aria-label={etiqueta}>
       {valores.map((v) => (
         <button
           key={v}
@@ -40,7 +55,7 @@ function Segmentos<T extends number>({ valores, actual, etiqueta, onElegir }: { 
             onElegir(v);
           }}
         >
-          {v}
+          {nombre ? nombre(v) : v}
         </button>
       ))}
     </div>
@@ -115,6 +130,21 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
             }}
           />
         </div>
+        <label className="ajuste">
+          <span>Abrir todos los grupos</span>
+          <input
+            type="checkbox"
+            className="interruptor"
+            checked={ajustes.gruposAbiertos}
+            aria-describedby="explica-grupos"
+            onChange={(e) => {
+              onCambiar({ ...ajustes, gruposAbiertos: e.target.checked });
+            }}
+          />
+        </label>
+        <p id="explica-grupos" className="texto-2 pequeno">
+          Para quien ya conoce lo básico. Cada ronda abre como mucho un grupo nuevo de cada parte (orden, verbos y vocabulario) sin esperar a ver entero el anterior; en orden y en verbos, empezando por su regla. Lo nuevo de orden y de verbos se escribe en vez de ordenarse con fichas o elegirse, salvo que su regla esté floja o que en “Ejercicios en los repasos” esté quitado el de escribir que le toca: “Traducir escribiendo la frase entera” en las frases y los separables, “Completar el hueco” en el presente.
+        </p>
       </section>
 
       <section className="tarjeta">
@@ -149,7 +179,7 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
                 variante="secundario"
                 disabled={!voz.disponible}
                 onClick={() => {
-                  voz.decir('Goedemorgen! Hoe gaat het met je?');
+                  voz.decir(FRASE_DE_PRUEBA);
                 }}
               >
                 Probar
@@ -166,7 +196,7 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
       <section className="tarjeta">
         <h2>Ejercicios en los repasos</h2>
         <p className="texto-2 pequeno" style={{ marginTop: 8 }}>
-          Lo nuevo empieza siempre igual: las frases y los separables con fichas, las palabras con opciones y los verbos eligiendo o completando la forma. Aquí eliges qué más sale en los repasos. Si ninguna de las elegidas sirve para un ejercicio, sale el de siempre: fichas en las frases y los separables, completar en los verbos y escribir la palabra en el vocabulario.
+          Lo nuevo suele empezar con fichas en las frases y los separables y eligiendo o completando la forma en los verbos; con “Abrir todos los grupos”, se escribe si aquí está elegido el ejercicio de escribir que le toca, salvo que su regla esté floja. Las palabras empiezan siempre por “¿Qué significa?”, también con ese ajuste: no salen de ninguna regla, y una palabra hay que reconocerla antes de escribirla. Aquí eliges qué más sale en los repasos. Si ninguna de las elegidas sirve para un ejercicio, sale el de siempre: fichas en las frases y los separables, completar en los verbos y escribir la palabra en el vocabulario.
         </p>
         {ORDEN_FORMAS.map((forma) => (
           <label key={forma} className="ajuste">
@@ -185,6 +215,22 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
             />
           </label>
         ))}
+        <div className="ajuste ajuste--apilado">
+          <span>Tiempo para decir la frase</span>
+          <Segmentos
+            valores={TIEMPOS_DECIR}
+            actual={ajustes.tiempoDecir}
+            etiqueta="Tiempo para decir la frase"
+            nombre={(t) => NOMBRES_TIEMPO_DECIR[t]}
+            ancho
+            onElegir={(t) => {
+              onCambiar({ ...ajustes, tiempoDecir: t });
+            }}
+          />
+          <p className="texto-2 pequeno">
+            Normal da el tiempo de leer el español y decir la frase, algo menos si la regla ya la dominas y más si está floja. Con calma, la mitad más. Sin cuenta atrás, la frase sale cuando la pidas.
+          </p>
+        </div>
       </section>
 
       <section className="tarjeta columna" style={{ gap: 10 }}>

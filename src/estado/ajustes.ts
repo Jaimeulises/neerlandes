@@ -1,10 +1,20 @@
 // Los ajustes del alumno: tamaño de la ronda, cuántas cosas nuevas entran,
-// la voz y qué ejercicios salen. Viven en localStorage, aparte del progreso:
+// la voz, qué ejercicios salen y cuánto tiempo hay para decir la frase. Viven en localStorage, aparte del progreso:
 // si se pierden, no se pierde nada importante.
 
 import { TODAS_LAS_FORMAS, type Ejercicio } from '../motor';
 
 export type Forma = Ejercicio['forma'];
+
+/** Cuánto tiempo da la cuenta atrás de decir la frase: el de una conversación, la mitad más o ninguno. */
+export const TIEMPOS_DECIR = ['normal', 'calma', 'sin'] as const;
+export type TiempoDecir = (typeof TIEMPOS_DECIR)[number];
+
+export const NOMBRES_TIEMPO_DECIR: Readonly<Record<TiempoDecir, string>> = {
+  normal: 'Normal',
+  calma: 'Con calma',
+  sin: 'Sin cuenta atrás',
+};
 
 export interface Ajustes {
   readonly tamanoRonda: number;
@@ -12,6 +22,15 @@ export interface Ajustes {
   readonly voz: boolean;
   readonly vozLenta: boolean;
   readonly formas: readonly Forma[];
+  /**
+   * Para quien ya conoce lo básico: lo nuevo entra de todos los grupos sin esperar a ver entero el anterior (cada ronda
+   * abre como mucho un grupo nuevo de cada parte: orden, verbos y vocabulario), y lo de orden y de verbos empieza
+   * escribiendo, salvo que su regla esté floja o que el ejercicio de escribir que le toca no esté en `formas` (traducir
+   * en las frases y los separables, completar en el presente): entonces empieza como siempre. Las palabras siguen
+   * empezando por “¿Qué significa?”: no salen de ninguna regla, y una palabra hay que reconocerla antes de escribirla.
+   */
+  readonly gruposAbiertos: boolean;
+  readonly tiempoDecir: TiempoDecir;
 }
 
 export const AJUSTES_POR_DEFECTO: Ajustes = {
@@ -20,12 +39,18 @@ export const AJUSTES_POR_DEFECTO: Ajustes = {
   voz: true,
   vozLenta: false,
   formas: [...TODAS_LAS_FORMAS],
+  gruposAbiertos: false,
+  tiempoDecir: 'normal',
 };
 
 export const TAMANOS_RONDA = [8, 12, 20] as const;
 export const NUEVOS_POR_RONDA = [2, 4, 6] as const;
 
 const CLAVE = 'stap/ajustes';
+
+function esTiempoDecir(valor: unknown): valor is TiempoDecir {
+  return TIEMPOS_DECIR.some((t) => t === valor);
+}
 
 function esForma(valor: unknown): valor is Forma {
   return typeof valor === 'string' && TODAS_LAS_FORMAS.has(valor as Forma);
@@ -49,6 +74,8 @@ export function leerAjustes(): Ajustes {
     voz: typeof g.voz === 'boolean' ? g.voz : AJUSTES_POR_DEFECTO.voz,
     vozLenta: typeof g.vozLenta === 'boolean' ? g.vozLenta : AJUSTES_POR_DEFECTO.vozLenta,
     formas: formas.length > 0 ? formas : AJUSTES_POR_DEFECTO.formas,
+    gruposAbiertos: typeof g.gruposAbiertos === 'boolean' ? g.gruposAbiertos : AJUSTES_POR_DEFECTO.gruposAbiertos,
+    tiempoDecir: esTiempoDecir(g.tiempoDecir) ? g.tiempoDecir : AJUSTES_POR_DEFECTO.tiempoDecir,
   };
 }
 

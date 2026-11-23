@@ -37,6 +37,8 @@ export function opcionesDeRonda(
     formas,
     ...(extra ? { incluirNoVencidos: true } : {}),
     ...(dominio ? { dominio } : {}),
+    // El interruptor es para quien ya conoce lo básico: abre todos los grupos y quita el andamiaje de lo nuevo.
+    ...(ajustes.gruposAbiertos ? { gruposAbiertos: true, sinAndamiaje: true } : {}),
   };
 }
 
@@ -90,7 +92,7 @@ export function construirRondaDe(
 ): PasoMixto[] {
   const vistos = vistosPorPista(pistas, progreso);
   // Lo nuevo se reparte entre las pistas que tienen algo que dar: lo que no puede usar una pasa a otra.
-  const disponibles = pistas.map((p) => resumirPista(p, progreso, ahora, vistos).nuevosDisponibles);
+  const disponibles = pistas.map((p) => resumirPista(p, progreso, ahora, vistos, opciones.gruposAbiertos === true).nuevosDisponibles);
   const inicio = inicioDelDia(ahora, pistas.length);
   const nuevos = repartir(opciones.nuevosMaximo, disponibles, inicio);
   const porPista = pistas.map((pista, i) =>

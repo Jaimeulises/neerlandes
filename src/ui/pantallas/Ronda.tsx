@@ -2,7 +2,8 @@
 // presenta antes de preguntarlo y lo que se falla vuelve al final de la ronda,
 // una vez, con otro ejercicio. Si el fallo tiene diagnóstico (una regla
 // concreta), justo después sale otra frase que ya conoces con la misma regla,
-// para arreglarlo en caliente.
+// para arreglarlo en caliente. Lo que sale bien a la segunda, con pista, cuenta
+// como fallo para el repaso y se cuenta aparte al terminar.
 
 import { useState, type ReactElement } from 'react';
 import type { Ajustes, Forma } from '../../estado/ajustes';
@@ -11,15 +12,18 @@ import type { Voz } from '../../estado/voz';
 import {
   crearAzar,
   practicarDestreza,
+  registrarRespuesta,
   repetirTrasFallo,
   semillaNueva,
   type Calificacion,
   type Diagnostico,
   type Pista,
   type Progreso,
+  type Veredicto,
 } from '../../motor';
 import { nombreDeDestreza } from '../../neerlandes/destrezas';
 import { Boton } from '../componentes/Boton';
+import { ConNeerlandes } from '../componentes/ConNeerlandes';
 import { Decir } from '../ejercicios/Decir';
 import { Escrito } from '../ejercicios/Escrito';
 import { Opcion } from '../ejercicios/Opcion';
@@ -50,6 +54,8 @@ interface Estado {
   readonly indice: number;
   readonly presentado: boolean;
   readonly aciertos: number;
+  /** Bien a la segunda, con pista: para el repaso son fallos. */
+  readonly segundas: number;
   readonly fallos: number;
   readonly repetidos: ReadonlyMap<string, number>;
   /** Destrezas que ya se han practicado en caliente en esta ronda: una vez cada una. */
@@ -62,7 +68,7 @@ type Dominio = Props['dominio'];
 
 function empezar(pistas: readonly Pista[], progreso: Progreso, ajustes: Ajustes, formas: ReadonlySet<Forma>, extra: boolean, dominio: Dominio): Estado {
   const pasos = construirRondaDe(pistas, progreso, new Date(), crearAzar(semillaNueva()), opcionesDeRonda(ajustes, formas, extra, dominio));
-  return { pasos, indice: 0, presentado: false, aciertos: 0, fallos: 0, repetidos: new Map(), practicadas: new Set(), extra };
+  return { pasos, indice: 0, presentado: false, aciertos: 0, segundas: 0, fallos: 0, repetidos: new Map(), practicadas: new Set(), extra };
 }
 
 export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespuesta, onSalir }: Props): ReactElement {
@@ -72,7 +78,7 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
   const total = estado.pasos.length;
   const pista = paso ? pistas.find((p) => p.id === paso.pistaId) : undefined;
 
-  const terminar = (calificacion: Calificacion, diagnosticos: readonly Diagnostico[] = []): void => {
+  const terminar = (calificacion: Calificacion, diagnosticos: readonly Diagnostico[] = [], aLaSegunda = false): void => {
     if (!paso || !pista) return;
     const { ejercicio } = paso.paso;
     const falladas = calificacion === 'otra_vez' ? [...new Set(diagnosticos.map((d) => d.destreza))] : [];
@@ -83,10 +89,13 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
       let practicadas = e.practicadas;
       if (calificacion === 'otra_vez') {
         const opciones = opcionesDeRonda(ajustes, formas, e.extra, dominio);
+        // El progreso de las props aún no trae esta respuesta. Con ella, la vuelta sabe que el elemento ya se ha
+        // hecho una vez (y no repite el mismo ejercicio de algo nuevo) y su grupo cuenta como empezado.
+        const progresoTras = registrarRespuesta(progreso, pista.id, ejercicio.elementoId, calificacion, new Date());
         const clave = `${pista.id}/${ejercicio.elementoId}`;
         const veces = e.repetidos.get(clave) ?? 0;
         const elemento = pista.elementos.find((x) => x.id === ejercicio.elementoId);
-        const vuelta = elemento ? repetirTrasFallo(pista, elemento, progreso, azar, veces, opciones) : null;
+        const vuelta = elemento ? repetirTrasFallo(pista, elemento, progresoTras, azar, veces, opciones) : null;
         if (vuelta) {
           pasos = [...pasos, { pistaId: pista.id, paso: vuelta }];
           repetidos = new Map(repetidos).set(clave, veces + 1);
@@ -96,7 +105,7 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
         if (destreza) {
           for (const p of [pista, ...pistas.filter((x) => x !== pista)]) {
             const enRonda = new Set(pasos.filter((x) => x.pistaId === p.id).map((x) => x.paso.ejercicio.elementoId));
-            const practica = practicarDestreza(p, destreza, enRonda, progreso, azar, opciones);
+            const practica = practicarDestreza(p, destreza, enRonda, progresoTras, azar, opciones);
             if (practica) {
               pasos = [...pasos.slice(0, e.indice + 1), { pistaId: p.id, paso: practica }, ...pasos.slice(e.indice + 1)];
               practicadas = new Set(practicadas).add(destreza);
@@ -113,7 +122,8 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
         indice: e.indice + 1,
         presentado: false,
         aciertos: e.aciertos + (calificacion === 'otra_vez' ? 0 : 1),
-        fallos: e.fallos + (calificacion === 'otra_vez' ? 1 : 0),
+        segundas: e.segundas + (aLaSegunda ? 1 : 0),
+        fallos: e.fallos + (calificacion === 'otra_vez' && !aLaSegunda ? 1 : 0),
       };
     });
   };
@@ -146,7 +156,8 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
         <div className="tarjeta columna">
           <h2>Ronda terminada</h2>
           <p className="texto-2">
-            {estado.aciertos} bien y {estado.fallos} {estado.fallos === 1 ? 'fallo' : 'fallos'}. Lo fallado volverá pronto.
+            {estado.aciertos} bien{estado.segundas > 0 ? `, ${String(estado.segundas)} a la segunda` : ''} y {estado.fallos} {estado.fallos === 1 ? 'fallo' : 'fallos'}.{' '}
+            {estado.fallos + estado.segundas > 0 ? 'Lo fallado volverá pronto.' : ''}
           </p>
           <Boton
             ancho
@@ -167,6 +178,8 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
   const { ejercicio, presentacion, repeticion, practica } = paso.paso;
   const mostrarPresentacion = presentacion !== null && !estado.presentado;
   const diagnosticar = (respuesta: string): readonly Diagnostico[] => pista?.diagnosticar?.(ejercicio, respuesta) ?? [];
+  const pistasDeReintento = (diagnosticos: readonly Diagnostico[], veredicto: Veredicto): readonly string[] =>
+    pista?.pistasDeReintento?.(ejercicio, diagnosticos, veredicto) ?? [];
   const props = { repeticion: repeticion && !practica, voz, diagnosticar, onTerminar: terminar };
 
   return (
@@ -183,7 +196,11 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
         </span>
       </div>
 
-      {practica && !mostrarPresentacion ? <p className="practica">Practica la regla que acabas de fallar: {nombreDeDestreza(practica)}</p> : null}
+      {practica && !mostrarPresentacion ? (
+        <p className="practica">
+          Practica la regla que acabas de fallar: <ConNeerlandes texto={nombreDeDestreza(practica)} />
+        </p>
+      ) : null}
 
       {mostrarPresentacion ? (
         <Presentacion
@@ -197,11 +214,11 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
       ) : ejercicio.forma === 'opcion' ? (
         <Opcion key={estado.indice} ejercicio={ejercicio} {...props} />
       ) : ejercicio.forma === 'ordenar' ? (
-        <Ordenar key={estado.indice} ejercicio={ejercicio} {...props} />
+        <Ordenar key={estado.indice} ejercicio={ejercicio} pistasDeReintento={pistasDeReintento} {...props} />
       ) : ejercicio.forma === 'decir' ? (
-        <Decir key={estado.indice} ejercicio={ejercicio} {...props} />
+        <Decir key={estado.indice} ejercicio={ejercicio} tiempo={ajustes.tiempoDecir} {...props} />
       ) : (
-        <Escrito key={estado.indice} ejercicio={ejercicio} {...props} />
+        <Escrito key={estado.indice} ejercicio={ejercicio} pistasDeReintento={pistasDeReintento} {...props} />
       )}
     </div>
   );

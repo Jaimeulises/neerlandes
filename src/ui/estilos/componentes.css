@@ -330,6 +330,22 @@
   background: var(--mal-suave);
 }
 
+/* Lo que aún no está corregido: decir la frase, hasta que el alumno se valore. */
+.resultado--neutro {
+  background: var(--tarjeta-2);
+}
+
+/* El botón secundario es del color de este panel: sin otro fondo, “Me he equivocado” no parecería un botón. */
+.resultado--neutro .boton--secundario {
+  background: var(--tarjeta);
+}
+
+.otras-formas ul {
+  margin: 4px 0 0;
+  padding-left: 1.2em;
+  line-height: 1.5;
+}
+
 .resultado__titulo {
   font-weight: 700;
   font-size: 1.1rem;
@@ -397,6 +413,19 @@
   font-weight: 600;
 }
 
+/* Una frase de ejemplo con su traducción debajo. */
+.ejemplo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.ejemplo p:first-child {
+  font-weight: 600;
+}
+
 /* Progreso */
 .barra-grupo {
   height: 8px;
@@ -455,6 +484,19 @@
   min-height: 36px;
   padding: 0 10px;
   border-radius: 6px;
+}
+
+.segmentos--ancho {
+  display: flex;
+}
+
+.segmentos--ancho button {
+  flex: 1;
+}
+
+.ajuste--apilado {
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .segmentos button[aria-pressed='true'] {
@@ -518,6 +560,72 @@
   color: var(--primario);
   font-weight: 600;
   margin: 0;
+}
+
+/* Decir: la cuenta atrás antes de ver y oír la frase. */
+.cuenta-atras {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cuenta-atras__barra {
+  flex: 1;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--tarjeta-2);
+  overflow: hidden;
+}
+
+.cuenta-atras__barra > div {
+  height: 100%;
+  background: var(--acento);
+  border-radius: 99px;
+  transition: width 1s linear;
+}
+
+.cuenta-atras__numero {
+  min-width: 1.5em;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto-2);
+}
+
+/* Corregir pidiendo: la pista del primer fallo, antes del segundo intento. */
+.reintento {
+  background: var(--acento-suave);
+  color: var(--texto);
+  border-radius: var(--radio);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reintento__titulo {
+  font-weight: 700;
+  color: var(--sobre-acento);
+  margin: 0;
+}
+
+.reintento__texto {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.reintento__nota {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--texto-2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .reintento__titulo {
+    color: var(--acento);
+  }
 }
 
 /* El nivel de cada regla en Progreso. */

@@ -6,6 +6,7 @@
 // decir en voz alta).
 
 import type { Azar } from './azar';
+import type { Veredicto } from './corregir';
 
 /** Cómo le ha ido al alumno con un elemento, en los cuatro niveles de FSRS. */
 export type Calificacion = 'otra_vez' | 'dificil' | 'bien' | 'facil';
@@ -38,6 +39,8 @@ export interface EjercicioOpcion extends EjercicioBase {
   readonly enunciado: string;
   /** Si el enunciado está en el idioma que se aprende (para lang y la voz). */
   readonly enunciadoEnIdioma: boolean;
+  /** Qué dice el enunciado, en el idioma de la interfaz, cuando está en el que se aprende y no lo dicen ya las opciones. */
+  readonly significado?: string;
   /** Opciones sin repetir, ya barajadas. */
   readonly opciones: readonly string[];
   readonly opcionesEnIdioma: boolean;
@@ -102,7 +105,11 @@ export interface EjercicioDecir extends EjercicioBase {
   readonly significado: string;
   /** La frase buena, que se enseña después de decirla. */
   readonly texto: string;
+  /** Las demás formas buenas, que se enseñan con ella: no hace falta decirla igual. */
+  readonly otras?: readonly string[];
   readonly pista?: string;
+  /** El dominio (de 0 a 1) de lo que se practica, si se sabe: la cuenta atrás aprieta más si se domina y menos si está flojo. */
+  readonly dominio?: number;
 }
 
 export type Ejercicio = EjercicioOpcion | EjercicioOrdenar | EjercicioTraducir | EjercicioCompletar | EjercicioDictado | EjercicioDecir;
@@ -125,7 +132,18 @@ export interface Presentacion {
   /** Una segunda línea, por ejemplo la regla de gramática. */
   readonly detalle?: string;
   /** Formas que conviene ver juntas (una conjugación), si las hay. */
-  readonly tabla?: readonly (readonly [string, string])[];
+  readonly tabla?: readonly (readonly [CeldaDeTabla, CeldaDeTabla])[];
+  /** Frases de ejemplo, cada una con su traducción. */
+  readonly ejemplos?: readonly Ejemplo[];
+}
+
+/** Una celda de la tabla: texto en el idioma que se aprende, o una etiqueta en el de la interfaz (como «pregunta»). */
+export type CeldaDeTabla = string | { readonly etiqueta: string };
+
+/** Una frase en el idioma que se aprende y lo que dice en el de la interfaz. */
+export interface Ejemplo {
+  readonly texto: string;
+  readonly significado: string;
 }
 
 /** Lo que una pista sabe del alumno al crear un ejercicio. */
@@ -141,6 +159,14 @@ export interface ContextoEjercicio {
   readonly variante?: string;
   /** Lo que domina el alumno cada destreza, de 0 a 1, o null si aún no hay datos. Sirve para subir o bajar la dificultad. */
   readonly dominio?: (destreza: string) => number | null;
+  /**
+   * El alumno ya conoce lo básico y pide menos ayuda: lo nuevo empieza sin andamiaje (escribiendo, en vez de
+   * eligiendo u ordenando fichas), salvo que su destreza esté floja o que la forma de escribir que le toca no esté
+   * entre las `formas`. Lo que no sale de ninguna regla puede seguir
+   * empezando con opciones, como las palabras del paquete de neerlandés, que empiezan por “¿Qué significa?”: una
+   * palabra hay que reconocerla antes de escribirla.
+   */
+  readonly sinAndamiaje?: boolean;
 }
 
 /**
@@ -176,6 +202,12 @@ export interface Pista<E extends Elemento = Elemento> {
    * roto y dónde. Vacío si no encuentra nada concreto (una palabra que no se sabe, por ejemplo).
    */
   diagnosticar?(ejercicio: Ejercicio, respuesta: string): readonly Diagnostico[];
+  /**
+   * Si existe, lo que se dice tras el primer fallo de una respuesta escrita u ordenada para dejar intentarlo otra vez:
+   * la regla con las palabras de la respuesta, sin dar la solución. Vacío si en ese ejercicio no se pide otro intento
+   * (si lo que se pregunta es una palabra o lo que se oye, una pista solo daría la respuesta).
+   */
+  pistasDeReintento?(ejercicio: Ejercicio, diagnosticos: readonly Diagnostico[], veredicto: Veredicto): readonly string[];
 }
 
 /** Un fallo concreto en una respuesta: qué regla se ha roto, dónde y cómo se arregla. */
@@ -186,6 +218,11 @@ export interface Diagnostico {
   readonly titulo: string;
   /** Por qué, con la regla aplicada a esta frase. */
   readonly texto: string;
+  /**
+   * Lo que se dice antes de dejar intentarlo otra vez: la regla con las palabras de la respuesta y, si el fallo viene
+   * del inglés, el contraste, sin dar la frase ni la forma buenas.
+   */
+  readonly pista?: string;
 }
 
 /** Una destreza que se mide: una regla o un tipo de conocimiento. */

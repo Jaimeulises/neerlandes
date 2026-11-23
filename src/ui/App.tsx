@@ -110,7 +110,7 @@ export function App({ almacen }: Props): ReactElement {
       <main className="app">
         {aviso}
         {pestana === 'hoy' ? <Hoy pistas={PISTAS} datos={datos.datos} opciones={opciones} onEmpezar={setRonda} /> : null}
-        {pestana === 'progreso' ? <Progreso pistas={PISTAS} datos={datos.datos} niveles={niveles} /> : null}
+        {pestana === 'progreso' ? <Progreso pistas={PISTAS} datos={datos.datos} niveles={niveles} gruposAbiertos={ajustes.gruposAbiertos} /> : null}
         {pestana === 'ajustes' ? (
           <Ajustes
             ajustes={ajustes}

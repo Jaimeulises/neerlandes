@@ -22,6 +22,13 @@ export interface OpcionesRonda {
   readonly incluirNoVencidos?: boolean;
   /** Lo que domina el alumno cada destreza (ver ContextoEjercicio). */
   readonly dominio?: (destreza: string) => number | null;
+  /**
+   * Todos los grupos abiertos desde el principio, sin esperar a ver entero el anterior: cada ronda empieza como mucho
+   * uno nuevo de cada pista (ver `nuevosEnOrden`).
+   */
+  readonly gruposAbiertos?: boolean;
+  /** Menos ayuda para quien ya conoce lo básico: lo nuevo empieza sin andamiaje (ver ContextoEjercicio). */
+  readonly sinAndamiaje?: boolean;
 }
 
 /** Un paso de la ronda: el ejercicio y, si el elemento es nuevo, su presentación. */
@@ -51,13 +58,15 @@ export function vistosPorPista(pistas: readonly Pista[], progreso: Progreso): Ma
  * Grupos abiertos, en orden. El primero siempre lo está si la pista no dice
  * otra cosa; cada uno de los siguientes se abre cuando todos los elementos del
  * anterior ya se han visto y, si la pista lo pide, cuando sus requisitos de
- * otras pistas están cumplidos.
+ * otras pistas están cumplidos. Con `todos`, todos desde el principio.
  */
 export function gruposDesbloqueados<E extends Elemento>(
   pista: Pista<E>,
   progreso: Progreso,
   vistosOtras: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
+  todos = false,
 ): string[] {
+  if (todos) return [...pista.grupos];
   const abiertos: string[] = [];
   for (const grupo of pista.grupos) {
     if (pista.grupoListo && !pista.grupoListo(grupo, vistosOtras)) break;
@@ -90,7 +99,52 @@ function contexto<E extends Elemento>(
     formas: opciones.formas,
     ...(opciones.variante !== undefined ? { variante: opciones.variante } : {}),
     ...(opciones.dominio ? { dominio: opciones.dominio } : {}),
+    ...(opciones.sinAndamiaje === true ? { sinAndamiaje: true } : {}),
   };
+}
+
+/**
+ * Lo nuevo que puede entrar ya, en el orden en que entraría.
+ *
+ * Con los grupos en orden, lo que queda sin ver de los grupos abiertos, en el orden del paquete.
+ *
+ * Con todos abiertos, como mucho un grupo nuevo de la pista por ronda: primero el elemento que abre el siguiente
+ * grupo sin empezar (el que presenta su regla) y después lo que sigue en los grupos ya empezados, en rueda y
+ * empezando por el que menos lleva visto. Abrir a la vez varias reglas de la misma pista diluiría la presentación
+ * de cada una; repartir lo demás entre los grupos empezados mantiene la práctica intercalada. El límite es de cada
+ * pista: una ronda que mezcla varias puede empezar un grupo de cada una.
+ */
+function nuevosEnOrden<E extends Elemento>(
+  pista: Pista<E>,
+  candidatos: readonly E[],
+  progreso: Progreso,
+  abiertos: ReadonlySet<string>,
+  todosAbiertos: boolean,
+): E[] {
+  const sinVer = candidatos.filter((e) => abiertos.has(e.grupo) && !progreso.has(clave(pista.id, e.id)));
+  if (!todosAbiertos) return sinVer;
+  const cola = new Map(pista.grupos.map((g) => [g, sinVer.filter((e) => e.grupo === g)]));
+  const llevaVistos = new Map(pista.grupos.map((g) => [g, pista.elementos.filter((e) => e.grupo === g && progreso.has(clave(pista.id, e.id))).length]));
+  const quedan = (g: string): boolean => (cola.get(g)?.length ?? 0) > 0;
+  const lleva = (g: string): number => llevaVistos.get(g) ?? 0;
+  const resultado: E[] = [];
+  const tomar = (g: string): void => {
+    const e = cola.get(g)?.shift();
+    if (!e) return;
+    resultado.push(e);
+    llevaVistos.set(g, lleva(g) + 1);
+  };
+  const sinEmpezar = pista.grupos.find((g) => lleva(g) === 0 && quedan(g));
+  if (sinEmpezar !== undefined) tomar(sinEmpezar);
+  // El grupo empezado que menos lleva visto; a igualdad, el primero en el orden del paquete.
+  const siguiente = (): string | undefined =>
+    pista.grupos.filter((g) => lleva(g) > 0 && quedan(g)).reduce<string | undefined>((a, g) => (a === undefined || lleva(g) < lleva(a) ? g : a), undefined);
+  let g = siguiente();
+  while (g !== undefined) {
+    tomar(g);
+    g = siguiente();
+  }
+  return resultado;
 }
 
 /** El ejercicio de un elemento, con las destrezas del elemento si el ejercicio no dice las suyas. */
@@ -102,8 +156,8 @@ export function crearEjercicioDe<E extends Elemento>(pista: Pista<E>, elemento: 
 
 /**
  * Primero los repasos vencidos (el más atrasado antes) y, si queda hueco,
- * elementos nuevos de los grupos abiertos en el orden del paquete. Los nuevos
- * llevan su presentación si la pista sabe presentarlos.
+ * elementos nuevos en el orden de `nuevosEnOrden`. Los nuevos llevan su
+ * presentación si la pista sabe presentarlos.
  */
 export function construirRonda<E extends Elemento>(
   pista: Pista<E>,
@@ -122,8 +176,9 @@ export function construirRonda<E extends Elemento>(
     .map((x) => x.elemento);
 
   const huecos = Math.max(0, Math.min(opciones.tamano - vencidos.length, opciones.nuevosMaximo));
-  const abiertos = new Set(gruposDesbloqueados(pista, progreso, vistosOtras));
-  const nuevos = candidatos.filter((e) => abiertos.has(e.grupo) && !progreso.has(clave(pista.id, e.id))).slice(0, huecos);
+  const todos = opciones.gruposAbiertos === true;
+  const abiertos = new Set(gruposDesbloqueados(pista, progreso, vistosOtras, todos));
+  const nuevos = nuevosEnOrden(pista, candidatos, progreso, abiertos, todos).slice(0, huecos);
 
   // Los ejercicios se crean como si los nuevos de la ronda ya se conocieran, para que sus distractores
   // puedan incluir a los demás nuevos, que se presentan en la misma ronda. Las repeticiones de cada
@@ -166,9 +221,10 @@ export function repetirTrasFallo<E extends Elemento>(
 
 /**
  * Un ejercicio de otro elemento que entrena la misma destreza, para practicar en caliente la regla que se
- * acaba de fallar con una frase distinta. Primero lo ya visto; si no hay, algo nuevo de un grupo abierto que
- * no necesite presentación (lo que sale de una regla ya presentada). Nunca algo que ya esté en la ronda.
- * null si no hay ninguno.
+ * acaba de fallar con una frase distinta. Primero lo ya visto; si no hay, algo nuevo que no necesite
+ * presentación (lo que sale de una regla ya presentada) de un grupo abierto y ya empezado: el primero de cada
+ * grupo es el que presenta su regla, y lo demás del grupo no puede salir antes que él. Nunca algo que ya esté
+ * en la ronda. null si no hay ninguno.
  */
 export function practicarDestreza<E extends Elemento>(
   pista: Pista<E>,
@@ -181,9 +237,11 @@ export function practicarDestreza<E extends Elemento>(
   if (!pista.destrezasDe) return null;
   const entrena = pista.elementos.filter((e) => !excluir.has(e.id) && (pista.destrezasDe?.(e) ?? []).includes(destreza));
   const vistos = entrena.filter((e) => progreso.has(clave(pista.id, e.id)));
-  const abiertos = new Set(gruposDesbloqueados(pista, progreso));
+  const abiertos = new Set(gruposDesbloqueados(pista, progreso, new Map(), opciones.gruposAbiertos === true));
+  const empezados = new Set(pista.elementos.filter((e) => progreso.has(clave(pista.id, e.id))).map((e) => e.grupo));
   const nuevosSinPresentacion = entrena.filter(
-    (e) => !progreso.has(clave(pista.id, e.id)) && abiertos.has(e.grupo) && (pista.presentar?.(e, opciones.variante) ?? null) === null,
+    (e) =>
+      !progreso.has(clave(pista.id, e.id)) && abiertos.has(e.grupo) && empezados.has(e.grupo) && (pista.presentar?.(e, opciones.variante) ?? null) === null,
   );
   const elemento = azar.elegir(vistos.length > 0 ? vistos : nuevosSinPresentacion);
   if (!elemento) return null;
@@ -201,7 +259,7 @@ export interface ResumenPista {
   readonly vistos: number;
   /** Elementos vistos cuyo repaso ya toca. */
   readonly paraRepasar: number;
-  /** Elementos nuevos que pueden entrar ya (grupos abiertos). */
+  /** Elementos nuevos que pueden entrar ya: los de los grupos abiertos o, con todos abiertos, los de los grupos empezados y el siguiente por empezar. */
   readonly nuevosDisponibles: number;
 }
 
@@ -210,6 +268,7 @@ export function resumirPista<E extends Elemento>(
   progreso: Progreso,
   ahora: Date,
   vistosOtras: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
+  gruposAbiertos = false,
 ): ResumenPista {
   let vistos = 0;
   let paraRepasar = 0;
@@ -219,8 +278,8 @@ export function resumirPista<E extends Elemento>(
     vistos++;
     if (vencida(tarjeta, ahora)) paraRepasar++;
   }
-  const abiertos = new Set(gruposDesbloqueados(pista, progreso, vistosOtras));
-  const nuevosDisponibles = pista.elementos.filter((e) => abiertos.has(e.grupo) && !progreso.has(clave(pista.id, e.id))).length;
+  const abiertos = new Set(gruposDesbloqueados(pista, progreso, vistosOtras, gruposAbiertos));
+  const nuevosDisponibles = nuevosEnOrden(pista, pista.elementos, progreso, abiertos, gruposAbiertos).length;
   return { total: pista.elementos.length, vistos, paraRepasar, nuevosDisponibles };
 }
 

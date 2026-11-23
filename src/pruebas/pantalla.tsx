@@ -35,6 +35,7 @@ export function prepararNavegador(): void {
   limpiar();
   Object.defineProperty(globalThis, 'Audio', { value: AudioDePrueba, configurable: true, writable: true });
   Object.defineProperty(window, 'scrollTo', { value: () => undefined, configurable: true, writable: true });
+  Object.defineProperty(Element.prototype, 'scrollIntoView', { value: () => undefined, configurable: true, writable: true });
   Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', { value: () => null, configurable: true, writable: true });
   localStorage.clear();
   sonadas.length = 0;

@@ -2,10 +2,12 @@
 // separado con lo que tiene pendiente.
 
 import type { ReactElement } from 'react';
+import { avisoFirma, useCaducidadFirma } from '../../estado/firma';
 import { preverRonda } from '../../estado/ronda';
 import { useAhora } from '../../estado/useAhora';
 import { diaDe, racha, respuestasHoy, resumirPista, vistosPorPista, type Datos, type OpcionesRonda, type Pista } from '../../motor';
 import { Boton } from '../componentes/Boton';
+import { ConNeerlandes } from '../componentes/ConNeerlandes';
 
 interface Props {
   readonly pistas: readonly Pista[];
@@ -26,12 +28,14 @@ export function textoDeRonda(repasos: number, nuevos: number, pendientes: number
 export function Hoy({ pistas, datos, opciones, onEmpezar }: Props): ReactElement {
   const ahora = useAhora();
   const vistos = vistosPorPista(pistas, datos.progreso);
-  const resumenes = pistas.map((p) => ({ pista: p, resumen: resumirPista(p, datos.progreso, ahora, vistos) }));
+  const resumenes = pistas.map((p) => ({ pista: p, resumen: resumirPista(p, datos.progreso, ahora, vistos, opciones.gruposAbiertos === true) }));
   const pendientes = resumenes.reduce((s, r) => s + r.resumen.paraRepasar, 0);
   const prevision = preverRonda(pistas, datos.progreso, ahora, opciones);
   const dias = racha(datos.historial, ahora);
   const hoy = respuestasHoy(datos.historial, ahora);
   const primeraVez = datos.historial.length === 0;
+  const caduca = useCaducidadFirma();
+  const firma = caduca ? avisoFirma(caduca, ahora) : null;
 
   return (
     <div className="columna">
@@ -39,6 +43,8 @@ export function Hoy({ pistas, datos, opciones, onEmpezar }: Props): ReactElement
         <h1>Stap</h1>
         <p className="texto-2">{primeraVez ? 'Neerlandés para hablarlo, frase a frase.' : `Hoy, ${diaDe(ahora).split('-').reverse().join('/')}`}</p>
       </header>
+
+      {firma ? <p className={firma.urgente ? 'aviso' : 'texto-3 pequeno'}>{firma.texto}</p> : null}
 
       <section className="tarjeta tarjeta--destacada columna">
         <h2>Ronda de hoy</h2>
@@ -73,7 +79,9 @@ export function Hoy({ pistas, datos, opciones, onEmpezar }: Props): ReactElement
               {resumen.vistos}/{resumen.total}
             </span>
           </div>
-          <p className="texto-2 pequeno">{pista.descripcion}</p>
+          <p className="texto-2 pequeno">
+            <ConNeerlandes texto={pista.descripcion} />
+          </p>
           <div className="fila fila--entre">
             <span className="texto-3">
               {resumen.paraRepasar} por repasar · {resumen.nuevosDisponibles} {resumen.nuevosDisponibles === 1 ? 'nueva' : 'nuevas'}
