@@ -2,6 +2,7 @@
 // separado con lo que tiene pendiente.
 
 import type { ReactElement } from 'react';
+import { avisoFirma, useCaducidadFirma } from '../../estado/firma';
 import { preverRonda } from '../../estado/ronda';
 import { useAhora } from '../../estado/useAhora';
 import { diaDe, racha, respuestasHoy, resumirPista, vistosPorPista, type Datos, type OpcionesRonda, type Pista } from '../../motor';
@@ -32,6 +33,8 @@ export function Hoy({ pistas, datos, opciones, onEmpezar }: Props): ReactElement
   const dias = racha(datos.historial, ahora);
   const hoy = respuestasHoy(datos.historial, ahora);
   const primeraVez = datos.historial.length === 0;
+  const caduca = useCaducidadFirma();
+  const firma = caduca ? avisoFirma(caduca, ahora) : null;
 
   return (
     <div className="columna">
@@ -39,6 +42,8 @@ export function Hoy({ pistas, datos, opciones, onEmpezar }: Props): ReactElement
         <h1>Stap</h1>
         <p className="texto-2">{primeraVez ? 'Neerlandés para hablarlo, frase a frase.' : `Hoy, ${diaDe(ahora).split('-').reverse().join('/')}`}</p>
       </header>
+
+      {firma ? <p className={firma.urgente ? 'aviso' : 'texto-3 pequeno'}>{firma.texto}</p> : null}
 
       <section className="tarjeta tarjeta--destacada columna">
         <h2>Ronda de hoy</h2>

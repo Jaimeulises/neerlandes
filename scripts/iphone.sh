@@ -41,13 +41,43 @@ fi
 app="$(node -p 'require("./capacitor.config.json").appId')"
 productos="ios/App/build/Build/Products/Release-iphoneos"
 
+# Cuándo caduca el perfil de firma: la pantalla de inicio lo avisa (src/estado/firma.ts).
+caducidad() {
+  security cms -D -i "$1" 2>/dev/null | plutil -extract ExpirationDate raw -o - - 2>/dev/null || true
+}
+
+# El perfil que Xcode ya tiene para esta app, si lo hay (el más nuevo). Si al compilar sale otro, se corrige abajo.
+perfil_previsto() {
+  for p in "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/"*.mobileprovision; do
+    [ -f "$p" ] || continue
+    id="$(security cms -D -i "$p" 2>/dev/null | plutil -extract Entitlements.application-identifier raw -o - - 2>/dev/null || true)"
+    case "$id" in *".$app") caducidad "$p" ;; esac
+  done | sort | tail -n 1
+}
+
+escribir_firma() {
+  printf '{ "caduca": "%s" }\n' "$1" > ios/App/App/public/firma.json
+}
+
+compilar() {
+  xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+    -destination "id=$iphone" -derivedDataPath ios/App/build \
+    -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
+    DEVELOPMENT_TEAM="$equipo" CODE_SIGN_STYLE=Automatic -quiet build
+}
+
 npm run build
 npx cap sync ios
-xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
-  -destination "id=$iphone" -derivedDataPath ios/App/build \
-  -allowProvisioningUpdates -allowProvisioningDeviceRegistration \
-  DEVELOPMENT_TEAM="$equipo" CODE_SIGN_STYLE=Automatic -quiet build
+prevista="$(perfil_previsto)"
+escribir_firma "$prevista"
+compilar
+real="$(caducidad "$productos/App.app/embedded.mobileprovision")"
+if [ -n "$real" ] && [ "$real" != "$prevista" ]; then
+  # Xcode ha hecho un perfil nuevo: se apunta su fecha y se recompila (rápido, ya está casi todo hecho).
+  escribir_firma "$real"
+  compilar
+fi
 xcrun devicectl device install app --device "$iphone" "$productos/App.app"
 # Abrirla solo funciona con el iPhone desbloqueado; si no se puede, ya está instalada igualmente.
 xcrun devicectl device process launch --device "$iphone" "$app" >/dev/null 2>&1 || true
-echo "Stap instalada en el iPhone."
+echo "Stap instalada en el iPhone. La firma caduca: ${real:-$prevista}."
