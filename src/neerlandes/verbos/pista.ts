@@ -3,7 +3,7 @@
 // simple o, si es separable, dónde va la partícula. Casi todo se responde
 // escribiendo la forma, porque reconocerla no basta para decirla.
 
-import { UMBRAL_DOMINADA, UMBRAL_FLOJA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
+import { UMBRAL_DOMINADA, UMBRAL_FLOJA, type CeldaDeTabla, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
 import { alternativas, comoFrase, conFormasTonicas, elegirForma, hueco, idFijo, opcionesCon, primera } from '../comun';
 import type { IdDestreza } from '../destrezas';
 import {
@@ -35,15 +35,15 @@ export const NOMBRES_GRUPO_VERBOS: Readonly<Record<GrupoVerbos, string>> = {
 // Los ejemplos de las reglas no son frases ni formas que la app pregunte antes de enseñarlas: la regla
 // se presenta al abrir el grupo y no debe dar la respuesta del ejercicio que viene detrás.
 const REGLA_PRESENTE =
-  'En los regulares: ik + raíz; jij, hij y zij + raíz + t (si la raíz ya acaba en t, no se añade otra: hij zet); en plural, el infinitivo. Si el sujeto jij o je va detrás del verbo, sin -t: «speel jij?». Los irregulares (zijn, hebben, kunnen, mogen…) tienen formas propias.';
+  'En los regulares: «ik» + raíz; «jij», «hij» y «zij» + raíz + t (si la raíz ya acaba en t, no se añade otra: «hij zet»); en plural, el infinitivo. Si el sujeto «jij» o «je» va detrás del verbo, sin -t: «speel jij?». Los irregulares («zijn, hebben, kunnen, mogen…») tienen formas propias.';
 const REGLA_PERFECTUM =
-  'Participio regular: ge + raíz + t si en el infinitivo va t, k, f, s, ch o p delante de -en (’t kofschip); si no, ge + raíz + d. Se mira el infinitivo, no la raíz: leven da geleefd aunque se diga ik leef. Si la raíz ya acaba en t o d, no se añade otra (zetten da gezet). Sin ge- con los prefijos átonos be-, ver-, ge-, her-, ont- y er- (beloven da beloofd); si esas letras no son prefijo, sí lo lleva (verven da geverfd).';
+  'Participio regular: ge + raíz + t si en el infinitivo va t, k, f, s, ch o p delante de -en («’t kofschip»); si no, ge + raíz + d. Se mira el infinitivo, no la raíz: «leven» da «geleefd» aunque se diga «ik leef». Si la raíz ya acaba en t o d, no se añade otra («zetten» da «gezet»). Sin ge- con los prefijos átonos be-, ver-, ge-, her-, ont- y er- («beloven» da «beloofd»); si esas letras no son prefijo, sí lo lleva («verven» da «geverfd»).';
 const REGLA_IRREGULAR =
-  'Participio irregular: no sigue la regla y hay que aprenderlo de memoria. Muchos acaban en -en, a menudo con otra vocal (drinken, gedronken; schrijven, geschreven); otros acaban en -cht (denken, gedacht; kopen, gekocht) y unos pocos son únicos (zijn, geweest; hebben, gehad).';
+  'Participio irregular: no sigue la regla y hay que aprenderlo de memoria. Muchos acaban en -en, a menudo con otra vocal («drinken, gedronken»; «schrijven, geschreven»); otros acaban en -cht («denken, gedacht»; «kopen, gekocht») y unos pocos son únicos («zijn, geweest»; «hebben, gehad»).';
 const REGLA_ZIJN =
-  'Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, worden, verhuizen…), y además zijn y blijven, que no son ni lo uno ni lo otro (ik ben geweest, ik ben gebleven).';
+  'Con «zijn» van los verbos de movimiento hacia un sitio o de cambio de estado («gaan, komen, worden, verhuizen…»), y además «zijn» y «blijven», que no son ni lo uno ni lo otro («ik ben geweest», «ik ben gebleven»).';
 const REGLA_SEPARABLES =
-  'Cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y va al final: «ik bel je op». Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Va pegada en el infinitivo («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio, delante de ge- (opgebeld, meegenomen). Con te + infinitivo, el te va entre las dos partes: «om je op te bellen».';
+  'Cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y va al final: «ik bel je op». Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Va pegada en el infinitivo («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio, delante de ge- («opgebeld, meegenomen»). Con «te» + infinitivo, el «te» va entre las dos partes: «om je op te bellen».';
 const REGLA_PASADO = 'El pasado simple se usa sobre todo para contar y describir: «toen woonde ik…», «het was koud».';
 
 /** Las reglas de los verbos, para que salgan también en docs/revision.md. */
@@ -80,6 +80,10 @@ export interface Sujeto {
   readonly i: number;
 }
 
+/** La consigna al elegir el auxiliar: lleva neerlandés y sale en docs/revision.md (T30). */
+export const CONSIGNA_AUXILIAR = '¿«Hebben» o «zijn»?';
+
+/** Con quién se completan las frases de presente. Salen en docs/revision.md (T33): cada forma ya revisada va con uno. */
 export const SUJETOS: readonly Sujeto[] = [
   { nl: 'ik', es: 'yo', i: 0 },
   { nl: 'jij', es: 'tú', i: 1 },
@@ -125,9 +129,9 @@ const AUXILIARES: Readonly<Record<string, string>> = {
   zijn: 'hebben',
 };
 
-function tablaPresente(v: DatosVerbo): (readonly [string, string])[] {
+function tablaPresente(v: DatosVerbo): (readonly [CeldaDeTabla, CeldaDeTabla])[] {
   const f = formasPresente(v);
-  const filas: (readonly [string, string])[] = [
+  const filas: (readonly [CeldaDeTabla, string])[] = [
     ['ik', f[0]],
     ['jij', f[1]],
     ['hij, zij', f[2]],
@@ -135,13 +139,14 @@ function tablaPresente(v: DatosVerbo): (readonly [string, string])[] {
     ['jullie', f[4]],
     ['zij', f[5]],
   ];
-  if (!v.sinPregunta) filas.push([`${primera(formaConJij(v))} jij…?`, 'pregunta']);
+  // La etiqueta va en español, en la columna de los sujetos, como la del perfectum en la tabla del pasado.
+  if (!v.sinPregunta) filas.push([{ etiqueta: 'pregunta' }, `${primera(formaConJij(v))} jij…?`]);
   return filas.map(([a, b]) => [a, b.replaceAll('/', ' / ')] as const);
 }
 
 function resumenPresente(v: DatosVerbo): string {
   const f = formasPresente(v).map(primera);
-  return `${v.inf}: ik ${f[0]}, jij ${f[1]}, hij ${f[2]}, wij ${f[3]}.`;
+  return `«${v.inf}»: «ik ${f[0]}, jij ${f[1]}, hij ${f[2]}, wij ${f[3]}».`;
 }
 
 function frasePresente(sujeto: string, forma: string, comp: string): string {
@@ -247,7 +252,7 @@ function elegirAuxiliar(e: Verbo, perf: readonly [string, string], aclaracion: s
     forma: 'opcion',
     tipo: 'verbos.perfectum.auxiliar',
     elementoId: e.id,
-    instruccion: '¿Hebben o zijn?',
+    instruccion: CONSIGNA_AUXILIAR,
     enunciado: conHueco,
     enunciadoEnIdioma: true,
     significado: es,
@@ -293,8 +298,8 @@ function decirFrase(e: Verbo, perf: readonly [string, string], otras: readonly s
 
 function reglaPerfectum(v: DatosVerbo): string {
   const regla = v.irregular ? REGLA_IRREGULAR : REGLA_PERFECTUM;
-  const aux = v.aux === 'zijn' ? ` Va con zijn. ${REGLA_ZIJN}` : ' Va con hebben.';
-  return `${v.inf}: ${v.aux === 'zijn' ? 'is' : 'heeft'} ${v.participio ?? ''}. ${regla}${aux}${v.nota ? ` ${v.nota}` : ''}`;
+  const aux = v.aux === 'zijn' ? ` Va con «zijn». ${REGLA_ZIJN}` : ' Va con «hebben».';
+  return `«${v.inf}»: «${v.aux === 'zijn' ? 'is' : 'heeft'} ${v.participio ?? ''}». ${regla}${aux}${v.nota ? ` ${v.nota}` : ''}`;
 }
 
 function ejercicioPerfectum(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio): Ejercicio {
@@ -322,10 +327,15 @@ function ejercicioPerfectum(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio
   return completarParticipio(e, v.inf, participio, perf, aclaracion);
 }
 
+/** Las formas que valen (wilde/wou), cada una entre «» y unidas por una “o” que queda fuera: «wilde» o «wou». */
+function formasCitadas(forma: string): string {
+  return alternativas(forma).map((f) => `«${f}»`).join(' o ');
+}
+
 function ejercicioPasado(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio): Ejercicio {
   const [singular, plural] = v.pasado ?? ['', ''];
   const [nl, es] = v.pasadoEj ?? ['', ''];
-  const aclaracion = `${v.inf}: ${singular.replaceAll('/', ' o ')} en singular, ${plural.replaceAll('/', ' o ')} en plural${v.participio ? ` (perfectum: ${v.participio})` : ''}. ${REGLA_PASADO}`;
+  const aclaracion = `«${v.inf}»: ${formasCitadas(singular)} en singular, ${formasCitadas(plural)} en plural${v.participio ? ` (perfectum: «${v.participio}»)` : ''}. ${REGLA_PASADO}`;
   const palabras = nl.split(/\s+/);
   const enSingular = alternativas(singular).find((f) => palabras.includes(f));
   const enPlural = alternativas(plural).find((f) => palabras.includes(f));
@@ -401,7 +411,7 @@ export function fraseDeSeparable(s: DatosSeparable): Frase {
 }
 
 function ejercicioSeparable(e: Verbo, s: DatosSeparable, contexto: ContextoEjercicio): Ejercicio {
-  const aclaracion = `${s.inf}: ${comoFrase(s.presente.replaceAll('|', ' '))} En perfectum: ${s.aux === 'zijn' ? 'is' : 'heeft'} ${s.participio}. ${REGLA_SEPARABLES}`;
+  const aclaracion = `«${s.inf}»: «${comoFrase(s.presente.replaceAll('|', ' '), '')}». En perfectum: «${s.aux === 'zijn' ? 'is' : 'heeft'} ${s.participio}». ${REGLA_SEPARABLES}`;
   const frase = fraseDeSeparable(s);
   // Si se pide menos ayuda y los separables no están flojos, la primera vez ya se escribe.
   const sinFichas = contexto.sinAndamiaje === true && (contexto.dominio?.('separables') ?? 1) >= UMBRAL_FLOJA;
@@ -524,7 +534,7 @@ function diagnosticarVerbo(e: Verbo, ejercicio: Ejercicio, respuesta: string) {
 export const verbos: Pista<Verbo> = {
   id: 'verbos',
   nombre: 'Verbos',
-  descripcion: 'Conjugar sin pensarlo: presente, perfectum con hebben o zijn, separables y pasado simple.',
+  descripcion: 'Conjugar sin pensarlo: presente, perfectum con «hebben» o «zijn», separables y pasado simple.',
   grupos: GRUPOS_VERBOS,
   nombresDeGrupo: NOMBRES_GRUPO_VERBOS,
   elementos: ELEMENTOS_VERBOS,
@@ -570,11 +580,11 @@ function presentacionDe(e: Verbo): Presentacion {
   }
   if (e.grupo === 'pasado') {
     const [singular, plural] = v.pasado ?? ['', ''];
-    const tabla: (readonly [string, string])[] = [
+    const tabla: (readonly [CeldaDeTabla, CeldaDeTabla])[] = [
       ['ik, jij, hij', singular.replaceAll('/', ' / ')],
       ['wij, jullie, zij', plural.replaceAll('/', ' / ')],
     ];
-    if (v.participio) tabla.push(['perfectum', `${v.aux === 'zijn' ? 'is' : 'heeft'} ${v.participio}`]);
+    if (v.participio) tabla.push([{ etiqueta: 'perfectum' }, `${v.aux === 'zijn' ? 'is' : 'heeft'} ${v.participio}`]);
     const [nl, es] = v.pasadoEj ?? ['', ''];
     return { principal: v.inf, significado: v.es, nota: v.nota ?? null, audio: comoFrase(nl), detalle: REGLA_PASADO, tabla, ejemplos: [{ texto: comoFrase(nl), significado: es }] };
   }

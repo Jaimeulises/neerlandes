@@ -119,7 +119,7 @@ const POR_ID = new Map(ELEMENTOS_ORDEN.map((e) => [e.id, e]));
 export const orden: Pista<Frase> = {
   id: 'orden',
   nombre: 'Orden de la frase',
-  descripcion: 'Dónde va el verbo: inversión, modales, perfectum, separables, niet, preguntas y subordinadas.',
+  descripcion: 'Dónde va el verbo: inversión, modales, perfectum, separables, «niet», preguntas y subordinadas.',
   grupos: GRUPOS_ORDEN,
   nombresDeGrupo: NOMBRES_GRUPO_ORDEN,
   elementos: ELEMENTOS_ORDEN,

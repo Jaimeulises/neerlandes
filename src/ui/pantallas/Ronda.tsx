@@ -23,6 +23,7 @@ import {
 } from '../../motor';
 import { nombreDeDestreza } from '../../neerlandes/destrezas';
 import { Boton } from '../componentes/Boton';
+import { ConNeerlandes } from '../componentes/ConNeerlandes';
 import { Decir } from '../ejercicios/Decir';
 import { Escrito } from '../ejercicios/Escrito';
 import { Opcion } from '../ejercicios/Opcion';
@@ -195,7 +196,11 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
         </span>
       </div>
 
-      {practica && !mostrarPresentacion ? <p className="practica">Practica la regla que acabas de fallar: {nombreDeDestreza(practica)}</p> : null}
+      {practica && !mostrarPresentacion ? (
+        <p className="practica">
+          Practica la regla que acabas de fallar: <ConNeerlandes texto={nombreDeDestreza(practica)} />
+        </p>
+      ) : null}
 
       {mostrarPresentacion ? (
         <Presentacion

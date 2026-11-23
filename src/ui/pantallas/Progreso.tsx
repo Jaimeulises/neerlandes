@@ -19,6 +19,7 @@ import {
   type Pista,
 } from '../../motor';
 import { DESTREZAS, FALTA_PARA_B2, nombreDeDestreza } from '../../neerlandes/destrezas';
+import { ConNeerlandes, sinMarcas } from '../componentes/ConNeerlandes';
 
 interface Props {
   readonly pistas: readonly Pista[];
@@ -69,7 +70,7 @@ function Nivel({ niveles, historial, ahora }: { readonly niveles: ReadonlyMap<st
           <ul className="lista-fallos">
             {falladas.map(([d, n]) => (
               <li key={d}>
-                {nombreDeDestreza(d)} <span className="texto-3">· {n} {n === 1 ? 'vez' : 'veces'}</span>
+                <ConNeerlandes texto={nombreDeDestreza(d)} /> <span className="texto-3">· {n} {n === 1 ? 'vez' : 'veces'}</span>
               </li>
             ))}
           </ul>
@@ -84,15 +85,17 @@ function Nivel({ niveles, historial, ahora }: { readonly niveles: ReadonlyMap<st
             const estado = estadoDe(e);
             const porcentaje = e && e.respuestas >= MINIMO_PARA_NIVEL ? Math.round(e.dominio * 100) : 0;
             return (
-              <div key={d.id} className="columna" style={{ gap: 4 }} title={d.descripcion}>
+              <div key={d.id} className="columna" style={{ gap: 4 }} title={sinMarcas(d.descripcion)}>
                 <div className="fila fila--entre pequeno">
-                  <span>{d.nombre}</span>
+                  <span>
+                    <ConNeerlandes texto={d.nombre} />
+                  </span>
                   <span className="texto-3">
                     {estado.texto}
                     {e ? ` · ${e.respuestas}` : ''}
                   </span>
                 </div>
-                <div className={`barra-grupo ${estado.clase}`} role="meter" aria-label={d.nombre} aria-valuemin={0} aria-valuemax={100} aria-valuenow={porcentaje}>
+                <div className={`barra-grupo ${estado.clase}`} role="meter" aria-label={sinMarcas(d.nombre)} aria-valuemin={0} aria-valuemax={100} aria-valuenow={porcentaje}>
                   <div style={{ width: `${porcentaje}%` }} />
                 </div>
               </div>
@@ -103,7 +106,9 @@ function Nivel({ niveles, historial, ahora }: { readonly niveles: ReadonlyMap<st
 
       <div className="columna" style={{ gap: 4 }}>
         <span className="etiqueta-nivel">B2</span>
-        <p className="texto-3">Aún no está en la app: {FALTA_PARA_B2.map((f) => f.texto).join('; ')}.</p>
+        <p className="texto-3">
+          Aún no está en la app: <ConNeerlandes texto={FALTA_PARA_B2.map((f) => f.texto).join('; ')} />.
+        </p>
       </div>
 
       <p className="texto-3">
@@ -166,7 +171,9 @@ export function Progreso({ pistas, datos, niveles, gruposAbiertos = false }: Pro
               return (
                 <div key={grupo} className="columna" style={{ gap: 4 }}>
                   <div className="fila fila--entre pequeno">
-                    <span>{pista.nombresDeGrupo?.[grupo] ?? grupo}</span>
+                    <span>
+                      <ConNeerlandes texto={pista.nombresDeGrupo?.[grupo] ?? grupo} />
+                    </span>
                     <span className="texto-3">
                       {vistosGrupo}/{delGrupo.length}
                     </span>

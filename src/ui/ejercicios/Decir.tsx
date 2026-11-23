@@ -12,6 +12,7 @@ import type { Voz } from '../../estado/voz';
 import { palabras, UMBRAL_DOMINADA, UMBRAL_FLOJA, type Calificacion, type Diagnostico, type EjercicioDecir } from '../../motor';
 import { Boton } from '../componentes/Boton';
 import { BotonVoz } from '../componentes/BotonVoz';
+import { ConNeerlandes } from '../componentes/ConNeerlandes';
 
 interface Props {
   readonly ejercicio: EjercicioDecir;
@@ -132,10 +133,14 @@ export function Decir({ ejercicio, repeticion, voz, tiempo = 'normal', onTermina
     <div className="columna">
       <p className="instruccion">
         {repeticion ? 'Otra vez: ' : ''}
-        {ejercicio.instruccion}
+        <ConNeerlandes texto={ejercicio.instruccion} />
       </p>
       <p className="enunciado">{ejercicio.significado}</p>
-      {ejercicio.pista ? <p className="pista">{ejercicio.pista}</p> : null}
+      {ejercicio.pista ? (
+        <p className="pista">
+          <ConNeerlandes texto={ejercicio.pista} />
+        </p>
+      ) : null}
       {fase === 'cuenta' ? (
         <>
           {total === null ? null : (
@@ -163,7 +168,11 @@ export function Decir({ ejercicio, repeticion, voz, tiempo = 'normal', onTermina
             <BotonVoz voz={voz} texto={ejercicio.texto} />
           </div>
           {otras.length > 0 ? <OtrasFormas otras={otras} /> : null}
-          {ejercicio.aclaracion ? <p className="aclaracion">{ejercicio.aclaracion}</p> : null}
+          {ejercicio.aclaracion ? (
+            <p className="aclaracion">
+              <ConNeerlandes texto={ejercicio.aclaracion} />
+            </p>
+          ) : null}
           {equivocado ? (
             <>
               <p className="texto-2">Dila otra vez en voz alta, ahora con la buena.</p>

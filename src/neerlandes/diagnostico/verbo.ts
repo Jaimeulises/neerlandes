@@ -71,7 +71,7 @@ export function explicarConjugacion(esperada: string, dada: string, sujeto: read
       return explicar(
         'pasado-plural-sin-n',
         'pasado',
-        `En pasado, el plural (${suj}) lleva -n: ${cita(esperada)}. Sin -n es el singular (ik, jij, hij).`,
+        `En pasado, el plural (${suj}) lleva -n: ${cita(esperada)}. Sin -n es el singular («ik, jij, hij»).`,
         // Igual que en el caso contrario: la pista no dice hacia dónde está el fallo.
         `Mira el sujeto: ${suj}. En pasado simple, ¿en qué se distingue el singular del plural?`,
       );
@@ -80,7 +80,7 @@ export function explicarConjugacion(esperada: string, dada: string, sujeto: read
       return explicar(
         'pasado-singular-con-n',
         'pasado',
-        `Con ${suj} (singular), el pasado va sin -n: ${cita(esperada)}. La -n es para el plural (wij, jullie, zij).`,
+        `Con ${suj} (singular), el pasado va sin -n: ${cita(esperada)}. La -n es para el plural («wij, jullie, zij»).`,
         `Mira el sujeto: ${suj}. En pasado simple, ¿en qué se distingue el singular del plural?`,
       );
     }
@@ -90,7 +90,7 @@ export function explicarConjugacion(esperada: string, dada: string, sujeto: read
       return explicar(
         'pasado-te-de',
         'pasado',
-        `En los regulares, -te o -de sale de la misma regla que el participio, ’t kofschip: si en el infinitivo${delVerbo} va t, k, f, s, ch o p delante de -en, -te; si no, -de. Aquí: ${cita(esperada)}.`,
+        `En los regulares, -te o -de sale de la misma regla que el participio, «’t kofschip»: si en el infinitivo${delVerbo} va t, k, f, s, ch o p delante de -en, -te; si no, -de. Aquí: ${cita(esperada)}.`,
         `¿-te o -de? Mira qué letra va delante de -en en el infinitivo${delVerbo}: ¿está en ${cita('’t kofschip')} (t, k, f, s, ch, p)?`,
       );
     }
@@ -125,7 +125,7 @@ export function explicarConjugacion(esperada: string, dada: string, sujeto: read
     return explicar(
       'presente-jij-detras',
       'presente',
-      `Cuando jij o je va detrás del verbo (en una pregunta o tras «morgen», por ejemplo), la -t se cae: ${cita([esperada, ...sujeto])}. Con jij delante sí lleva -t: «jij ${dada}».`,
+      `Cuando «jij» o «je» va detrás del verbo (en una pregunta o tras «morgen», por ejemplo), la -t se cae: ${cita([esperada, ...sujeto])}. Con «jij» delante sí lleva -t: «jij ${dada}».`,
       `Mira dónde va ${cita(sujeto)}: detrás del verbo. Con ${cita('jij')} y ${cita('je')}, ¿cambia algo la forma según vayan delante o detrás?`,
     );
   }
@@ -133,7 +133,7 @@ export function explicarConjugacion(esperada: string, dada: string, sujeto: read
     return explicar(
       'presente-ik-con-t',
       'presente',
-      `Con ik va la raíz sola, sin -t: «ik ${esperada}». La -t es para jij, hij, zij y u.`,
+      `Con «ik» va la raíz sola, sin -t: «ik ${esperada}». La -t es para «jij», «hij», «zij» y «u».`,
       `Mira el sujeto: ${cita('ik')}. ¿Qué forma del presente va con ${cita('ik')}?`,
     );
   }
@@ -144,17 +144,17 @@ export function explicarConjugacion(esperada: string, dada: string, sujeto: read
       return explicar(
         'presente-je-posesivo',
         'presente',
-        `Aquí ${cita(posesivo)} es «tu», no el sujeto «tú»: el sujeto es ${suj}, que va en tercera persona, así que el verbo lleva -t: ${cita(invertido ? [esperada, ...sujeto] : [...sujeto, esperada])}. La -t solo se cae si el sujeto es jij o je y va detrás del verbo.`,
+        `Aquí ${cita(posesivo)} es “tu”, no el sujeto “tú”: el sujeto es ${suj}, que va en tercera persona, así que el verbo lleva -t: ${cita(invertido ? [esperada, ...sujeto] : [...sujeto, esperada])}. La -t solo se cae si el sujeto es «jij» o «je» y va detrás del verbo.`,
         `Aquí ${cita(posesivo)} no es el sujeto “tú” sino “tu”: el sujeto es ${suj}. ¿Qué forma va con ese sujeto?`,
       );
     }
-    const quien = persona === 'jij' ? 'Con jij delante del verbo' : persona === 'u' ? 'Con u' : `Con ${suj} (él, ella, eso o un nombre en singular)`;
+    const quien = persona === 'jij' ? 'Con «jij» delante del verbo' : persona === 'u' ? 'Con «u»' : `Con ${suj} (él, ella, eso o un nombre en singular)`;
     // La -s de «he works» es la misma idea que la -t de «hij werkt»: con la tercera persona, el inglés hace de disparador.
     const ingles = persona === 'tercera' ? ' En inglés dirías “he works”, no “he work”.' : '';
     return explicar(
       'presente-falta-t',
       'presente',
-      `${quien} va raíz + t: ${cita([...sujeto, esperada])}. Solo se cae la -t si jij o je va detrás del verbo.`,
+      `${quien} va raíz + t: ${cita([...sujeto, esperada])}. Solo se cae la -t si «jij» o «je» va detrás del verbo.`,
       `Mira el sujeto: ${suj}${persona === 'jij' ? ', delante del verbo' : ''}.${ingles} ¿Qué forma del presente le toca?`,
     );
   }
@@ -171,7 +171,7 @@ export function explicarConjugacion(esperada: string, dada: string, sujeto: read
     return explicar(
       'presente-infinitivo',
       'presente',
-      `Has dejado el verbo sin conjugar. Con ${suj}, ${cita(inf ?? dada)} es ${cita(esperada)}; el infinitivo solo va con wij, jullie y zij (plural).`,
+      `Has dejado el verbo sin conjugar. Con ${suj}, ${cita(inf ?? dada)} es ${cita(esperada)}; el infinitivo solo va con «wij», «jullie» y «zij» (plural).`,
       `${cita(dada)} está sin conjugar. Mira el sujeto, ${suj}: ¿qué forma del presente le toca?`,
     );
   }
@@ -269,7 +269,7 @@ export function explicarParticipio(esperado: string, dado: string): DiagnosticoN
     caso: 'participio-kofschip',
     destreza: 'participio',
     titulo,
-    texto: `’t kofschip: en ${cita(inf)} va ${cita(letra)} delante de -en, ${conT ? 'que está en ’t kofschip (t, k, f, s, ch, p), así que acaba en -t' : 'que no está en ’t kofschip (t, k, f, s, ch, p), así que acaba en -d'}: ${cita(esperado)}. Se mira el infinitivo, no la raíz.`,
+    texto: `«’t kofschip»: en ${cita(inf)} va ${cita(letra)} delante de -en, ${conT ? 'que está en «’t kofschip» (t, k, f, s, ch, p), así que acaba en -t' : 'que no está en «’t kofschip» (t, k, f, s, ch, p), así que acaba en -d'}: ${cita(esperado)}. Se mira el infinitivo, no la raíz.`,
     pista: `¿-t o -d? Mira qué letra va delante de -en en el infinitivo de ${verbo}: ¿está en ${cita('’t kofschip')} (t, k, f, s, ch, p)?`,
   };
 }
@@ -286,8 +286,8 @@ export function explicarAuxiliar(usado: string, esperado: string, participio: st
     destreza: 'auxiliar',
     titulo: `${cita(usado)} no: ${cita(esperado)}`,
     texto: conZijn
-      ? `${verbo} va con zijn: ${fraseBuena}${fin} Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, verhuizen, worden…), y además zijn y blijven.`
-      : `${verbo} va con hebben: ${fraseBuena}${fin} La gran mayoría van con hebben; zijn es solo para el movimiento hacia un sitio, el cambio de estado, zijn y blijven.`,
+      ? `${verbo} va con «zijn»: ${fraseBuena}${fin} Con «zijn» van los verbos de movimiento hacia un sitio o de cambio de estado («gaan, komen, verhuizen, worden…»), y además «zijn» y «blijven».`
+      : `${verbo} va con «hebben»: ${fraseBuena}${fin} La gran mayoría van con «hebben»; «zijn» es solo para el movimiento hacia un sitio, el cambio de estado, «zijn» y «blijven».`,
     // Se habla de la frase y no del verbo (fietsen va con zijn si se va a un sitio y con hebben si no), y con la
     // misma pregunta en las dos direcciones: la pista no decide por el alumno.
     pista: `En inglés todo va con “have”. En neerlandés, ¿hay aquí movimiento hacia un sitio, cambio de estado, ${cita('zijn')} o ${cita('blijven')}? Según eso, ¿qué auxiliar va?`,

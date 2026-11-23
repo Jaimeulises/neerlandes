@@ -3,10 +3,12 @@ import type { Voz } from '../../estado/voz';
 import type { Diagnostico } from '../../motor';
 import { Boton } from './Boton';
 import { BotonVoz } from './BotonVoz';
+import { ConNeerlandes } from './ConNeerlandes';
 import { Diagnosticos } from './Diagnosticos';
 
 interface Props {
   readonly bien: boolean;
+  /** Con el neerlandés entre «», como todos los textos en español. */
   readonly titulo: string;
   readonly voz: Voz;
   readonly audio: string | undefined;
@@ -24,7 +26,9 @@ export function Resultado({ bien, titulo, voz, audio, aclaracion, diagnosticos =
   return (
     <div className={`resultado ${bien ? 'resultado--bien' : 'resultado--mal'}`} aria-live="polite">
       <div className="fila fila--entre">
-        <p className="resultado__titulo">{titulo}</p>
+        <p className="resultado__titulo">
+          <ConNeerlandes texto={titulo} />
+        </p>
         <BotonVoz voz={voz} texto={audio} />
       </div>
       {children}
@@ -32,10 +36,14 @@ export function Resultado({ bien, titulo, voz, audio, aclaracion, diagnosticos =
       {aclaracion && hayDiagnostico ? (
         <details className="regla-completa">
           <summary>La regla completa</summary>
-          <p className="aclaracion">{aclaracion}</p>
+          <p className="aclaracion">
+            <ConNeerlandes texto={aclaracion} />
+          </p>
         </details>
       ) : aclaracion ? (
-        <p className="aclaracion">{aclaracion}</p>
+        <p className="aclaracion">
+          <ConNeerlandes texto={aclaracion} />
+        </p>
       ) : null}
       {extra}
       <Boton ancho autoFocus onClick={onSiguiente}>

@@ -17,9 +17,9 @@ import { diagnosticarEjemplos } from '../diagnostico/ejemplos';
 import { GRUPOS_ORDEN, NOMBRES_GRUPO_ORDEN, REGLAS_ORDEN, type GrupoOrden } from '../orden/datos';
 import { ELEMENTOS_ORDEN, orden } from '../orden/pista';
 import { SEPARABLES, VERBOS, type DatosVerbo } from '../verbos/datos';
-import { formaConJij, formasPresente, preguntaPresenteEs, REGLAS_VERBOS, verbos } from '../verbos/pista';
+import { CONSIGNA_AUXILIAR, formaConJij, formasPresente, preguntaPresenteEs, REGLAS_VERBOS, SUJETOS, verbos } from '../verbos/pista';
 import { GRUPOS_VOCABULARIO, NOMBRES_GRUPO_VOCABULARIO } from '../vocabulario/datos';
-import { ELEMENTOS_VOCABULARIO, vocabulario } from '../vocabulario/pista';
+import { CONSIGNA_ARTICULO, ELEMENTOS_VOCABULARIO, PISTA_ARTICULO, vocabulario } from '../vocabulario/pista';
 
 /** O frases de orden, R reglas, V verbos, S separables, P palabras, E explicaciones de errores, T otros textos. */
 export type Tipo = 'O' | 'R' | 'V' | 'S' | 'P' | 'E' | 'T';
@@ -218,7 +218,12 @@ function reglaDeVerbos(k: keyof typeof REGLAS_VERBOS, apartado: string): Element
 
 function verbosConSusReglas(): ElementoRevision[] {
   const reglas = (Object.keys(REGLAS_VERBOS) as (keyof typeof REGLAS_VERBOS)[]).filter((k) => k !== 'separables').map((k) => reglaDeVerbos(k, NOMBRES_TIPO.V));
-  return [...reglas, ...VERBOS.map((v): ElementoRevision => ({ codigo: v.codigo, tipo: 'V', apartado: NOMBRES_TIPO.V, fase: 1, contenido: contenidoVerbo(v) }))];
+  // Lo que sale con todos los verbos: la consigna del auxiliar y los sujetos de las frases de presente.
+  const comunes = [
+    texto('T30', 'Verbos, la consigna al elegir el auxiliar del perfectum', CONSIGNA_AUXILIAR, 1),
+    texto('T33', 'Verbos, los sujetos con que salen las frases de presente (cada forma, ya revisada, va con uno de ellos)', SUJETOS.map((s) => `«${s.nl}»: ${s.es}`).join('; '), 1),
+  ].map((t) => ({ ...t, apartado: NOMBRES_TIPO.V }));
+  return [...reglas, ...VERBOS.map((v): ElementoRevision => ({ codigo: v.codigo, tipo: 'V', apartado: NOMBRES_TIPO.V, fase: 1, contenido: contenidoVerbo(v) })), ...comunes];
 }
 
 function separablesConSuRegla(): ElementoRevision[] {
@@ -240,7 +245,11 @@ function separablesConSuRegla(): ElementoRevision[] {
 }
 
 function palabras(): ElementoRevision[] {
-  return GRUPOS_VOCABULARIO.flatMap((grupo) =>
+  const comunes = [
+    texto('T31', 'Vocabulario, la consigna al elegir el artículo', CONSIGNA_ARTICULO),
+    texto('T32', 'Vocabulario, la pista al escribir un sustantivo', PISTA_ARTICULO),
+  ].map((t) => ({ ...t, apartado: NOMBRES_TIPO.P }));
+  const porGrupo = GRUPOS_VOCABULARIO.flatMap((grupo) =>
     ELEMENTOS_VOCABULARIO.filter((e) => e.grupo === grupo).map(
       (p): ElementoRevision => ({
         codigo: p.codigo,
@@ -251,6 +260,7 @@ function palabras(): ElementoRevision[] {
       }),
     ),
   );
+  return [...comunes, ...porGrupo];
 }
 
 /** Cada explicación de error, con el apartado del elemento sobre el que va, para revisarla justo después de él. */

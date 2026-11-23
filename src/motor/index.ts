@@ -2,6 +2,7 @@ export type { Azar } from './azar';
 export { crearAzar, semillaNueva } from './azar';
 export type {
   Calificacion,
+  CeldaDeTabla,
   ContextoEjercicio,
   Destreza,
   Diagnostico,

@@ -56,15 +56,19 @@ function sinArticulo(nl: string): string {
 }
 
 function aclaracionDe(e: Palabra): string | undefined {
-  const partes = [`${e.nl}: ${e.es}.`];
+  const partes = [`«${e.nl}»: ${e.es}.`];
   if (e.nota) partes.push(e.nota);
   return partes.join(' ');
 }
 
+/** La consigna al elegir el artículo y la pista al escribir un sustantivo: llevan neerlandés y salen en docs/revision.md (T31 y T32). */
+export const CONSIGNA_ARTICULO = '¿«De» o «het»?';
+export const PISTA_ARTICULO = 'Con su artículo («de» o «het»).';
+
 export const vocabulario: Pista<Palabra> = {
   id: 'vocabulario',
   nombre: 'Vocabulario',
-  descripcion: 'Palabras y expresiones de la vida diaria, siempre con su de o het.',
+  descripcion: 'Palabras y expresiones de la vida diaria, siempre con su «de» o «het».',
   grupos: GRUPOS_VOCABULARIO,
   nombresDeGrupo: NOMBRES_GRUPO_VOCABULARIO,
   elementos: ELEMENTOS_VOCABULARIO,
@@ -117,7 +121,7 @@ export const vocabulario: Pista<Palabra> = {
         forma: 'opcion',
         tipo: 'vocabulario.articulo',
         destrezas: ['articulo'],
-        instruccion: '¿De o het?',
+        instruccion: CONSIGNA_ARTICULO,
         enunciado: sinArticulo(e.nl),
         enunciadoEnIdioma: true,
         significado: e.es,
@@ -144,7 +148,7 @@ export const vocabulario: Pista<Palabra> = {
       tipo: 'vocabulario.escribir',
       instruccion: 'Escríbela en neerlandés',
       significado: e.es,
-      ...(e.sustantivo ? { pista: 'Con su artículo (de o het).' } : {}),
+      ...(e.sustantivo ? { pista: PISTA_ARTICULO } : {}),
       respuestas: conFormasTonicas([e.nl, ...e.otras]),
     };
   },
@@ -165,10 +169,10 @@ export const vocabulario: Pista<Palabra> = {
       destreza: 'articulo',
       titulo: `Es «${e.articulo} ${sustantivo}», no «${articulo} ${sustantivo}»`,
       texto: diminutivo
-        ? 'Acaba en -je: los diminutivos siempre van con het.'
+        ? 'Acaba en -je: los diminutivos siempre van con «het».'
         : e.articulo === 'het'
-          ? 'Es de las palabras con het: hay menos que con de, así que conviene aprenderlas con su artículo, como una sola palabra.'
-          : 'Va con de, que es lo más común (todos los plurales y la mayoría de las palabras en singular). Apréndela con su artículo, como una sola palabra.',
+          ? 'Es de las palabras con «het»: hay menos que con «de», así que conviene aprenderlas con su artículo, como una sola palabra.'
+          : 'Va con «de», que es lo más común (todos los plurales y la mayoría de las palabras en singular). Apréndela con su artículo, como una sola palabra.',
     };
     return [d];
   },

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactElement } from 'react';
 import { Boton } from './Boton';
-import { ConNeerlandes } from './Diagnosticos';
+import { ConNeerlandes } from './ConNeerlandes';
 
 export function Reintento({ pistas }: { readonly pistas: readonly string[] }): ReactElement {
   const panel = useRef<HTMLDivElement>(null);

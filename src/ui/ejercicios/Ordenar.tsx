@@ -8,6 +8,7 @@ import { useState, type ReactElement } from 'react';
 import type { Voz } from '../../estado/voz';
 import { corregir, type Calificacion, type Correccion, type Diagnostico, type EjercicioOrdenar, type Veredicto } from '../../motor';
 import { Boton } from '../componentes/Boton';
+import { ConNeerlandes } from '../componentes/ConNeerlandes';
 import { Marcas } from '../componentes/Marcas';
 import { Reintento, VerSolucion } from '../componentes/Reintento';
 import { Resultado } from '../componentes/Resultado';
@@ -85,7 +86,7 @@ export function Ordenar({ ejercicio, repeticion, voz, diagnosticar, pistasDeRein
     <div className="columna">
       <p className="instruccion">
         {repeticion ? 'Otra vez: ' : ''}
-        {ejercicio.instruccion}
+        <ConNeerlandes texto={ejercicio.instruccion} />
       </p>
       <p className="enunciado">{ejercicio.significado}</p>
 

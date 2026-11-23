@@ -10,6 +10,7 @@ import type { Voz } from '../../estado/voz';
 import { calificacionDe, corregir, normalizar, type Calificacion, type Correccion, type Diagnostico, type EjercicioEscrito, type Veredicto } from '../../motor';
 import { Boton } from '../componentes/Boton';
 import { BotonVoz } from '../componentes/BotonVoz';
+import { ConNeerlandes } from '../componentes/ConNeerlandes';
 import { Marcas } from '../componentes/Marcas';
 import { Reintento, VerSolucion } from '../componentes/Reintento';
 import { Resultado } from '../componentes/Resultado';
@@ -119,13 +120,17 @@ export function Escrito({ ejercicio, repeticion, voz, diagnosticar, pistasDeRein
     <form className="columna" onSubmit={alEnviar}>
       <p className="instruccion">
         {repeticion ? 'Otra vez: ' : ''}
-        {ejercicio.instruccion}
+        <ConNeerlandes texto={ejercicio.instruccion} />
       </p>
 
       {ejercicio.forma === 'traducir' ? (
         <>
           <p className="enunciado">{ejercicio.significado}</p>
-          {ejercicio.pista ? <p className="pista">{ejercicio.pista}</p> : null}
+          {ejercicio.pista ? (
+            <p className="pista">
+              <ConNeerlandes texto={ejercicio.pista} />
+            </p>
+          ) : null}
         </>
       ) : null}
 
@@ -146,7 +151,8 @@ export function Escrito({ ejercicio, repeticion, voz, diagnosticar, pistasDeRein
               ref={campo}
               className="campo campo--hueco"
               value={respuesta}
-              aria-label={`Hueco: ${ejercicio.pista}`}
+              // Dentro de la frase en neerlandés: el hueco se llama por la palabra que hay que poner, también en neerlandés.
+              aria-label={ejercicio.pista}
               placeholder={ejercicio.pista}
               readOnly={resuelto}
               onChange={(e) => {

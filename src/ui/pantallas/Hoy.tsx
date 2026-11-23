@@ -7,6 +7,7 @@ import { preverRonda } from '../../estado/ronda';
 import { useAhora } from '../../estado/useAhora';
 import { diaDe, racha, respuestasHoy, resumirPista, vistosPorPista, type Datos, type OpcionesRonda, type Pista } from '../../motor';
 import { Boton } from '../componentes/Boton';
+import { ConNeerlandes } from '../componentes/ConNeerlandes';
 
 interface Props {
   readonly pistas: readonly Pista[];
@@ -78,7 +79,9 @@ export function Hoy({ pistas, datos, opciones, onEmpezar }: Props): ReactElement
               {resumen.vistos}/{resumen.total}
             </span>
           </div>
-          <p className="texto-2 pequeno">{pista.descripcion}</p>
+          <p className="texto-2 pequeno">
+            <ConNeerlandes texto={pista.descripcion} />
+          </p>
           <div className="fila fila--entre">
             <span className="texto-3">
               {resumen.paraRepasar} por repasar · {resumen.nuevosDisponibles} {resumen.nuevosDisponibles === 1 ? 'nueva' : 'nuevas'}

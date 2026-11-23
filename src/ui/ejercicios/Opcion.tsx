@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { Voz } from '../../estado/voz';
 import type { Calificacion, Diagnostico, EjercicioOpcion } from '../../motor';
+import { ConNeerlandes } from '../componentes/ConNeerlandes';
 import { Resultado } from '../componentes/Resultado';
 
 interface Props {
@@ -28,7 +29,7 @@ export function Opcion({ ejercicio, repeticion, voz, diagnosticar, onTerminar }:
     <div className="columna">
       <p className="instruccion">
         {repeticion ? 'Otra vez: ' : ''}
-        {ejercicio.instruccion}
+        <ConNeerlandes texto={ejercicio.instruccion} />
       </p>
       <p className={ejercicio.enunciadoEnIdioma ? 'enunciado enunciado--nl' : 'enunciado'} lang={ejercicio.enunciadoEnIdioma ? 'nl' : 'es'}>
         {ejercicio.enunciado}
@@ -58,7 +59,7 @@ export function Opcion({ ejercicio, repeticion, voz, diagnosticar, onTerminar }:
       {elegida !== null ? (
         <Resultado
           bien={acierto}
-          titulo={acierto ? 'Bien' : `Era «${ejercicio.respuestaCorrecta}»`}
+          titulo={acierto ? 'Bien' : ejercicio.opcionesEnIdioma ? `Era «${ejercicio.respuestaCorrecta}»` : `Era “${ejercicio.respuestaCorrecta}”`}
           voz={voz}
           audio={ejercicio.audio}
           aclaracion={ejercicio.aclaracion}

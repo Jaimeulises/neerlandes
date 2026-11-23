@@ -151,7 +151,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           titulo: conInterrogativa ? `En la pregunta, el verbo va justo detrás de ${cita(p.interrogativa)}` : 'En la pregunta, el verbo va primero',
           texto: conInterrogativa
             ? `Después de ${cita(p.interrogativa)} va el verbo (${cita(verboBueno)}) y luego el sujeto (${cita(p.sujeto)}): ${frase} Con el sujeto delante, suena a subordinada (como en «Ik weet niet waar je zus woont»), no a pregunta.${notaJij}`
-            : `En una pregunta de sí o no, el verbo (${cita(verboBueno)}) va delante del sujeto (${cita(p.sujeto)}): ${frase} En inglés se usa do o se cambia el orden con el auxiliar; en neerlandés siempre se pone delante el verbo, sea el que sea.${notaJij}`,
+            : `En una pregunta de sí o no, el verbo (${cita(verboBueno)}) va delante del sujeto (${cita(p.sujeto)}): ${frase} En inglés se usa “do” o se cambia el orden con el auxiliar; en neerlandés siempre se pone delante el verbo, sea el que sea.${notaJij}`,
           pista: conInterrogativa
             ? `En inglés, la pregunta se apoya en “do” o “does”. En neerlandés no existen: ¿qué hace entonces el verbo conjugado?${pistaJij}`
             : `Tal como está, es una afirmación. En inglés empezarías por “do” o por el auxiliar; en neerlandés, ¿qué va primero?${pistaJij}`,
@@ -188,7 +188,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           caso: 'inversion-niet',
           destreza: 'inversion',
           titulo: 'El verbo conjugado va en segunda posición',
-          texto: `${principio}, y niet después: ${conSujeto ?? frase}${fin} En español el «no» va delante del verbo; en neerlandés, niet nunca va entre el sujeto y el verbo conjugado.`,
+          texto: `${principio}, y «niet» después: ${conSujeto ?? frase}${fin} En español el “no” va delante del verbo; en neerlandés, «niet» nunca va entre el sujeto y el verbo conjugado.`,
           pista: `Has puesto ${cita('niet')} delante del verbo, como el “no” del español. En neerlandés, ¿en qué posición va siempre el verbo conjugado?`,
         });
       } else {
@@ -213,7 +213,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
         caso: 'separable-pegado',
         destreza: 'separables',
         titulo: `${cita(pegada)} se separa en la frase principal`,
-        texto: `Con el verbo conjugado en la principal, la partícula ${cita(particula)} se separa y se va al final: ${frase}${fin} Solo va pegada con un modal, en una subordinada y en el participio (con opbellen: «ik wil je opbellen», «omdat ik je opbel», «opgebeld»).`,
+        texto: `Con el verbo conjugado en la principal, la partícula ${cita(particula)} se separa y se va al final: ${frase}${fin} Solo va pegada con un modal, en una subordinada y en el participio (con «opbellen»: «ik wil je opbellen», «omdat ik je opbel», «opgebeld»).`,
         pista: `${cita(pegada)} es un verbo separable. ¿Qué le pasa a un separable cuando va conjugado en la frase principal?`,
       });
     }
@@ -318,8 +318,8 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     anadir({
       caso: 'geen',
       destreza: 'niet',
-      titulo: `Aquí va geen, no niet`,
-      texto: `Con un sustantivo sin artículo o con een (${cita(modelo.slice(i + 1, i + 2))}), la negación es geen: ${frase}${fin} Niet niega el verbo, un adjetivo o algo definido (de, het, mijn…).`,
+      titulo: `Aquí va «geen», no «niet»`,
+      texto: `Con un sustantivo sin artículo o con «een» (${cita(modelo.slice(i + 1, i + 2))}), la negación es «geen»: ${frase}${fin} «Niet» niega el verbo, un adjetivo o algo definido («de, het, mijn…»).`,
       // El mismo criterio sirve en las dos direcciones: la pista no dice cuál de las dos negaciones falla.
       pista: `Mira qué niegas: ¿un sustantivo sin artículo o con ${cita('een')}, o un verbo, un adjetivo o algo definido? En neerlandés no se niegan igual.`,
     });
@@ -341,8 +341,8 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
       anadir({
         caso: 'niet-sitio',
         destreza: 'niet',
-        titulo: `Niet va ${donde}`,
-        texto: `Niet va detrás del verbo, del cuándo (morgen, vandaag…) y del objeto definido (het, de film, hem), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar: ${frase}${fin} En inglés va pegado al auxiliar (“I have not seen it”); en neerlandés se mueve.`,
+        titulo: `«Niet» va ${donde}`,
+        texto: `«Niet» va detrás del verbo, del cuándo («morgen, vandaag…») y del objeto definido («het, de film, hem»), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar: ${frase}${fin} En inglés va pegado al auxiliar (“I have not seen it”); en neerlandés se mueve.`,
         pista: `${cita('niet')} no va donde iría “not” en inglés. Piensa qué niega: ¿qué palabras de la frase tienen que quedar antes que ${cita('niet')}?`,
       });
     }

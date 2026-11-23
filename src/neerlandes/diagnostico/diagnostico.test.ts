@@ -333,7 +333,7 @@ describe('lo que el inventario de la fase 1 encontró mal explicado', () => {
   it('je de «je zus» no es el sujeto: la -t no se cae', () => {
     const d = diagnostico('Waar woont je zus', 'Waar woon je zus?');
     expect(casos(d)).toEqual(['presente-je-posesivo']);
-    expect(d[0]?.texto).toContain('«tu»');
+    expect(d[0]?.texto).toContain('“tu”');
   });
 
   it('un irregular hecho con la regla se reconoce como el mismo verbo', () => {

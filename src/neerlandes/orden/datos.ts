@@ -35,7 +35,7 @@ export const NOMBRES_GRUPO_ORDEN: Readonly<Record<GrupoOrden, string>> = {
   modal: 'Verbos modales',
   perfectum: 'Perfectum',
   separables: 'Verbos separables',
-  niet: 'Niet y geen',
+  niet: '«Niet» y «geen»',
   preguntas: 'Preguntas',
   subordinada: 'Subordinadas',
   'subordinada-delante': 'Subordinada delante',
@@ -44,18 +44,18 @@ export const NOMBRES_GRUPO_ORDEN: Readonly<Record<GrupoOrden, string>> = {
 /** La regla de cada grupo, en una o dos frases, para presentarla y recordarla al corregir. */
 export const REGLAS_ORDEN: Readonly<Record<GrupoOrden, string>> = {
   inversion:
-    'Si la frase empieza por algo que no es el sujeto (morgen, vandaag, in het weekend…), el verbo va en segunda posición y el sujeto justo detrás. En inglés se dice «Now I have time»; en neerlandés, «Nu heb ik tijd». En, maar y want no cuentan: detrás va el orden normal («want ik ben moe»).',
+    'Si la frase empieza por algo que no es el sujeto («morgen, vandaag, in het weekend…»), el verbo va en segunda posición y el sujeto justo detrás. En inglés se dice “Now I have time”; en neerlandés, «Nu heb ik tijd». «En», «maar» y «want» no cuentan: detrás va el orden normal («want ik ben moe»).',
   modal:
-    'Con willen, kunnen, moeten, mogen, zullen o gaan + infinitivo, ese verbo va en segunda posición (en primera si es una pregunta de sí o no: «Kun je me helpen?») y el infinitivo se va al final.',
+    'Con «willen», «kunnen», «moeten», «mogen», «zullen» o «gaan» + infinitivo, ese verbo va en segunda posición (en primera si es una pregunta de sí o no: «Kun je me helpen?») y el infinitivo se va al final.',
   perfectum:
-    'En el perfectum, hebben o zijn van en segunda posición (en primera si es una pregunta de sí o no: «Heb je al gegeten?») y el participio se va al final de la frase.',
+    'En el perfectum, «hebben» o «zijn» van en segunda posición (en primera si es una pregunta de sí o no: «Heb je al gegeten?») y el participio se va al final de la frase.',
   separables:
-    'En los verbos separables (opbellen, opstaan, meenemen…), cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y se va al final. Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Con un modal o en una subordinada va pegada al verbo: «Ik wil je opbellen», «omdat ik je opbel».',
-  niet: 'Niet va detrás del verbo, de las palabras que dicen cuándo (morgen, vandaag, vanavond…) y del objeto definido (de film, mijn fiets, het, hem), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar. Con un sustantivo sin artículo o con een, se usa geen.',
+    'En los verbos separables («opbellen, opstaan, meenemen…»), cuando el verbo va conjugado en la frase principal, en presente o en pasado, la partícula se separa y se va al final. Un complemento con preposición puede ir aún detrás: «ik bel je op na het eten». Con un modal o en una subordinada va pegada al verbo: «Ik wil je opbellen», «omdat ik je opbel».',
+  niet: '«Niet» va detrás del verbo, de las palabras que dicen cuándo («morgen, vandaag, vanavond…») y del objeto definido («de film, mijn fiets, het, hem»), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar. Con un sustantivo sin artículo o con «een», se usa «geen».',
   preguntas:
-    'En las preguntas el verbo va primero, o justo detrás de la palabra interrogativa (wat, waar, hoe…). Si el sujeto es jij o je y va detrás del verbo, el verbo pierde la -t: «Drink jij koffie?». Si je es «tu», la -t se queda: «Waar werkt je vriend?».',
+    'En las preguntas el verbo va primero, o justo detrás de la palabra interrogativa («wat, waar, hoe…»). Si el sujeto es «jij» o «je» y va detrás del verbo, el verbo pierde la -t: «Drink jij koffie?». Si «je» es “tu”, la -t se queda: «Waar werkt je vriend?».',
   subordinada:
-    'Después de dat, omdat, als, of (si), waar… el verbo conjugado se va al final de esa parte de la frase: «omdat ik moe ben». Si hay también un infinitivo o un participio, los verbos van juntos al final: «dat ik morgen moet werken», «dat ik het heb gezien» o «dat ik het gezien heb».',
+    'Después de «dat», «omdat», «als», «of» (si), «waar»… el verbo conjugado se va al final de esa parte de la frase: «omdat ik moe ben». Si hay también un infinitivo o un participio, los verbos van juntos al final: «dat ik morgen moet werken», «dat ik het heb gezien» o «dat ik het gezien heb».',
   'subordinada-delante':
     'Si la frase empieza por la subordinada, esa subordinada ocupa la primera posición y se cierra con una coma: la principal sigue con el verbo y después el sujeto («Als het regent, neem ik de tram»).',
 };

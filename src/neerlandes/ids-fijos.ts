@@ -284,7 +284,7 @@ export const IDS_FIJOS: Readonly<Record<string, string>> = {
  * lleva el siguiente número y se sube aquí; nunca se baja. Con RETIRADOS, garantiza que un código borrado no vuelve a
  * usarse para otra cosa: lo nuevo no hereda el historial ni lo revisado de lo que hubo antes.
  */
-export const ULTIMO_CODIGO: Readonly<Record<'O' | 'R' | 'V' | 'S' | 'P' | 'E' | 'T', number>> = { O: 64, R: 14, V: 58, S: 15, P: 128, E: 43, T: 29 };
+export const ULTIMO_CODIGO: Readonly<Record<'O' | 'R' | 'V' | 'S' | 'P' | 'E' | 'T', number>> = { O: 64, R: 14, V: 58, S: 15, P: 128, E: 43, T: 33 };
 
 /** Códigos de lo que ya no está: no se vuelven a usar, para que nada nuevo herede su historial ni su revisión. */
 export const RETIRADOS: readonly string[] = [

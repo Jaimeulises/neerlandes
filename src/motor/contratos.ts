@@ -132,10 +132,13 @@ export interface Presentacion {
   /** Una segunda línea, por ejemplo la regla de gramática. */
   readonly detalle?: string;
   /** Formas que conviene ver juntas (una conjugación), si las hay. */
-  readonly tabla?: readonly (readonly [string, string])[];
+  readonly tabla?: readonly (readonly [CeldaDeTabla, CeldaDeTabla])[];
   /** Frases de ejemplo, cada una con su traducción. */
   readonly ejemplos?: readonly Ejemplo[];
 }
+
+/** Una celda de la tabla: texto en el idioma que se aprende, o una etiqueta en el de la interfaz (como «pregunta»). */
+export type CeldaDeTabla = string | { readonly etiqueta: string };
 
 /** Una frase en el idioma que se aprende y lo que dice en el de la interfaz. */
 export interface Ejemplo {

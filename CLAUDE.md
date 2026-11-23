@@ -19,7 +19,7 @@ Stap (nombre provisional) es una app personal para practicar neerlandés hablado
 
 ## El neerlandés, con cuidado
 
-- Todo el neerlandés en pantalla lleva `lang="nl"`.
+- Todo el neerlandés en pantalla lleva `lang="nl"`. Dentro de un texto en español va entre «», que `ConNeerlandes` marca como neerlandés; lo citado en español o en inglés va entre “”. Lo comprueba `src/neerlandes/marcado.test.ts`.
 - El significado en español de cada palabra es único en todo el vocabulario, para que cada ejercicio tenga una sola respuesta buena. Las demás formas válidas van en `otras`.
 - Cada frase de orden lleva en `otras` las demás formas naturales de decirla: si falta una, el corrector suspende una respuesta buena.
 - Los participios regulares siguen la regla de ’t kofschip y las pruebas lo comprueban; los irregulares van marcados.

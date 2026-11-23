@@ -204,7 +204,7 @@ describe('qué se enseña antes de preguntarlo', () => {
       expect(ELEMENTOS_VERBOS.some((e) => e.grupo === grupo && e.verbo?.inf === ejemplo), grupo).toBe(true);
       const p = verbos.presentar?.(abre);
       expect(p?.etiqueta, grupo).toMatch(/^Regla nueva/);
-      const palabras = new Set(normalizar([p?.principal, p?.audio, p?.detalle, ...(p?.tabla ?? []).flat(), ...(p?.ejemplos ?? []).map((x) => x.texto)].join(' ')).split(' '));
+      const palabras = new Set(normalizar([p?.principal, p?.audio, p?.detalle, ...(p?.tabla ?? []).flat().map((c) => (typeof c === 'string' ? c : c.etiqueta)), ...(p?.ejemplos ?? []).map((x) => x.texto)].join(' ')).split(' '));
       for (const e of ELEMENTOS_VERBOS.filter((x) => x.grupo === grupo && x.verbo?.inf !== ejemplo)) {
         const v = e.verbo;
         if (!v || (grupo === 'presente' && v.presente !== undefined)) continue;
