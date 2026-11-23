@@ -4,6 +4,8 @@
 // frase escrita o de unas fichas con el orden del inglés, y lo que pasa con lo
 // guardado: restaurar una copia, no poder abrirlo y volver a la app otro día.
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NOMBRE_APP } from '../estado/app';
@@ -621,6 +623,26 @@ describe('decir la frase con cuenta atrás', () => {
     expect(document.querySelector('.resultado--neutro')).not.toBeNull();
   });
 
+  it('“Me he equivocado” se ve como un botón sobre el panel, en el tema claro y en el oscuro', async () => {
+    await montarDecir([]);
+    await pulsar(boton('Ya la he dicho'));
+    const panel = document.querySelector('.resultado--neutro');
+    if (!panel) throw new Error('falta el panel');
+    const equivocado = boton('Me he equivocado');
+    const colores = (['claro', 'oscuro'] as const).map((tema) => {
+      const quitar = ponerEstilos(tema);
+      try {
+        return { tema, panel: getComputedStyle(panel).backgroundColor, boton: getComputedStyle(equivocado).backgroundColor };
+      } finally {
+        quitar();
+      }
+    });
+    // Los estilos se han aplicado, cada tema con sus colores: si no, la comparación no diría nada.
+    expect(colores[0]?.panel).not.toBe('rgba(0, 0, 0, 0)');
+    expect(colores[0]?.panel).not.toBe(colores[1]?.panel);
+    for (const c of colores) expect(c.boton, c.tema).not.toBe(c.panel);
+  });
+
   it('tras equivocarse se dice otra vez con la buena antes de seguir, y cuenta como fallo', async () => {
     const calificaciones: string[] = [];
     await montarDecir([], { calificaciones });
@@ -632,6 +654,31 @@ describe('decir la frase con cuenta atrás', () => {
     expect(calificaciones).toEqual(['otra_vez']);
   });
 });
+
+/**
+ * Pone en la página los estilos de la app con los colores de un tema y devuelve cómo quitarlos. jsdom no aplica lo
+ * que va dentro de @media, así que el tema oscuro se pone copiando sus colores detrás de los claros. La ruta no va
+ * con new URL(…, import.meta.url): Vite lo convierte en una dirección web y se leería otra cosa.
+ */
+function ponerEstilos(tema: 'claro' | 'oscuro'): () => void {
+  const hojas = ['tokens.css', 'base.css', 'componentes.css'].map((archivo) => {
+    const hoja = document.createElement('style');
+    hoja.textContent = readFileSync(join(import.meta.dirname, 'estilos', archivo), 'utf8');
+    document.head.append(hoja);
+    return hoja;
+  });
+  if (tema === 'oscuro') {
+    const oscuro = [...(hojas[0]?.sheet?.cssRules ?? [])].find((r): r is CSSMediaRule => r instanceof CSSMediaRule && r.media.mediaText.includes('dark'));
+    if (!oscuro) throw new Error('faltan los colores del tema oscuro');
+    const hoja = document.createElement('style');
+    hoja.textContent = [...oscuro.cssRules].map((r) => r.cssText).join('\n');
+    document.head.append(hoja);
+    hojas.push(hoja);
+  }
+  return () => {
+    for (const hoja of hojas) hoja.remove();
+  };
+}
 
 function fraseDeMorgen(): Frase {
   const f = ELEMENTOS_ORDEN.find((e) => e.frase.startsWith('Morgen ga ik'));
