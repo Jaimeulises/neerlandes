@@ -30,6 +30,13 @@ function diagnostico(texto: string, respuesta: string): readonly Diagnostico[] {
   return orden.diagnosticar?.(traducir(f), respuesta) ?? [];
 }
 
+/** El ejercicio de traducir la frase en perfectum de un verbo. */
+function perfectumDe(inf: string): Ejercicio {
+  const v = ELEMENTOS_VERBOS.find((x) => x.grupo.startsWith('perfectum') && x.verbo?.inf === inf);
+  if (!v) throw new Error(`falta ${inf}`);
+  return verbos.crearEjercicio(v, contexto);
+}
+
 const destrezas = (ds: readonly Diagnostico[]): string[] => ds.map((d) => d.destreza);
 const IDS = new Set<string>(DESTREZAS.map((d) => d.id));
 const CASOS_VALIDOS = new Set<string>(CASOS);
@@ -579,11 +586,6 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(casos(verbos.diagnosticar?.(perfectum, 'Ik heb de hele dag gewerkd') ?? [])).toEqual(['participio-kofschip']);
     // Sin auxiliar, tampoco lo que se escribe como una forma conjugada, aunque los datos no traigan ese pasado
     // («belde», «trouwden») o sea el presente («spelen»).
-    const perfectumDe = (inf: string): Ejercicio => {
-      const v = ELEMENTOS_VERBOS.find((x) => x.grupo.startsWith('perfectum') && x.verbo?.inf === inf);
-      if (!v) throw new Error(`falta ${inf}`);
-      return verbos.crearEjercicio(v, contexto);
-    };
     for (const [inf, r] of [
       ['bellen', 'Mijn moeder belde gisteren'],
       ['bellen', 'Gisteren belde mijn moeder'],
@@ -607,5 +609,16 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(casos(verbos.diagnosticar?.(perfectumDe('zijn'), 'Ik heb nog nooit in Groningen geweest') ?? [])).toEqual(['auxiliar-zijn']);
     // Un participio mal formado no mueve «niet»: lo que falla es el participio.
     expect(casos(verbos.diagnosticar?.(perfectumDe('begrijpen'), 'Ik heb het niet begrijpt') ?? [])).toEqual(['participio-irregular']);
+  });
+
+  it('con hebben y zijn, un participio mal escrito no hace que la frase vaya en otro tiempo', () => {
+    // El auxiliar es del mismo verbo que el participio, pero lo que va al final con ge- intenta ser el participio
+    // («gehat» es escribirlo como suena).
+    expect(casos(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik heb vorige week griep gehat') ?? [])).toEqual(['participio-irregular']);
+    expect(casos(verbos.diagnosticar?.(perfectumDe('hebben'), 'Vorige week heb ik griep gehat') ?? [])).toEqual(['participio-irregular']);
+    expect(casos(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik hebt vorige week griep gehat') ?? [])).toEqual(['presente-otra', 'participio-irregular']);
+    expect(casos(verbos.diagnosticar?.(perfectumDe('zijn'), 'Ik ben nog nooit in Groningen gewest') ?? [])).toEqual(['participio-irregular']);
+    // Sin participio sigue siendo otro tiempo.
+    expect(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik had vorige week griep')).toEqual([]);
   });
 });

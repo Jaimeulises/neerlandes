@@ -133,9 +133,11 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     if (iOtroVerbo >= 0 && iOtroVerbo < iVerbo) iVerbo = -1;
     if (p.tipoFinal === 'participio') {
       const participio = p.finales.at(-1) ?? '';
-      // Con el auxiliar, lo que va detrás y es del verbo del participio intenta serlo («ik ben … was»); sin él, lo
-      // que no se escribe como una forma conjugada.
-      const intentaParticipio = (w: string, i: number): boolean => w === participio || (mismoVerbo(w, participio) && (iVerbo >= 0 ? i > iVerbo : !pareceConjugada(w, participio)));
+      // Con el auxiliar, lo que va detrás y es del verbo del participio intenta serlo («ik ben … was»), y también lo
+      // que empieza por ge- al final, como en la comprobación del participio («ik heb … gehat»); sin él, lo que es
+      // del verbo y no se escribe como una forma conjugada.
+      const intentaParticipio = (w: string, i: number): boolean =>
+        w === participio || (iVerbo >= 0 ? i > iVerbo && (mismoVerbo(w, participio) || (w.startsWith('ge') && i >= u.length - 2)) : mismoVerbo(w, participio) && !pareceConjugada(w, participio));
       enOtroTiempo = !u.some(intentaParticipio) && (iVerbo < 0 ? u.some((w) => pareceConjugada(w, participio)) : pareceConjugada(u[iVerbo] ?? '', participio));
     }
     const dada = exacto < 0 ? u[iVerbo] : undefined;
