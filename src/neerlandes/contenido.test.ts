@@ -381,6 +381,32 @@ describe('lo que se da por bueno al responder', () => {
   });
 });
 
+describe('decir la frase', () => {
+  it('enseña con la frase todas las formas que valdrían al escribirla, y el nivel de su regla para la cuenta atrás', () => {
+    const conDominio: ContextoEjercicio = { ...contextoDe(1, 3, new Set(['decir'])), dominio: () => 0.9 };
+    for (const f of ELEMENTOS_ORDEN) {
+      const e = ejercicioDeFrase(f, 'decir', conDominio);
+      if (e.forma !== 'decir') throw new Error(f.codigo);
+      expect([e.texto, ...(e.otras ?? [])], f.codigo).toEqual(f.validas);
+      expect(e.dominio, f.codigo).toBe(0.9);
+    }
+    let dichas = 0;
+    for (const e of ELEMENTOS_VERBOS.filter((x) => x.grupo === 'perfectum' || x.grupo === 'perfectum-irregular')) {
+      for (let semilla = 1; semilla <= 40; semilla++) {
+        const ej = verbos.crearEjercicio(e, { ...contextoDe(semilla, 3, new Set(['decir'])), dominio: () => 0.3 });
+        if (ej.forma !== 'decir') continue;
+        dichas++;
+        const traducir = verbos.crearEjercicio(e, contextoDe(semilla, 3, new Set(['traducir'])));
+        if (traducir.forma !== 'traducir') throw new Error(e.id);
+        // Al traducir también valen las formas tónicas de los pronombres; al decir se enseñan las apuntadas.
+        for (const forma of [ej.texto, ...(ej.otras ?? [])]) expect(traducir.respuestas, `${e.id}: ${forma}`).toContain(forma);
+        expect(ej.dominio, e.id).toBe(0.3);
+      }
+    }
+    expect(dichas).toBeGreaterThan(0);
+  });
+});
+
 describe('lo que se ofrece como opción', () => {
   it('las opciones malas se toman en el orden en que llegan, sin repetir', () => {
     for (let semilla = 1; semilla <= 20; semilla++) {

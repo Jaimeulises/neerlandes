@@ -105,7 +105,11 @@ export interface EjercicioDecir extends EjercicioBase {
   readonly significado: string;
   /** La frase buena, que se enseña después de decirla. */
   readonly texto: string;
+  /** Las demás formas buenas, que se enseñan con ella: no hace falta decirla igual. */
+  readonly otras?: readonly string[];
   readonly pista?: string;
+  /** El dominio (de 0 a 1) de lo que se practica, si se sabe: la cuenta atrás aprieta más si se domina y menos si está flojo. */
+  readonly dominio?: number;
 }
 
 export type Ejercicio = EjercicioOpcion | EjercicioOrdenar | EjercicioTraducir | EjercicioCompletar | EjercicioDictado | EjercicioDecir;

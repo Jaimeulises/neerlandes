@@ -25,10 +25,11 @@ import {
 } from '../motor';
 import { vozGrabada } from '../neerlandes/audio';
 import { boton, buscarBoton, enPantalla, escribirEn, esperar, limpiar, montar, prepararNavegador, pulsar } from '../pruebas/pantalla';
+import type { TiempoDecir } from '../estado/ajustes';
 import type { Voz } from '../estado/voz';
 import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../neerlandes/orden/pista';
 import { App } from './App';
-import { Decir, segundosParaDecir } from './ejercicios/Decir';
+import { Decir, PAUSA_ANTES_DE_SONAR, segundosParaDecir } from './ejercicios/Decir';
 import { Escrito } from './ejercicios/Escrito';
 import { Ordenar } from './ejercicios/Ordenar';
 
@@ -140,6 +141,21 @@ describe('la app de punta a punta', () => {
     expect(JSON.parse(localStorage.getItem('stap/ajustes') ?? '{}')).toMatchObject({ gruposAbiertos: true });
     await pulsar(boton('Progreso'));
     expect(enPantalla()).toContain('Todos los grupos están abiertos');
+  });
+
+  it('el tiempo para decir la frase se elige y se guarda; lo que no se entienda vuelve a normal', async () => {
+    prepararNavegador();
+    localStorage.setItem('stap/ajustes', JSON.stringify({ tiempoDecir: 'mucho' }));
+    await montar(<App almacen={almacenEnMemoria()} />);
+    await pulsar(boton('Ajustes'));
+    const grupo = document.querySelector('[role="group"][aria-label="Tiempo para decir la frase"]');
+    const pulsado = (): string | undefined => grupo?.querySelector('[aria-pressed="true"]')?.textContent ?? undefined;
+    expect(pulsado()).toBe('Normal');
+    const calma = [...(grupo?.querySelectorAll('button') ?? [])].find((b) => b.textContent === 'Con calma');
+    if (!calma) throw new Error('falta Con calma');
+    await pulsar(calma);
+    expect(pulsado()).toBe('Con calma');
+    expect(JSON.parse(localStorage.getItem('stap/ajustes') ?? '{}')).toMatchObject({ tiempoDecir: 'calma' });
   });
 });
 
@@ -410,13 +426,14 @@ describe('decir la frase con cuenta atrás', () => {
     forma: 'decir',
     tipo: 'prueba',
     elementoId: 'x',
-    instruccion: 'Dila en voz alta antes de que se acabe el tiempo',
+    instruccion: 'Dila en voz alta antes de verla',
     significado: 'Hoy trabajo en casa.',
     texto: 'Vandaag werk ik thuis.',
+    otras: ['Ik werk vandaag thuis.'],
   };
-  const total = segundosParaDecir(ejercicio.texto);
+  const total = segundosParaDecir(ejercicio) ?? 0;
 
-  async function montarDecir(dichas: string[]): Promise<void> {
+  async function montarDecir(dichas: string[], opciones: { tiempo?: TiempoDecir; calificaciones?: string[] } = {}): Promise<void> {
     // Solo el reloj de la cuenta es de mentira: montar y esperar usan setTimeout de verdad.
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     prepararNavegador();
@@ -427,7 +444,17 @@ describe('decir la frase con cuenta atrás', () => {
         dichas.push(t);
       },
     };
-    await montar(<Decir ejercicio={ejercicio} repeticion={false} voz={voz} onTerminar={() => undefined} />);
+    await montar(
+      <Decir
+        ejercicio={ejercicio}
+        repeticion={false}
+        voz={voz}
+        {...(opciones.tiempo ? { tiempo: opciones.tiempo } : {})}
+        onTerminar={(c) => {
+          opciones.calificaciones?.push(c);
+        }}
+      />,
+    );
   }
 
   function pasan(segundos: number): void {
@@ -441,14 +468,30 @@ describe('decir la frase con cuenta atrás', () => {
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
   });
 
-  it('dura más cuanto más larga es la frase, entre 5 y 8 segundos', () => {
-    expect(segundosParaDecir('Ja.')).toBe(5);
-    expect(segundosParaDecir('Vandaag werk ik thuis.')).toBe(5);
-    expect(segundosParaDecir('Ik wil morgen een nieuwe fiets kopen.')).toBe(7);
-    expect(segundosParaDecir('In het weekend fietsen we vaak met de kinderen naar het strand.')).toBe(8);
+  it('da el tiempo de leer el español y decir la frase, entre 6 y 12 segundos', () => {
+    expect(segundosParaDecir({ texto: 'Ja.', significado: 'Sí.' })).toBe(6);
+    expect(segundosParaDecir({ texto: 'Vandaag werk ik thuis.', significado: 'Hoy trabajo en casa.' })).toBe(6);
+    // 2 + 0,25 por 6 palabras leídas + 0,7 por 7 dichas: 8,4.
+    expect(segundosParaDecir({ texto: 'Ik wil morgen een nieuwe fiets kopen.', significado: 'Mañana quiero comprar una bici nueva.' })).toBe(8);
+    // La pista también se lee.
+    expect(segundosParaDecir({ texto: 'Ik wil morgen een nieuwe fiets kopen.', significado: 'Mañana quiero comprar una bici nueva.', pista: 'Con el verbo willen, que es modal.' })).toBe(10);
+    expect(segundosParaDecir({ texto: 'In het weekend fietsen we vaak met de kinderen naar het strand.', significado: 'Los fines de semana vamos a menudo en bici a la playa con los niños.' })).toBe(12);
   });
 
-  it('al acabar la cuenta se ve la frase y suena, una sola vez', async () => {
+  it('aprieta más con la regla dominada y menos con la regla floja', () => {
+    const frase = { texto: 'Ik wil morgen een nieuwe fiets kopen.', significado: 'Mañana quiero comprar una bici nueva.' };
+    expect(segundosParaDecir({ ...frase, dominio: 0.6 })).toBe(8);
+    expect(segundosParaDecir({ ...frase, dominio: 0.9 })).toBe(7);
+    expect(segundosParaDecir({ ...frase, dominio: 0.2 })).toBe(11);
+  });
+
+  it('con calma da la mitad más, y sin cuenta atrás no hay tiempo que contar', () => {
+    const frase = { texto: 'Ik wil morgen een nieuwe fiets kopen.', significado: 'Mañana quiero comprar una bici nueva.' };
+    expect(segundosParaDecir(frase, 'calma')).toBe(13);
+    expect(segundosParaDecir(frase, 'sin')).toBeNull();
+  });
+
+  it('al acabar la cuenta se ve la frase y, un momento después, suena una sola vez', async () => {
     const dichas: string[] = [];
     await montarDecir(dichas);
     expect(document.querySelector('[role="timer"]')?.getAttribute('aria-label')).toBe(`Quedan ${String(total)} segundos`);
@@ -457,19 +500,33 @@ describe('decir la frase con cuenta atrás', () => {
     expect(dichas).toEqual([]);
     pasan(1);
     expect(enPantalla()).toContain('Vandaag werk ik thuis.');
+    // Aún no: si se está acabando de decir, la voz no lo pisa.
+    expect(dichas).toEqual([]);
+    pasan(PAUSA_ANTES_DE_SONAR / 1000);
     expect(dichas).toEqual(['Vandaag werk ik thuis.']);
     pasan(10);
     expect(dichas).toHaveLength(1);
   });
 
-  it('se puede ver antes, y la cuenta se para', async () => {
+  it('se puede ver antes, y suena enseguida', async () => {
     const dichas: string[] = [];
     await montarDecir(dichas);
     pasan(2);
     await pulsar(boton('Ya la he dicho'));
     expect(enPantalla()).toContain('Vandaag werk ik thuis.');
     expect(document.querySelector('[role="timer"]')).toBeNull();
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
     pasan(10);
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+  });
+
+  it('sin cuenta atrás, la frase sale solo cuando se pide', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas, { tiempo: 'sin' });
+    expect(document.querySelector('[role="timer"]')).toBeNull();
+    pasan(60);
+    expect(enPantalla()).not.toContain('Vandaag werk ik thuis.');
+    await pulsar(boton('Ya la he dicho'));
     expect(dichas).toEqual(['Vandaag werk ik thuis.']);
   });
 
@@ -480,8 +537,30 @@ describe('decir la frase con cuenta atrás', () => {
     pasan(total + 5);
     expect(enPantalla()).not.toContain('Vandaag werk ik thuis.');
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-    pasan(total);
+    pasan(total + 1);
     expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+  });
+
+  it('pregunta por el sitio y la forma del verbo, enseña las otras formas buenas y no da nada por bueno antes de tiempo', async () => {
+    await montarDecir([]);
+    await pulsar(boton('Ya la he dicho'));
+    expect(enPantalla()).toContain('¿Has puesto el verbo en su sitio y bien conjugado?');
+    expect(enPantalla()).toContain('También vale');
+    const otra = [...document.querySelectorAll('.otras-formas li')];
+    expect(otra.map((li) => [li.textContent, li.getAttribute('lang')])).toEqual([['Ik werk vandaag thuis.', 'nl']]);
+    expect(document.querySelector('.resultado--bien')).toBeNull();
+    expect(document.querySelector('.resultado--neutro')).not.toBeNull();
+  });
+
+  it('tras equivocarse se dice otra vez con la buena antes de seguir, y cuenta como fallo', async () => {
+    const calificaciones: string[] = [];
+    await montarDecir([], { calificaciones });
+    await pulsar(boton('Ya la he dicho'));
+    await pulsar(boton('Me he equivocado'));
+    expect(calificaciones).toEqual([]);
+    expect(enPantalla()).toContain('Dila otra vez en voz alta, ahora con la buena.');
+    await pulsar(boton('Siguiente'));
+    expect(calificaciones).toEqual(['otra_vez']);
   });
 });
 

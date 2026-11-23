@@ -211,7 +211,7 @@ export function Ronda({ pistas, progreso, ajustes, formas, voz, dominio, onRespu
       ) : ejercicio.forma === 'ordenar' ? (
         <Ordenar key={estado.indice} ejercicio={ejercicio} pistasDeReintento={pistasDeReintento} {...props} />
       ) : ejercicio.forma === 'decir' ? (
-        <Decir key={estado.indice} ejercicio={ejercicio} {...props} />
+        <Decir key={estado.indice} ejercicio={ejercicio} tiempo={ajustes.tiempoDecir} {...props} />
       ) : (
         <Escrito key={estado.indice} ejercicio={ejercicio} pistasDeReintento={pistasDeReintento} {...props} />
       )}

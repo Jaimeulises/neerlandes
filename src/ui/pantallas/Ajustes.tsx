@@ -4,7 +4,7 @@
 
 import { useRef, useState, type ReactElement } from 'react';
 import { VERSION_APP } from '../../estado/app';
-import { NOMBRES_FORMA, NUEVOS_POR_RONDA, TAMANOS_RONDA, type Ajustes as DatosAjustes, type Forma } from '../../estado/ajustes';
+import { NOMBRES_FORMA, NOMBRES_TIEMPO_DECIR, NUEVOS_POR_RONDA, TAMANOS_RONDA, TIEMPOS_DECIR, type Ajustes as DatosAjustes, type Forma } from '../../estado/ajustes';
 import { exportarCopia, leerCopia, MENSAJE_DE_ENTREGA, type CopiaLeida } from '../../estado/copia';
 import type { Voz } from '../../estado/voz';
 import { CopiaIlegible, HISTORIAL_VACIO, PROGRESO_VACIO, TODAS_LAS_FORMAS, type Datos } from '../../motor';
@@ -29,9 +29,23 @@ function resumen(d: Datos): string {
   return `${String(vistas)} ${vistas === 1 ? 'cosa vista' : 'cosas vistas'} y ${String(respuestas)} ${respuestas === 1 ? 'respuesta' : 'respuestas'}`;
 }
 
-function Segmentos<T extends number>({ valores, actual, etiqueta, onElegir }: { valores: readonly T[]; actual: T; etiqueta: string; onElegir: (v: T) => void }): ReactElement {
+function Segmentos<T extends string | number>({
+  valores,
+  actual,
+  etiqueta,
+  nombre,
+  ancho = false,
+  onElegir,
+}: {
+  valores: readonly T[];
+  actual: T;
+  etiqueta: string;
+  nombre?: (v: T) => string;
+  ancho?: boolean;
+  onElegir: (v: T) => void;
+}): ReactElement {
   return (
-    <div className="segmentos" role="group" aria-label={etiqueta}>
+    <div className={ancho ? 'segmentos segmentos--ancho' : 'segmentos'} role="group" aria-label={etiqueta}>
       {valores.map((v) => (
         <button
           key={v}
@@ -41,7 +55,7 @@ function Segmentos<T extends number>({ valores, actual, etiqueta, onElegir }: { 
             onElegir(v);
           }}
         >
-          {v}
+          {nombre ? nombre(v) : v}
         </button>
       ))}
     </div>
@@ -201,6 +215,22 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
             />
           </label>
         ))}
+        <div className="ajuste ajuste--apilado">
+          <span>Tiempo para decir la frase</span>
+          <Segmentos
+            valores={TIEMPOS_DECIR}
+            actual={ajustes.tiempoDecir}
+            etiqueta="Tiempo para decir la frase"
+            nombre={(t) => NOMBRES_TIEMPO_DECIR[t]}
+            ancho
+            onElegir={(t) => {
+              onCambiar({ ...ajustes, tiempoDecir: t });
+            }}
+          />
+          <p className="texto-2 pequeno">
+            Normal da el tiempo de leer el español y decir la frase, algo menos si la regla ya la dominas y más si está floja. Con calma, la mitad más. Sin cuenta atrás, la frase sale cuando la pidas.
+          </p>
+        </div>
       </section>
 
       <section className="tarjeta columna" style={{ gap: 10 }}>

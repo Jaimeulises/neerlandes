@@ -63,16 +63,20 @@ export function ejercicioDeFrase(e: Frase, forma: Ejercicio['forma'], contexto: 
         respuestas: conFormasTonicas(e.validas),
         ...(e.pista ? { pista: e.pista } : {}),
       };
-    case 'decir':
+    case 'decir': {
+      const dominio = contexto.dominio?.(DESTREZA_DE_GRUPO[e.grupo]) ?? null;
       return {
         ...base,
         forma: 'decir',
         tipo: `${prefijo}.decir`,
-        instruccion: 'Dila en voz alta antes de que se acabe el tiempo',
+        instruccion: 'Dila en voz alta antes de verla',
         significado: e.es,
         texto: e.frase,
+        otras: e.validas.slice(1),
         ...(e.pista ? { pista: e.pista } : {}),
+        ...(dominio === null ? {} : { dominio }),
       };
+    }
     case 'dictado':
       return {
         ...base,

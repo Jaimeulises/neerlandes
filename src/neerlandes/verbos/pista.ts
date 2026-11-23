@@ -274,18 +274,20 @@ function traducirFrase(e: Verbo, perf: readonly [string, string], otras: readonl
   };
 }
 
-function decirFrase(e: Verbo, perf: readonly [string, string], tipo: string, pista: string, aclaracion: string): Ejercicio {
+function decirFrase(e: Verbo, perf: readonly [string, string], otras: readonly string[], tipo: string, pista: string, aclaracion: string, dominio: number | null): Ejercicio {
   const [nl, es] = perf;
   return {
     forma: 'decir',
     tipo,
     elementoId: e.id,
-    instruccion: 'Dila en voz alta antes de que se acabe el tiempo',
+    instruccion: 'Dila en voz alta antes de verla',
     significado: es,
     texto: comoFrase(nl),
+    otras: otras.map((o) => comoFrase(o)),
     pista,
     audio: comoFrase(nl),
     aclaracion,
+    ...(dominio === null ? {} : { dominio }),
   };
 }
 
@@ -301,7 +303,8 @@ function ejercicioPerfectum(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio
   const aclaracion = reglaPerfectum(v);
   if (contexto.repeticiones === 0) return completarParticipio(e, v.inf, participio, perf, aclaracion);
   // Si el participio ya se domina, se practica sobre todo en la frase entera.
-  const domina = (contexto.dominio?.(v.irregular ? 'participio-irregular' : 'participio') ?? 0) >= UMBRAL_DOMINADA;
+  const dominio = contexto.dominio?.(v.irregular ? 'participio-irregular' : 'participio') ?? null;
+  const domina = (dominio ?? 0) >= UMBRAL_DOMINADA;
   const forma = elegirForma(
     contexto.azar,
     contexto.formas,
@@ -315,7 +318,7 @@ function ejercicioPerfectum(e: Verbo, v: DatosVerbo, contexto: ContextoEjercicio
   );
   if (forma === 'opcion') return elegirAuxiliar(e, perf, aclaracion, contexto) ?? completarParticipio(e, v.inf, participio, perf, aclaracion);
   if (forma === 'traducir') return traducirFrase(e, perf, v.perfOtras ?? [], 'verbos.perfectum.traducir', `En perfectum, con «${v.inf}».`, aclaracion);
-  if (forma === 'decir') return decirFrase(e, perf, 'verbos.perfectum.decir', `En perfectum, con «${v.inf}».`, aclaracion);
+  if (forma === 'decir') return decirFrase(e, perf, v.perfOtras ?? [], 'verbos.perfectum.decir', `En perfectum, con «${v.inf}».`, aclaracion, dominio);
   return completarParticipio(e, v.inf, participio, perf, aclaracion);
 }
 

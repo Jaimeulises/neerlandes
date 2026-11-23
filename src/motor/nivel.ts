@@ -13,7 +13,8 @@ export const PESO_DE_FORMA: Readonly<Record<string, number>> = {
   ordenar: 0.4,
   dictado: 0.6,
   completar: 0.7,
-  decir: 0.8,
+  // Decir se lo evalúa uno mismo, sin nada que lo compruebe: pesa poco hasta que haya grabación con la que compararse.
+  decir: 0.5,
   traducir: 1,
 };
 

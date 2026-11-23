@@ -330,6 +330,17 @@
   background: var(--mal-suave);
 }
 
+/* Lo que aún no está corregido: decir la frase, hasta que el alumno se valore. */
+.resultado--neutro {
+  background: var(--tarjeta-2);
+}
+
+.otras-formas ul {
+  margin: 4px 0 0;
+  padding-left: 1.2em;
+  line-height: 1.5;
+}
+
 .resultado__titulo {
   font-weight: 700;
   font-size: 1.1rem;
@@ -468,6 +479,19 @@
   min-height: 36px;
   padding: 0 10px;
   border-radius: 6px;
+}
+
+.segmentos--ancho {
+  display: flex;
+}
+
+.segmentos--ancho button {
+  flex: 1;
+}
+
+.ajuste--apilado {
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .segmentos button[aria-pressed='true'] {
