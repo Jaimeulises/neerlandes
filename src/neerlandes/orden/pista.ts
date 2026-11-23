@@ -5,7 +5,7 @@
 
 import { UMBRAL_DOMINADA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
 import { barajarFichas, comoFrase, conFormasTonicas, elegirForma, idFijo } from '../comun';
-import { diagnosticarConFrase } from '../diagnostico';
+import { diagnosticarConFrase, pistasDeReintento } from '../diagnostico';
 import type { IdDestreza } from '../destrezas';
 import { FRASES, GRUPOS_ORDEN, NOMBRES_GRUPO_ORDEN, REGLAS_ORDEN, type DatosFrase, type GrupoOrden } from './datos';
 
@@ -169,6 +169,7 @@ export const orden: Pista<Frase> = {
     const frase = POR_ID.get(ejercicio.elementoId);
     return frase ? diagnosticarConFrase(frase, ejercicio, respuesta) : [];
   },
+  pistasDeReintento,
   presentar(e): Presentacion | null {
     if (!ABRE_GRUPO.has(e.id)) return null;
     const ejemplo = ejemploDe(e.grupo) ?? e;

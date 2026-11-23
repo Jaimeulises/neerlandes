@@ -9,6 +9,7 @@ import { explicarAuxiliar, explicarConjugacion, explicarParticipio } from './ver
 import type { Frase } from '../orden/pista';
 
 export { diagnosticarFrase } from './frase';
+export { PISTAS_GENERALES, pistasDeReintento } from './pistas';
 export { papelesDe, papelesDeFraseLibre, type Papeles } from './papeles';
 export { explicarAuxiliar, explicarConjugacion, explicarParticipio } from './verbo';
 

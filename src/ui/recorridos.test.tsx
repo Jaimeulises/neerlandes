@@ -36,6 +36,12 @@ afterEach(() => {
   limpiar();
 });
 
+/** Tras un primer fallo con pista, ver la solución en vez de intentarlo otra vez. */
+async function rendirseSiHayPista(): Promise<void> {
+  const ver = buscarBoton('Ver la solución');
+  if (ver) await pulsar(ver);
+}
+
 /** Da un paso en la ronda, sea cual sea el ejercicio. Devuelve la forma que ha visto. */
 async function darUnPaso(): Promise<string> {
   const entendido = buscarBoton('Entendido');
@@ -55,6 +61,7 @@ async function darUnPaso(): Promise<string> {
       await pulsar(suelta);
     }
     await pulsar(boton('Comprobar'));
+    await rendirseSiHayPista();
     await pulsar(boton('Siguiente'));
     return 'ordenar';
   }
@@ -62,6 +69,7 @@ async function darUnPaso(): Promise<string> {
   if (campo) {
     escribirEn(campo, 'ik weet het niet');
     await pulsar(boton('Comprobar'));
+    await rendirseSiHayPista();
     await pulsar(boton('Siguiente'));
     return campo instanceof HTMLTextAreaElement ? 'escrito' : 'completar';
   }
@@ -246,6 +254,114 @@ describe('ordenar las fichas en pantalla', () => {
     expect(enPantalla()).toContain('No va en ese orden');
     await pulsar(boton('Mi respuesta también vale'));
     expect(calificaciones).toEqual(['bien']);
+  });
+});
+
+describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () => {
+  type Terminado = [string, string[], boolean];
+
+  async function montarEscrito(terminados: Terminado[]): Promise<HTMLTextAreaElement> {
+    const ejercicio = ejercicioDeFrase(fraseDeMorgen(), 'traducir', { azar: crearAzar(1), vistos: new Set(), repeticiones: 1, formas: new Set(['traducir']) });
+    await montar(
+      <Escrito
+        ejercicio={ejercicio as EjercicioTraducir}
+        repeticion={false}
+        voz={SIN_VOZ}
+        diagnosticar={(r) => orden.diagnosticar?.(ejercicio, r) ?? []}
+        pistasDeReintento={(ds, v) => orden.pistasDeReintento?.(ejercicio, ds, v) ?? []}
+        onTerminar={(c, ds, segunda) => {
+          terminados.push([c, (ds ?? []).map((d) => d.destreza), segunda ?? false]);
+        }}
+      />,
+    );
+    const campo = document.querySelector<HTMLTextAreaElement>('textarea');
+    if (!campo) throw new Error('falta el campo');
+    return campo;
+  }
+
+  it('el primer fallo da la pista sin la solución, y a la segunda se explica lo que falló y cuenta como fallo', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const campo = await montarEscrito(terminados);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('Inténtalo otra vez');
+    expect(enPantalla()).toContain('Has empezado por «morgen»');
+    // Ni la frase buena ni la explicación, y lo escrito sigue ahí para corregirlo.
+    expect(enPantalla()).not.toContain('Morgen ga ik naar mijn schoonouders');
+    expect(buscarBoton('Siguiente')).toBeNull();
+    expect(campo.readOnly).toBe(false);
+    expect(campo.value).toBe('morgen ik ga naar mijn schoonouders');
+    // Sin cambiar nada no se gasta el segundo intento.
+    expect(boton('Comprobar').disabled).toBe(true);
+    escribirEn(campo, 'Morgen ga ik naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('Bien a la segunda');
+    expect(enPantalla()).toContain('el verbo va antes que el sujeto');
+    await pulsar(boton('Siguiente'));
+    expect(terminados).toEqual([['otra_vez', ['inversion'], true]]);
+  });
+
+  it('se puede ver la solución sin intentarlo otra vez: es la corrección del primer intento', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const campo = await montarEscrito(terminados);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    escribirEn(campo, 'morgen ik');
+    await pulsar(boton('Ver la solución'));
+    expect(campo.value).toBe('morgen ik ga naar mijn schoonouders');
+    expect(enPantalla()).toContain('el verbo va antes que el sujeto');
+    expect(enPantalla()).toContain('Mi respuesta también vale');
+    await pulsar(boton('Siguiente'));
+    expect(terminados).toEqual([['otra_vez', ['inversion'], false]]);
+  });
+
+  it('si el segundo intento también falla, se corrige ese y cuenta todo lo fallado', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const campo = await montarEscrito(terminados);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    escribirEn(campo, 'morgen ga ik naar mijn ouders');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).not.toContain('Bien a la segunda');
+    expect(enPantalla()).toContain('No es así');
+    await pulsar(boton('Siguiente'));
+    expect(terminados).toEqual([['otra_vez', ['inversion'], false]]);
+  });
+
+  it('al ordenar, las fichas se quedan donde estaban para moverlas', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const f = fraseDeMorgen();
+    const ejercicio = ejercicioDeFrase(f, 'ordenar', { azar: crearAzar(1), vistos: new Set(), repeticiones: 0, formas: new Set(['ordenar']) }) as EjercicioOrdenar;
+    await montar(
+      <Ordenar
+        ejercicio={ejercicio}
+        repeticion={false}
+        voz={SIN_VOZ}
+        diagnosticar={(r) => orden.diagnosticar?.(ejercicio, r) ?? []}
+        pistasDeReintento={(ds, v) => orden.pistasDeReintento?.(ejercicio, ds, v) ?? []}
+        onTerminar={(c, ds, segunda) => {
+          terminados.push([c, (ds ?? []).map((d) => d.destreza), segunda ?? false]);
+        }}
+      />,
+    );
+    // El orden del inglés: morgen ik ga…
+    const [morgen, ga, ik, ...resto] = f.fichas;
+    for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('Inténtalo otra vez');
+    const puestas = () => [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Tu frase"] button')];
+    expect(puestas().map((b) => b.textContent)).toEqual([morgen, ik, ga, ...resto]);
+    // Se quitan desde ik y se vuelven a poner en su orden.
+    for (const b of puestas().slice(1)) await pulsar(b);
+    for (const texto of [ga, ik, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('Bien a la segunda');
+    await pulsar(boton('Siguiente'));
+    expect(terminados).toEqual([['otra_vez', ['inversion'], true]]);
   });
 });
 

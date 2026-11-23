@@ -13,6 +13,7 @@ import {
   diagnosticarForma,
   diagnosticarFraseLibre,
   diagnosticarParticipio,
+  pistasDeReintento,
 } from '../diagnostico';
 import { ejercicioDeFrase, type Frase } from '../orden/pista';
 import { SEPARABLES, VERBOS, type DatosSeparable, type DatosVerbo, type Formas } from './datos';
@@ -538,6 +539,7 @@ export const verbos: Pista<Verbo> = {
     const e = POR_ID.get(ejercicio.elementoId);
     return e ? diagnosticarVerbo(e, ejercicio, respuesta) : [];
   },
+  pistasDeReintento,
   // Lo regular se intenta sin verlo antes: su regla se presenta con el verbo que abre el grupo y se
   // repite al corregir. Lo irregular, los separables y el pasado sí se enseñan, porque no se deducen.
   presentar(e): Presentacion | null {

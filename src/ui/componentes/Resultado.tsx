@@ -11,7 +11,7 @@ interface Props {
   readonly voz: Voz;
   readonly audio: string | undefined;
   readonly aclaracion: string | undefined;
-  /** Lo que ha fallado, regla a regla. Si hay, la regla general queda plegada debajo. */
+  /** Lo que ha fallado, regla a regla (a la segunda, lo del primer intento). Si hay, la regla general queda plegada debajo. */
   readonly diagnosticos?: readonly Diagnostico[];
   readonly children?: ReactNode;
   /** Botones antes de «Siguiente», por ejemplo «Mi respuesta también vale». */
@@ -20,7 +20,7 @@ interface Props {
 }
 
 export function Resultado({ bien, titulo, voz, audio, aclaracion, diagnosticos = [], children, extra, onSiguiente }: Props): ReactElement {
-  const hayDiagnostico = !bien && diagnosticos.length > 0;
+  const hayDiagnostico = diagnosticos.length > 0;
   return (
     <div className={`resultado ${bien ? 'resultado--bien' : 'resultado--mal'}`} aria-live="polite">
       <div className="fila fila--entre">

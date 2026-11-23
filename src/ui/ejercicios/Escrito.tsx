@@ -1,14 +1,16 @@
 // Los ejercicios en los que se escribe: traducir la frase entera, completar el
 // hueco y el dictado. Al corregir se separa el fallo de orden del de palabras,
 // y si la respuesta es buena pero no estaba en la lista, el alumno puede darla
-// por buena.
+// por buena. Si la pista lo pide, el primer fallo no enseña la solución: da una
+// pista y deja intentarlo otra vez (corregir pidiendo).
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactElement, type SyntheticEvent } from 'react';
 import type { Voz } from '../../estado/voz';
-import { calificacionDe, corregir, type Calificacion, type Correccion, type Diagnostico, type EjercicioEscrito, type Veredicto } from '../../motor';
+import { calificacionDe, corregir, normalizar, type Calificacion, type Correccion, type Diagnostico, type EjercicioEscrito, type Veredicto } from '../../motor';
 import { Boton } from '../componentes/Boton';
 import { BotonVoz } from '../componentes/BotonVoz';
 import { Marcas } from '../componentes/Marcas';
+import { Reintento } from '../componentes/Reintento';
 import { Resultado } from '../componentes/Resultado';
 
 interface Props {
@@ -17,7 +19,18 @@ interface Props {
   readonly voz: Voz;
   /** Qué regla falla en una respuesta. Vacío si no hay nada concreto. */
   readonly diagnosticar?: (respuesta: string) => readonly Diagnostico[];
-  readonly onTerminar: (calificacion: Calificacion, diagnosticos?: readonly Diagnostico[]) => void;
+  /** Las pistas para intentarlo otra vez tras el primer fallo. Vacío si no se reintenta. */
+  readonly pistasDeReintento?: (diagnosticos: readonly Diagnostico[], veredicto: Veredicto) => readonly string[];
+  /** aLaSegunda: salió bien después de la pista (cuenta como fallo para el repaso). */
+  readonly onTerminar: (calificacion: Calificacion, diagnosticos?: readonly Diagnostico[], aLaSegunda?: boolean) => void;
+}
+
+/** El primer intento fallido, mientras se intenta otra vez con la pista. */
+interface PrimerIntento {
+  readonly respuesta: string;
+  readonly correccion: Correccion;
+  readonly diagnosticos: readonly Diagnostico[];
+  readonly pistas: readonly string[];
 }
 
 const TITULOS: Readonly<Record<Veredicto, string>> = {
@@ -36,13 +49,17 @@ const ATRIBUTOS_CAMPO = {
   lang: 'nl',
 } as const;
 
-export function Escrito({ ejercicio, repeticion, voz, diagnosticar, onTerminar }: Props): ReactElement {
+export function Escrito({ ejercicio, repeticion, voz, diagnosticar, pistasDeReintento, onTerminar }: Props): ReactElement {
   const [respuesta, setRespuesta] = useState('');
   const [correccion, setCorreccion] = useState<Correccion | null>(null);
   const [diagnosticos, setDiagnosticos] = useState<readonly Diagnostico[]>([]);
+  const [primero, setPrimero] = useState<PrimerIntento | null>(null);
   const campo = useRef<HTMLTextAreaElement & HTMLInputElement>(null);
   const { decir } = voz;
   const bien = correccion !== null && calificacionDe(correccion.veredicto) === 'bien';
+  const aLaSegunda = bien && primero !== null;
+  // Mientras se reintenta, Comprobar espera a que la respuesta cambie: un doble toque no gasta el segundo intento.
+  const igualQueLaPrimera = primero !== null && correccion === null && normalizar(respuesta) === normalizar(primero.respuesta);
 
   useEffect(() => {
     campo.current?.focus();
@@ -50,12 +67,38 @@ export function Escrito({ ejercicio, repeticion, voz, diagnosticar, onTerminar }
   }, [ejercicio, decir]);
 
   const comprobar = (): void => {
-    if (respuesta.trim() === '' || correccion !== null) return;
+    if (respuesta.trim() === '' || correccion !== null || igualQueLaPrimera) return;
     const c = corregir(respuesta, ejercicio.respuestas);
-    setCorreccion(c);
     // El dictado es para el oído: sus fallos son de lo que se oye, no de gramática.
-    if (calificacionDe(c.veredicto) !== 'bien' && ejercicio.forma !== 'dictado') setDiagnosticos(diagnosticar?.(respuesta) ?? []);
+    const ds = calificacionDe(c.veredicto) !== 'bien' && ejercicio.forma !== 'dictado' ? (diagnosticar?.(respuesta) ?? []) : [];
+    if (calificacionDe(c.veredicto) !== 'bien' && primero === null) {
+      const pistas = pistasDeReintento?.(ds, c.veredicto) ?? [];
+      if (pistas.length > 0) {
+        // Sin voz ni solución: se oiría la respuesta.
+        setPrimero({ respuesta, correccion: c, diagnosticos: ds, pistas });
+        campo.current?.focus();
+        return;
+      }
+    }
+    setCorreccion(c);
+    setDiagnosticos(ds);
     if (ejercicio.audio) decir(ejercicio.audio);
+  };
+
+  /** Rendirse en el segundo intento: la corrección del primero, como si no hubiera habido pista. */
+  const verSolucion = (): void => {
+    if (!primero) return;
+    setRespuesta(primero.respuesta);
+    setCorreccion(primero.correccion);
+    setDiagnosticos(primero.diagnosticos);
+    setPrimero(null);
+    if (ejercicio.audio) decir(ejercicio.audio);
+  };
+
+  /** Lo que se ha fallado en los dos intentos, una vez cada regla: todo eso se practica. */
+  const falladas = (): readonly Diagnostico[] => {
+    const todos = [...(primero?.diagnosticos ?? []), ...diagnosticos];
+    return todos.filter((d, i) => todos.findIndex((x) => x.destreza === d.destreza) === i);
   };
 
   const alEnviar = (e: SyntheticEvent): void => {
@@ -130,20 +173,31 @@ export function Escrito({ ejercicio, repeticion, voz, diagnosticar, onTerminar }
         />
       )}
 
+      {correccion === null && primero ? <Reintento pistas={primero.pistas} /> : null}
+
       {correccion === null ? (
-        <Boton ancho type="submit" disabled={respuesta.trim() === ''}>
-          Comprobar
-        </Boton>
+        <>
+          <Boton ancho type="submit" disabled={respuesta.trim() === '' || igualQueLaPrimera}>
+            Comprobar
+          </Boton>
+          {primero ? (
+            <Boton ancho variante="texto" onClick={verSolucion}>
+              Ver la solución
+            </Boton>
+          ) : null}
+        </>
       ) : (
         <Resultado
           bien={bien}
-          titulo={TITULOS[correccion.veredicto]}
+          titulo={aLaSegunda ? 'Bien a la segunda' : TITULOS[correccion.veredicto]}
           voz={voz}
           audio={ejercicio.audio}
           aclaracion={ejercicio.aclaracion}
-          diagnosticos={diagnosticos}
+          // A la segunda se explica lo que falló en el primer intento: para eso era la pista.
+          diagnosticos={aLaSegunda ? primero.diagnosticos : diagnosticos}
           onSiguiente={() => {
-            onTerminar(bien ? 'bien' : 'otra_vez', diagnosticos);
+            if (aLaSegunda) onTerminar('otra_vez', primero.diagnosticos, true);
+            else onTerminar(bien ? 'bien' : 'otra_vez', falladas());
           }}
           extra={
             bien ? null : (
@@ -159,9 +213,13 @@ export function Escrito({ ejercicio, repeticion, voz, diagnosticar, onTerminar }
           }
         >
           {bien ? (
-            <p className="marcas" lang="nl">
-              {correccion.cercana}
-            </p>
+            <>
+              <p className="marcas" lang="nl">
+                {correccion.cercana}
+              </p>
+              {aLaSegunda ? <p className="texto-2">Volverá pronto, para que salga a la primera.</p> : null}
+              {aLaSegunda && primero.diagnosticos.length > 0 ? <p className="texto-3">En el primer intento</p> : null}
+            </>
           ) : (
             <>
               <p className="texto-3">Tu respuesta</p>

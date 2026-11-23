@@ -6,6 +6,7 @@
 // decir en voz alta).
 
 import type { Azar } from './azar';
+import type { Veredicto } from './corregir';
 
 /** Cómo le ha ido al alumno con un elemento, en los cuatro niveles de FSRS. */
 export type Calificacion = 'otra_vez' | 'dificil' | 'bien' | 'facil';
@@ -186,6 +187,12 @@ export interface Pista<E extends Elemento = Elemento> {
    * roto y dónde. Vacío si no encuentra nada concreto (una palabra que no se sabe, por ejemplo).
    */
   diagnosticar?(ejercicio: Ejercicio, respuesta: string): readonly Diagnostico[];
+  /**
+   * Si existe, lo que se dice tras el primer fallo de una respuesta escrita u ordenada para dejar intentarlo otra vez:
+   * la regla con las palabras de la respuesta, sin dar la solución. Vacío si en ese ejercicio no se pide otro intento
+   * (si lo que se pregunta es una palabra o lo que se oye, una pista solo daría la respuesta).
+   */
+  pistasDeReintento?(ejercicio: Ejercicio, diagnosticos: readonly Diagnostico[], veredicto: Veredicto): readonly string[];
 }
 
 /** Un fallo concreto en una respuesta: qué regla se ha roto, dónde y cómo se arregla. */
@@ -196,6 +203,11 @@ export interface Diagnostico {
   readonly titulo: string;
   /** Por qué, con la regla aplicada a esta frase. */
   readonly texto: string;
+  /**
+   * Lo que se dice antes de dejar intentarlo otra vez: la regla con las palabras de la respuesta y, si el fallo viene
+   * del inglés, el contraste, sin dar la frase ni la forma buenas.
+   */
+  readonly pista?: string;
 }
 
 /** Una destreza que se mide: una regla o un tipo de conocimiento. */

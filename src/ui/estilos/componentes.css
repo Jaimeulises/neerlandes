@@ -533,6 +533,34 @@
   margin: 0;
 }
 
+/* Corregir pidiendo: la pista del primer fallo, antes del segundo intento. */
+.reintento {
+  background: var(--acento-suave);
+  color: var(--texto);
+  border-radius: var(--radio);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reintento__titulo {
+  font-weight: 700;
+  color: var(--sobre-acento);
+  margin: 0;
+}
+
+.reintento__texto {
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .reintento__titulo {
+    color: var(--acento);
+  }
+}
+
 /* El nivel de cada regla en Progreso. */
 .etiqueta-nivel {
   font-size: 0.8rem;

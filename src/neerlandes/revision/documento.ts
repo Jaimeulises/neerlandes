@@ -145,7 +145,7 @@ export function documentoDeRevision(registro: Registro = REVISADO, elementos: re
     '- **R, reglas:** salen al abrir cada grupo y al corregir. Que la regla esté bien dicha.',
     '- **V y S, verbos:** las formas, los ejemplos y su traducción.',
     '- **P, vocabulario:** la palabra con su artículo, sus otras formas y que el significado sea ese.',
-    '- **E, explicaciones de errores:** cuando se falla una frase, la app explica qué regla se ha roto con las palabras de esa frase. Las explicaciones se montan solas; aquí van fallos típicos con lo que diría la app. Que la regla esté bien dicha y que el neerlandés de la explicación sea correcto.',
+    '- **E, explicaciones de errores:** cuando se falla una frase, la app da primero una pista y deja intentarlo otra vez; si vuelve a fallar, explica qué regla se ha roto con las palabras de esa frase. Las pistas y las explicaciones se montan solas; aquí van fallos típicos con lo que diría la app. Que la regla esté bien dicha, que la pista no dé la respuesta y que el neerlandés sea correcto.',
     '- **T, otros textos:** textos de la app que llevan neerlandés o hablan de él.',
     '',
     'Al terminar un lote: aplica sus correcciones y marca el lote con la orden que lleva debajo del título (`npm run revisado -- …`), que apunta qué se ha revisado y vuelve a generar este archivo. Marca solo lo que ha visto tal como queda: si al corregir cambias algo más de lo que dijo, deja ese código fuera. Si después cambia algo de lo revisado, vuelve solo a pendiente.',

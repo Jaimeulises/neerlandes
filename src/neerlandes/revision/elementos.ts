@@ -11,6 +11,7 @@
 import { FRASE_DE_PRUEBA } from '../audio';
 import { alternativas, comoFrase, huella, primera } from '../comun';
 import { DESTREZAS, FALTA_PARA_B2, type IdDestreza } from '../destrezas';
+import { PISTAS_GENERALES } from '../diagnostico';
 import { diagnosticarEjemplos } from '../diagnostico/ejemplos';
 import { GRUPOS_ORDEN, NOMBRES_GRUPO_ORDEN, REGLAS_ORDEN, type GrupoOrden } from '../orden/datos';
 import { ELEMENTOS_ORDEN, orden } from '../orden/pista';
@@ -208,7 +209,11 @@ function explicaciones(): ElementoRevision[] {
     tipo: 'E',
     apartado: NOMBRES_TIPO.E,
     formato: 'bloque',
-    lineas: [`**${e.codigo}.** «${e.frase}» → respuesta: «${e.respuesta}»`, '', ...e.diagnosticos.map((d) => `- **${d.titulo}.** ${d.texto}`)],
+    lineas: [
+      `**${e.codigo}.** «${e.frase}» → respuesta: «${e.respuesta}»`,
+      '',
+      ...e.diagnosticos.flatMap((d) => [`- **${d.titulo}.** ${d.texto}`, ...(d.pista ? [`  - *Pista antes del segundo intento:* ${d.pista}`] : [])]),
+    ],
   }));
 }
 
@@ -225,6 +230,11 @@ function textos(): ElementoRevision[] {
     texto('T23', 'Hoy, la parte de verbos', verbos.descripcion),
     texto('T24', 'Hoy, la parte de vocabulario', vocabulario.descripcion),
     texto('T25', 'Ajustes, el botón Probar de la voz', FRASE_DE_PRUEBA),
+    // La pista del primer fallo cuando no se sabe qué regla ha fallado (las demás van con su explicación, en E).
+    texto('T26', 'Pista del primer fallo al ordenar, si no se sabe qué regla falla', PISTAS_GENERALES.ordenar),
+    texto('T27', 'Pista del primer fallo al escribir la frase con las palabras buenas en otro orden', PISTAS_GENERALES.traducirOrden),
+    texto('T28', 'Pista del primer fallo al escribir la frase con otras palabras', PISTAS_GENERALES.traducir),
+    texto('T29', 'Pista del primer fallo al completar una forma', PISTAS_GENERALES.completar),
   ];
 }
 

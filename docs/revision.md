@@ -19,7 +19,7 @@ Qué mirar en cada tipo:
 - **R, reglas:** salen al abrir cada grupo y al corregir. Que la regla esté bien dicha.
 - **V y S, verbos:** las formas, los ejemplos y su traducción.
 - **P, vocabulario:** la palabra con su artículo, sus otras formas y que el significado sea ese.
-- **E, explicaciones de errores:** cuando se falla una frase, la app explica qué regla se ha roto con las palabras de esa frase. Las explicaciones se montan solas; aquí van fallos típicos con lo que diría la app. Que la regla esté bien dicha y que el neerlandés de la explicación sea correcto.
+- **E, explicaciones de errores:** cuando se falla una frase, la app da primero una pista y deja intentarlo otra vez; si vuelve a fallar, explica qué regla se ha roto con las palabras de esa frase. Las pistas y las explicaciones se montan solas; aquí van fallos típicos con lo que diría la app. Que la regla esté bien dicha, que la pista no dé la respuesta y que el neerlandés sea correcto.
 - **T, otros textos:** textos de la app que llevan neerlandés o hablan de él.
 
 Al terminar un lote: aplica sus correcciones y marca el lote con la orden que lleva debajo del título (`npm run revisado -- …`), que apunta qué se ha revisado y vuelve a generar este archivo. Marca solo lo que ha visto tal como queda: si al corregir cambias algo más de lo que dijo, deja ese código fuera. Si después cambia algo de lo revisado, vuelve solo a pendiente.
@@ -35,9 +35,9 @@ Al terminar un lote: aplica sus correcciones y marca el lote con la orden que ll
 | Verbos (V) | 58 | 0 | 58 |
 | Verbos separables (S) | 15 | 0 | 13 |
 | Vocabulario (P) | 128 | 0 | 25 |
-| Explicaciones de errores (E) | 16 | 0 | 13 |
-| Otros textos de la app (T) | 25 | 0 | 9 |
-| **Total** | **320** | **0** | **195** |
+| Explicaciones de errores (E) | 16 | 0 | 19 |
+| Otros textos de la app (T) | 29 | 0 | 12 |
+| **Total** | **324** | **0** | **203** |
 
 ## Lote 1 (unos 14 minutos)
 
@@ -836,73 +836,95 @@ Para marcarlo cuando esté corregido: `npm run revisado -- P55-P128`
 
 ## Lote 13 (unos 15 minutos)
 
-Para marcarlo cuando esté corregido: `npm run revisado -- E1-E16 T1-T5`
+Para marcarlo cuando esté corregido: `npm run revisado -- E1-E13`
 
 ### Explicaciones de errores
 
 **E1.** «Morgen ga ik naar mijn schoonouders.» → respuesta: «Morgen ik ga naar mijn schoonouders»
 
 - **Tras «morgen», el verbo va antes que el sujeto.** Empezaste por «morgen», así que eso ocupa la primera posición: el verbo («ga») va segundo y el sujeto («ik») justo detrás: «Morgen ga ik naar mijn schoonouders». En inglés el sujeto va antes del verbo (“Tomorrow I go”); por eso sale así.
+  - *Pista antes del segundo intento:* Has empezado por «morgen», y eso ya ocupa la primera posición. En inglés iría ahora el sujeto (“Tomorrow I go”); en neerlandés, el verbo conjugado. ¿Dónde va «ga»?
 
 **E2.** «Ik wil morgen een nieuwe fiets kopen.» → respuesta: «Ik wil kopen morgen een nieuwe fiets»
 
 - **El infinitivo «kopen» va al final.** Con «wil», el infinitivo se va al final de la frase y todo lo demás queda en medio: «Ik wil morgen een nieuwe fiets kopen». En inglés va pegado al modal (“I want to buy a bike tomorrow”).
+  - *Pista antes del segundo intento:* Con «wil», el infinitivo se va al final y todo lo demás queda en medio. En inglés va pegado al modal (“I want to buy a bike tomorrow”). ¿Qué tienes que mover?
 
 **E3.** «Ik heb gisteren de hele dag gewerkt.» → respuesta: «Ik heb gewerkt gisteren de hele dag»
 
 - **El participio «gewerkt» va al final.** En el perfectum, «heb» se queda en segunda posición y el participio cierra la frase: «Ik heb gisteren de hele dag gewerkt». En inglés el participio va pegado al auxiliar (“I have worked all day”); en neerlandés todo lo demás va en medio.
+  - *Pista antes del segundo intento:* En el perfectum, «heb» va en segunda posición y el participio cierra la frase, con todo lo demás en medio. En inglés van juntos (“I have worked all day”). ¿Qué tienes que mover?
 
 **E4.** «Ik heb gisteren de hele dag gewerkt.» → respuesta: «Ik heb gisteren de hele dag gewerkd»
 
 - **«gewerkd» no: «gewerkt».** ’t kofschip: en «werken» va «k» delante de -en, que está en ’t kofschip (t, k, f, s, ch, p), así que acaba en -t: «gewerkt». Se mira el infinitivo, no la raíz.
+  - *Pista antes del segundo intento:* ¿-t o -d? Mira qué letra va delante de -en en el infinitivo de «werken» y si está en ’t kofschip (t, k, f, s, ch, p). Se mira el infinitivo, no la raíz.
 
 **E5.** «We zijn in het weekend naar Utrecht gegaan.» → respuesta: «We hebben in het weekend naar Utrecht gegaan»
 
 - **«hebben» no: «zijn».** El perfectum de «gaan» va con zijn: «We zijn in het weekend naar Utrecht gegaan». Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, verhuizen, worden…), y además zijn y blijven.
+  - *Pista antes del segundo intento:* En inglés todo va con have, pero en neerlandés el movimiento hacia un sitio, el cambio de estado, zijn y blijven llevan otro auxiliar. ¿Cuál va aquí, y en qué forma?
 
 **E6.** «Heb je goed geslapen?» → respuesta: «Heb je goed geslaapt?»
 
 - **«geslaapt» no: «geslapen».** «slapen» tiene participio irregular: «geslapen». No sigue la regla de ge + raíz + t o d, así que hay que aprenderlo de memoria.
+  - *Pista antes del segundo intento:* «slapen» es irregular: su participio no sale de ge + raíz + t o d. Muchos acaban en -en, a menudo con otra vocal, y otros en -cht. ¿Cuál es?
 
 **E7.** «Ik bel je morgen op.» → respuesta: «Ik opbel je morgen»
 
 - **«opbel» se separa en la frase principal.** Con el verbo conjugado en la principal, la partícula «op» se separa y se va al final: «Ik bel je morgen op». Solo va pegada con un modal («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio («opgebeld»).
+  - *Pista antes del segundo intento:* «opbel» es un verbo separable, y conjugado en la frase principal se parte en dos. ¿Qué parte va en segunda posición y cuál se va al final?
 
 **E8.** «Ik heb het niet gezien.» → respuesta: «Ik heb niet het gezien»
 
 - **Niet va detrás de «het» y delante de «gezien».** Niet va detrás del verbo, del cuándo (morgen, vandaag…) y del objeto definido (het, de film, hem), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar: «Ik heb het niet gezien». En inglés va pegado al auxiliar (“I have not seen it”); en neerlandés se mueve.
+  - *Pista antes del segundo intento:* Niet no va pegado al verbo como “not” en inglés. Va detrás del verbo, del cuándo y de lo definido (het, hem, de film), y delante del participio, del infinitivo, de la partícula, del adjetivo o del lugar. ¿Dónde va en esta frase?
 
 **E9.** «Ik heb vandaag geen tijd.» → respuesta: «Ik heb vandaag niet tijd»
 
 - **Aquí va geen, no niet.** Con un sustantivo sin artículo o con een («tijd»), la negación es geen: «Ik heb vandaag geen tijd». Niet niega el verbo, un adjetivo o algo definido (de, het, mijn…).
+  - *Pista antes del segundo intento:* En inglés dirías “I have no time”, no “I have not time”. En neerlandés pasa algo parecido: con un sustantivo sin artículo o con een, la negación no es niet. ¿Cuál es?
 
 **E10.** «Waar woont je zus?» → respuesta: «Waar je zus woont?»
 
 - **En la pregunta, el verbo va justo detrás de «waar».** Después de «waar» va el verbo («woont») y luego el sujeto («je zus»): «Waar woont je zus?» Con el sujeto antes del verbo sería una subordinada («…waar je zus woont»), no una pregunta.
+  - *Pista antes del segundo intento:* En inglés el sujeto va detrás de do o does (“Where does your sister live?”); en neerlandés no hay do, y es el verbo el que va delante del sujeto. ¿Dónde va «woont»?
 
 **E11.** «Werk jij morgen?» → respuesta: «Werkt jij morgen?»
 
 - **«werkt» no: «werk».** Cuando jij o je va detrás del verbo (en una pregunta o tras «morgen», por ejemplo), la -t se cae: «werk jij». Con jij delante sí lleva -t: «jij werkt».
+  - *Pista antes del segundo intento:* Aquí «jij» va detrás del verbo. Con jij o je detrás, el verbo pierde algo que lleva con jij delante. ¿Qué le sobra a «werkt»?
 
 **E12.** «Vandaag werk ik thuis.» → respuesta: «Vandaag werkt ik thuis»
 
 - **«werkt» no: «werk».** Con ik va la raíz sola, sin -t: «ik werk». La -t es para jij, hij, zij y u.
+  - *Pista antes del segundo intento:* Con ik va la raíz sola, sin nada detrás. ¿Qué le sobra a «werkt»?
 
 **E13.** «Ik blijf thuis omdat ik niet lekker ben.» → respuesta: «Ik blijf thuis omdat ik ben niet lekker»
 
 - **Después de «omdat», el verbo va al final.** «omdat» abre una subordinada, y en la subordinada el verbo conjugado («ben») se va al final: «omdat ik niet lekker ben». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).
+  - *Pista antes del segundo intento:* «omdat» abre una subordinada, y en una subordinada el verbo conjugado se va al final. En inglés se queda en medio (“because I am not well”). ¿Qué tienes que mover?
+
+## Lote 14 (unos 15 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- E14-E16 T1-T28`
+
+### Explicaciones de errores
 
 **E14.** «Ik denk dat het morgen gaat regenen.» → respuesta: «Ik denk dat het gaat regenen morgen»
 
 - **Después de «dat», el verbo va al final.** «dat» abre una subordinada, y en la subordinada los verbos («gaat regenen») van juntos al final: «dat het morgen gaat regenen». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).
+  - *Pista antes del segundo intento:* «dat» abre una subordinada, y en una subordinada los verbos se van juntos al final. En inglés se queda en medio (“because I am not well”). ¿Qué tienes que mover?
 
 **E15.** «Als ik tijd heb, kom ik langs.» → respuesta: «Als ik tijd heb, ik kom langs»
 
 - **Tras la subordinada, primero el verbo y luego el sujeto.** La subordinada entera («als ik tijd heb») cuenta como primera posición, así que detrás va el verbo («kom») y luego el sujeto («ik»): «Als ik tijd heb, kom ik langs». Es la misma regla que con «Morgen ga ik».
+  - *Pista antes del segundo intento:* Si la frase empieza por una subordinada («als»…), toda ella ocupa la primera posición, como «morgen» en «Morgen ga ik». ¿Qué va justo detrás de la coma?
 
 **E16.** «Als ik tijd heb, kom ik langs.» → respuesta: «Als ik heb tijd, kom ik langs»
 
 - **Después de «als», el verbo va al final.** «als» abre una subordinada, y en la subordinada el verbo conjugado («heb») se va al final: «als ik tijd heb». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).
+  - *Pista antes del segundo intento:* «als» abre una subordinada, y en una subordinada el verbo conjugado se va al final. En inglés se queda en medio (“because I am not well”). ¿Qué tienes que mover?
 
 ### Otros textos de la app
 
@@ -911,13 +933,6 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E1-E16 T1-T5`
 - **T3** (Progreso, una regla): Modal + infinitivo al final. Ik wil morgen een fiets kopen.
 - **T4** (Progreso, una regla): Perfectum: participio al final. Ik heb gisteren de hele dag gewerkt.
 - **T5** (Progreso, una regla): Participio regular. ge + raíz + t o d (’t kofschip).
-
-## Lote 14 (unos 7 minutos)
-
-Para marcarlo cuando esté corregido: `npm run revisado -- T6-T25`
-
-### Otros textos de la app
-
 - **T6** (Progreso, una regla): Hebben o zijn. Ik heb gewerkt, pero ik ben gegaan.
 - **T7** (Progreso, una regla): Niet y geen. Dónde va niet y cuándo se dice geen.
 - **T8** (Progreso, una regla): Preguntas. Werk jij morgen? Waar woont je zus?
@@ -938,6 +953,17 @@ Para marcarlo cuando esté corregido: `npm run revisado -- T6-T25`
 - **T23** (Hoy, la parte de verbos): Conjugar sin pensarlo: presente, perfectum con hebben o zijn, separables y pasado simple.
 - **T24** (Hoy, la parte de vocabulario): Palabras y expresiones de la vida diaria, siempre con su de o het.
 - **T25** (Ajustes, el botón Probar de la voz): Goedemorgen! Hoe gaat het met je?
+- **T26** (Pista del primer fallo al ordenar, si no se sabe qué regla falla): Las palabras son esas; falla el orden. Empieza por el verbo conjugado: segundo en la frase principal, primero en una pregunta de sí o no y al final en una subordinada. Lo demás se coloca a su alrededor.
+- **T27** (Pista del primer fallo al escribir la frase con las palabras buenas en otro orden): Tienes las palabras buenas, pero no en su sitio. Empieza por el verbo conjugado: segundo en la frase principal, primero en una pregunta de sí o no y al final en una subordinada.
+- **T28** (Pista del primer fallo al escribir la frase con otras palabras): Alguna palabra no es la que toca, o falta o sobra alguna. Repasa también la forma de cada verbo.
+
+## Lote 15 (unos 1 minutos)
+
+Para marcarlo cuando esté corregido: `npm run revisado -- T29`
+
+### Otros textos de la app
+
+- **T29** (Pista del primer fallo al completar una forma): Esa forma no es la que va aquí. Fíjate en quién hace la acción y en el tiempo de la frase.
 
 ## Ya revisado
 
