@@ -574,6 +574,9 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     // Si ese pronombre va antes de la coma, es el sujeto de la subordinada, que lleva el verbo en medio.
     expect(casos(diagnostico('Toen ik in Spanje woonde', 'Toen in Spanje woonde ik, sprak geen Nederlands'))).toEqual(['subordinada-un-verbo']);
     expect(casos(diagnostico('Nadat we gegeten hebben', 'Nadat gegeten hebben we, gaan wandelen'))).toEqual(['subordinada-varios-verbos']);
+    expect(casos(diagnostico('Toen ik in Spanje woonde', 'Toen, in Spanje woonde ik, sprak geen Nederlands'))).toEqual(['subordinada-un-verbo']);
+    // La coma que cuenta es la que va entre las dos: una al final no dice nada.
+    expect(casos(diagnostico('Nadat we gegeten hebben', 'Nadat gegeten hebben we gaan wandelen,'))).toEqual(['subordinada-delante']);
   });
 
   it('el perfectum dicho en otro tiempo o con otro verbo conjugado no lleva un participio sin ge-', () => {
