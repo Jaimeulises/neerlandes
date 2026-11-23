@@ -139,6 +139,7 @@ describe('la ronda de hoy', () => {
     expect(new Set(tipos({ ...conInterruptor, sinAndamiaje: false }))).toEqual(new Set(['verbos.presente.elegir']));
     expect(new Set(tipos({ ...conInterruptor, dominio: () => 0.2 }))).toEqual(new Set(['verbos.presente.elegir']));
     expect(new Set(tipos({ ...conInterruptor, formas: new Set(['opcion', 'traducir']) }))).toEqual(new Set(['verbos.presente.elegir']));
+    expect(new Set(tipos({ ...conInterruptor, formas: new Set(['traducir']) }))).toEqual(new Set(['verbos.presente.elegir']));
     // En los repasos, elegir sigue saliendo de vez en cuando.
     const azar = crearAzar(7);
     const presente = verbos.elementos.filter((e) => e.grupo === 'presente');
