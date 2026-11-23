@@ -571,6 +571,9 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(casos(diagnostico('Als ik tijd heb', 'Als tijd heb, ik kom langs'))).toEqual(['subordinada-delante']);
     expect(casos(diagnostico('Als ik tijd heb', 'Als heb tijd, ik kom langs'))).toEqual(['subordinada-un-verbo', 'subordinada-delante']);
     expect(casos(diagnostico('Als ik tijd heb', 'Als heb ik tijd, kom langs'))).toEqual(['subordinada-un-verbo']);
+    // Si ese pronombre va antes de la coma, es el sujeto de la subordinada, que lleva el verbo en medio.
+    expect(casos(diagnostico('Toen ik in Spanje woonde', 'Toen in Spanje woonde ik, sprak geen Nederlands'))).toEqual(['subordinada-un-verbo']);
+    expect(casos(diagnostico('Nadat we gegeten hebben', 'Nadat gegeten hebben we, gaan wandelen'))).toEqual(['subordinada-varios-verbos']);
   });
 
   it('el perfectum dicho en otro tiempo o con otro verbo conjugado no lleva un participio sin ge-', () => {
