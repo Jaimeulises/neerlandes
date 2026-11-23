@@ -9,11 +9,13 @@ import { REGLAS_VERBOS } from '../verbos/pista';
 import { PALABRAS } from '../vocabulario/datos';
 import { documentoDeRevision, pintarElemento, repartirEnLotes, SEGUNDOS_POR_LOTE, segundosDe } from './documento';
 import { elementosDeRevision, huellaDe, textosDe, type ElementoRevision } from './elementos';
-import { cambiadosDesdeSuRevision, cambiosQueImpidenMarcar, estaRevisado, leerCodigos, marcar, quitar, serializarRegistro, tramos, type Registro } from './estado';
+import { cambiadosDesdeQueSeLeyo, estaRevisado, huellasDe, leerCodigos, leerLote, lineaDeLote, marcar, quitar, serializarRegistro, tramos, type Registro } from './estado';
 import REVISADO from './revisado.json';
 
 const ELEMENTOS = elementosDeRevision();
 const CODIGOS = ELEMENTOS.map((e) => e.codigo);
+/** Las huellas de ahora, como si se hubiera leído todo tal como está. */
+const AHORA = huellasDe(ELEMENTOS);
 
 function elemento(codigo: string): ElementoRevision {
   const e = ELEMENTOS.find((x) => x.codigo === codigo);
@@ -45,7 +47,7 @@ describe('el documento de revisión', () => {
   });
 
   it('lo revisado ya no sale entero: solo su código, en Ya revisado', () => {
-    const registro = marcar({}, ELEMENTOS, ['O1', 'O2', 'O3', 'V1'], '2026-11-23');
+    const registro = marcar({}, AHORA, ['O1', 'O2', 'O3', 'V1'], '2026-11-23');
     const conRevisados = documentoDeRevision(registro);
     expect(conRevisados).not.toContain('**O1.**');
     expect(conRevisados).not.toContain('**V1. ');
@@ -57,7 +59,7 @@ describe('el documento de revisión', () => {
   it('los lotes se llaman por sus códigos: su número cambiaría al marcar o corregir otros', () => {
     expect(documento).toMatch(/^## Lote O1 a O\d+/m);
     expect(documento).not.toMatch(/^## Lote \d/m);
-    expect(documento).toContain('Se marca con: `npm run revisado -- O1-O');
+    expect(documento).toMatch(/^Se marca con: `npm run revisado -- O1-O\d+ [^`]* --lote [0-9a-f]{8}`$/m);
     // Y en singular cuando es uno.
     expect(documento).not.toContain('unos 1 minutos');
   });
@@ -81,7 +83,7 @@ describe('el documento de revisión', () => {
   });
 
   it('no lleva rayas largas ni medias', () => {
-    expect(documento).not.toMatch(/[–—]/);
+    expect(documento).not.toMatch(/[\u2013\u2014]/);
   });
 });
 
@@ -162,25 +164,62 @@ describe('lo revisado', () => {
   });
 
   it('vuelve a pendiente si cambia lo que se lee', () => {
-    const registro = marcar({}, ELEMENTOS, ['O1'], '2026-11-23');
+    const registro = marcar({}, AHORA, ['O1'], '2026-11-23');
     expect(estaRevisado(elemento('O1'), registro)).toBe(true);
     expect(estaRevisado(elemento('O2'), registro)).toBe(false);
     expect(estaRevisado(corregido(elemento('O1'), 'Morgen ga', 'Overmorgen ga'), registro)).toBe(false);
   });
 
-  it('se marca antes de corregir: lo corregido vuelve solo a pendiente, y al volver a marcarlo se avisa', () => {
-    const registro = marcar({}, ELEMENTOS, ['O1', 'O2'], '2026-11-23');
-    const o2Corregida = corregido(elemento('O2'), 'Vandaag werk', 'Vandaag werk ik');
-    const despues = ELEMENTOS.map((e) => (e.codigo === 'O2' ? o2Corregida : e));
-    expect(estaRevisado(elemento('O1'), registro)).toBe(true);
-    expect(estaRevisado(o2Corregida, registro)).toBe(false);
-    expect(cambiadosDesdeSuRevision(registro, despues, ['O1', 'O2', 'O3'])).toEqual(['O2']);
+  it('cada lote lleva, en una línea oculta, la huella de cada elemento tal como sale en esa copia', () => {
+    const documento = documentoDeRevision({});
+    const [primero] = repartirEnLotes(ELEMENTOS);
+    if (!primero) throw new Error('sin lotes');
+    const { id, linea } = lineaDeLote(primero);
+    expect(documento).toContain(`--lote ${id}\`\n${linea}\n`);
+    expect(linea).toMatch(/^<!-- lote [0-9a-f]{8}: .* -->$/);
+    expect(leerLote(documento, id)).toEqual(new Map(primero.map((e) => [e.codigo, huellaDe(e)])));
+    expect(leerLote(documento, id.toUpperCase())).not.toBeNull();
+    expect(leerLote(documento, '00000000')).toBeNull();
   });
 
-  it('no se marca con cambios sin guardar en el contenido', () => {
-    const estado = [' M src/neerlandes/orden/datos.ts', ' M src/neerlandes/revision/revisado.json', '?? src/neerlandes/orden/nuevo.test.ts', ' M docs/revision.md', ''].join('\n');
-    expect(cambiosQueImpidenMarcar(estado)).toEqual(['src/neerlandes/orden/datos.ts']);
-    expect(cambiosQueImpidenMarcar('')).toEqual([]);
+  it('se apunta lo que decía la copia que se leyó: lo corregido después sigue pendiente, aunque se marque con ella', () => {
+    // E2 cita O9 y va en un lote posterior. Se corrige O9 (y con ella E2) después de imprimir la copia y antes de
+    // marcar el lote de E2: la persona nativa leyó la E2 de antes, y eso es lo que se apunta.
+    const copia = documentoDeRevision({});
+    const lote = repartirEnLotes(ELEMENTOS).find((l) => l.some((e) => e.codigo === 'E2'));
+    if (!lote) throw new Error('sin el lote de E2');
+    const leidas = leerLote(copia, lineaDeLote(lote).id);
+    if (!leidas) throw new Error('la copia no trae su lote');
+    const e2Corregida = conContenido(elemento('E2'), (t) => `${t} (corregido)`);
+    expect(huellaDe(e2Corregida)).not.toBe(huellaDe(elemento('E2')));
+    const despues = ELEMENTOS.map((e) => (e.codigo === 'E2' ? e2Corregida : e));
+    const codigos = lote.map((e) => e.codigo);
+    const registro = marcar({}, leidas, codigos, '2026-11-23');
+    expect(estaRevisado(e2Corregida, registro)).toBe(false);
+    for (const e of lote) if (e.codigo !== 'E2') expect(estaRevisado(e, registro), e.codigo).toBe(true);
+    expect(cambiadosDesdeQueSeLeyo(leidas, despues, codigos)).toEqual(['E2']);
+    expect(documentoDeRevision(registro, despues)).toContain('**E2.**');
+  });
+
+  it('solo se marca lo del lote que se leyó: un rango mal escrito no se sale de él', () => {
+    const [primero] = repartirEnLotes(ELEMENTOS);
+    if (!primero) throw new Error('sin lotes');
+    const leidas = leerLote(documentoDeRevision({}), lineaDeLote(primero).id);
+    if (!leidas) throw new Error('la copia no trae su lote');
+    const deOrden = primero.filter((e) => e.tipo === 'O').map((e) => e.codigo);
+    expect(leerCodigos(['O1-O90'], leidas.keys(), 'el lote')).toEqual(deOrden);
+    expect(() => leerCodigos(['P1'], leidas.keys(), 'el lote')).toThrow('P1 no está en el lote');
+    expect(() => leerCodigos(['P1-P9'], leidas.keys(), 'el lote')).toThrow('Ningún código de P1-P9 está en el lote');
+    expect(() => marcar({}, leidas, ['P1'], '2026-11-23')).toThrow('P1 no está en lo que se leyó');
+  });
+
+  it('una copia retocada a mano no vale para marcar', () => {
+    const [primero] = repartirEnLotes(ELEMENTOS);
+    if (!primero) throw new Error('sin lotes');
+    const { id, linea } = lineaDeLote(primero);
+    const huella = huellaDe(primero[0] ?? elemento('O1'));
+    const retocada = documentoDeRevision({}).replace(linea, linea.replace(huella, huella === '00000000' ? '11111111' : '00000000'));
+    expect(leerLote(retocada, id)).toBeNull();
   });
 
   it('se marca y se desmarca por códigos sueltos y rangos de un mismo tipo', () => {
@@ -188,7 +227,7 @@ describe('lo revisado', () => {
     expect(() => leerCodigos(['O999'], CODIGOS)).toThrow('No existe');
     expect(() => leerCodigos(['O1-V3'], CODIGOS)).toThrow('mismo tipo');
     expect(() => leerCodigos(['O5-O1'], CODIGOS)).toThrow('al revés');
-    const registro = marcar({}, ELEMENTOS, ['O2', 'O1'], '2026-11-23');
+    const registro = marcar({}, AHORA, ['O2', 'O1'], '2026-11-23');
     expect(Object.keys(registro)).toEqual(['O1', 'O2']);
     expect(registro.O1).toEqual({ huella: huellaDe(elemento('O1')), el: '2026-11-23' });
     expect(Object.keys(quitar(registro, ['O1']))).toEqual(['O2']);
@@ -196,7 +235,7 @@ describe('lo revisado', () => {
 
   it('revisado.json lleva un código por línea, para que dos lotes casi nunca choquen', () => {
     expect(serializarRegistro({})).toBe('{}\n');
-    const registro = marcar({}, ELEMENTOS, ['V1', 'O2', 'O1'], '2026-11-23');
+    const registro = marcar({}, AHORA, ['V1', 'O2', 'O1'], '2026-11-23');
     const texto = serializarRegistro(registro);
     expect(texto.split('\n')).toEqual(['{', `  "O1": {"huella":"${huellaDe(elemento('O1'))}","el":"2026-11-23"},`, expect.stringMatching(/^ {2}"O2": /), expect.stringMatching(/^ {2}"V1": /), '}', '']);
     expect(JSON.parse(texto)).toEqual(registro);

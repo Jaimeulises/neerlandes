@@ -337,9 +337,9 @@ function segmentos(valor: unknown): unknown {
 
 /**
  * FNV-1a de 32 bits sobre UTF-8, en hexadecimal. La revisión tiene la suya y el audio la suya: si algún día hay que
- * cambiar la del audio, lo revisado no vuelve entero a pendiente.
+ * cambiar la del audio, lo revisado no vuelve entero a pendiente. También da el id de cada lote (estado.ts).
  */
-function fnv1a(texto: string): string {
+export function fnv1a(texto: string): string {
   let h = 0x811c9dc5;
   for (const byte of new TextEncoder().encode(texto)) {
     h ^= byte;

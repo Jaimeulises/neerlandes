@@ -1,10 +1,14 @@
 // Qué está revisado y qué falta. De cada elemento revisado se guarda en
 // revisado.json la huella de lo que se leyó y el día: si después cambia lo que
 // se lee, la huella deja de coincidir y vuelve solo a pendiente. Lo apunta
-// `npm run revisado -- O1-O12 V3` (scripts/revisado.ts), antes de aplicar las
-// correcciones del lote: así lo corregido vuelve a pendiente por sí solo.
+// `npm run revisado -- O1-O12 V3 --lote 3fa2b1c4` (scripts/revisado.ts), con la
+// orden que lleva cada lote en docs/revision.md. Cada lote lleva, en una línea
+// oculta, la huella de cada elemento tal como sale en esa copia, y eso es lo que
+// se guarda, no lo que diga el código al marcar: lo que se corrija después de
+// imprimir la copia, también por las correcciones de ese mismo lote, sigue
+// pendiente y sale en el lote siguiente para confirmarlo.
 
-import { huellaDe, type ElementoRevision, type Tipo } from './elementos';
+import { fnv1a, huellaDe, type ElementoRevision, type Tipo } from './elementos';
 
 export interface Revisado {
   readonly huella: string;
@@ -35,9 +39,10 @@ export function ordenarCodigos(codigos: Iterable<string>): string[] {
 /**
  * Los códigos que se piden: sueltos (V3) o en rangos del mismo tipo (O1-O12), separados por espacios o comas. Un
  * código que no está entre los `validos`, o un rango entre tipos distintos, es un error: mejor que marcar algo que no
- * se ha leído.
+ * se ha leído. Al marcar, los válidos son los del lote que se leyó (`donde`), así que un rango mal escrito (O1-O90 por
+ * O1-O9) no se sale de él.
  */
-export function leerCodigos(pedidos: readonly string[], validos: Iterable<string>): string[] {
+export function leerCodigos(pedidos: readonly string[], validos: Iterable<string>, donde?: string): string[] {
   const existentes = new Set(validos);
   const leidos = new Set<string>();
   for (const pedido of pedidos.flatMap((p) => p.split(/[\s,]+/)).filter(Boolean)) {
@@ -50,50 +55,61 @@ export function leerCodigos(pedidos: readonly string[], validos: Iterable<string
       if (a > b) throw new Error(`Rango al revés: ${pedido}`);
       // En un rango valen los huecos (códigos retirados); que no haya ninguno, no.
       const delRango = [...existentes].filter((c) => c[0] === tipo && numero(c) >= a && numero(c) <= b);
-      if (delRango.length === 0) throw new Error(`Ningún código en ${pedido}`);
+      if (delRango.length === 0) throw new Error(donde ? `Ningún código de ${pedido} está en ${donde}` : `Ningún código en ${pedido}`);
       for (const c of delRango) leidos.add(c);
     } else if (existentes.has(codigo)) {
       leidos.add(codigo);
     } else {
-      throw new Error(`No existe el código ${pedido}`);
+      throw new Error(donde ? `${pedido} no está en ${donde}` : `No existe el código ${pedido}`);
     }
   }
   return ordenarCodigos(leidos);
 }
 
-/** El registro con esos códigos marcados como revisados hoy, tal como se leen ahora. */
-export function marcar(registro: Registro, elementos: readonly ElementoRevision[], codigos: readonly string[], el: string): Registro {
-  const porCodigo = new Map(elementos.map((e) => [e.codigo, e]));
+/** La huella de cada elemento tal como es ahora, por código. */
+export function huellasDe(elementos: readonly ElementoRevision[]): Map<string, string> {
+  return new Map(elementos.map((e) => [e.codigo, huellaDe(e)]));
+}
+
+/** El registro con esos códigos marcados como revisados el día `el`, con la huella de lo que se leyó (`leidas`). */
+export function marcar(registro: Registro, leidas: ReadonlyMap<string, string>, codigos: readonly string[], el: string): Registro {
   const nuevo: Record<string, Revisado> = { ...registro };
   for (const c of codigos) {
-    const e = porCodigo.get(c);
-    if (!e) throw new Error(`No existe el código ${c}`);
-    nuevo[c] = { huella: huellaDe(e), el };
+    const huella = leidas.get(c);
+    if (huella === undefined) throw new Error(`${c} no está en lo que se leyó`);
+    nuevo[c] = { huella, el };
   }
   return ordenado(nuevo);
 }
 
 /**
- * De los códigos que se van a marcar, los que ya se revisaron una vez y han cambiado desde entonces: solo se deben
- * marcar si la persona nativa ha visto el texto de ahora.
+ * De los códigos que se marcan, los que ya no dicen lo que se leyó (se corrigieron después de la copia, o ya no
+ * existen): se apuntan con la huella de lo leído, así que siguen pendientes y salen en el lote siguiente.
  */
-export function cambiadosDesdeSuRevision(registro: Registro, elementos: readonly ElementoRevision[], codigos: readonly string[]): string[] {
-  const porCodigo = new Map(elementos.map((e) => [e.codigo, e]));
-  return codigos.filter((c) => {
-    const e = porCodigo.get(c);
-    return e !== undefined && registro[c] !== undefined && !estaRevisado(e, registro);
-  });
+export function cambiadosDesdeQueSeLeyo(leidas: ReadonlyMap<string, string>, elementos: readonly ElementoRevision[], codigos: readonly string[]): string[] {
+  const ahora = huellasDe(elementos);
+  return codigos.filter((c) => ahora.get(c) !== leidas.get(c));
+}
+
+/** La línea oculta de un lote en docs/revision.md: su id y la huella de cada elemento tal como sale en esa copia. */
+export function lineaDeLote(lote: readonly ElementoRevision[]): { readonly id: string; readonly linea: string } {
+  const huellas = lote.map((e) => `${e.codigo} ${huellaDe(e)}`).join(', ');
+  const id = fnv1a(huellas);
+  return { id, linea: `<!-- lote ${id}: ${huellas} -->` };
 }
 
 /**
- * Lo que impide marcar, de la salida de `git status --porcelain`: cambios sin guardar en el contenido. Si se marcara
- * con ellos, quedaría como revisado un texto que la persona nativa no ha visto. No cuentan revisado.json ni las pruebas.
+ * Las huellas de un lote, sacadas de una copia de docs/revision.md por el id que lleva su orden, o null si esa copia
+ * no lo trae. Una línea que no cuadra con su id (retocada a mano) no vale.
  */
-export function cambiosQueImpidenMarcar(estadoGit: string): string[] {
-  return estadoGit
-    .split('\n')
-    .map((linea) => linea.slice(3).trim())
-    .filter((ruta) => ruta.startsWith('src/neerlandes/') && !ruta.endsWith('revision/revisado.json') && !/\.test\.tsx?$/.test(ruta));
+export function leerLote(documento: string, id: string): Map<string, string> | null {
+  for (const [, idLinea = '', huellas = ''] of documento.matchAll(/^<!-- lote ([0-9a-f]{8}): (.*) -->$/gm)) {
+    if (idLinea !== id.toLowerCase() || fnv1a(huellas) !== idLinea) continue;
+    const pares = huellas.split(', ').map((par) => /^([ORVSPET][1-9]\d*) ([0-9a-f]{8})$/.exec(par));
+    if (pares.some((p) => p === null)) continue;
+    return new Map(pares.flatMap((p) => (p ? [[p[1] ?? '', p[2] ?? ''] as const] : [])));
+  }
+  return null;
 }
 
 /** revisado.json con un código por línea: dos lotes marcados en ramas distintas casi nunca chocan. */

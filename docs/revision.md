@@ -33,7 +33,8 @@ Qué mirar en cada tipo:
 
 ## Lote O1 a O9, R1 a R2, E1, E12, E19, E33 (unos 14 minutos)
 
-Se marca con: `npm run revisado -- O1-O9 R1-R2 E1 E12 E19 E33`
+Se marca con: `npm run revisado -- O1-O9 R1-R2 E1 E12 E19 E33 --lote 43ab45e2`
+<!-- lote 43ab45e2: R1 57c59b4c, O1 7ccad166, O2 75fe1ac5, O3 8937905a, O4 f2b71b1c, O5 4b3a3cf6, O6 08a98315, O7 a73f8478, O8 1aaeed88, E1 54832b9f, E12 2d0432be, E19 b73a14e4, E33 99ca4c52, R2 455df7b3, O9 4e1ca67c -->
 
 ### Orden de la frase: Inversión
 
@@ -158,7 +159,8 @@ Se marca con: `npm run revisado -- O1-O9 R1-R2 E1 E12 E19 E33`
 
 ## Lote O10 a O21, R3, E2, E17, E31 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- O10-O21 R3 E2 E17 E31`
+Se marca con: `npm run revisado -- O10-O21 R3 E2 E17 E31 --lote 2a6c526a`
+<!-- lote 2a6c526a: O10 4c7d180f, O11 fa08e756, O12 ad8e9389, O13 ba80c246, O14 53573eaa, O15 424fe4c6, O16 c72f2275, E2 0e6a7232, E17 e2b4157e, E31 600152f1, R3 73c07016, O17 707a63da, O18 9acfd285, O19 009c2e32, O20 4f58ffc1, O21 a0833d8e -->
 
 ### Orden de la frase: Verbos modales
 
@@ -310,7 +312,8 @@ Se marca con: `npm run revisado -- O10-O21 R3 E2 E17 E31`
 
 ## Lote O22 a O31, R4, E3 a E6, E40 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- O22-O31 R4 E3-E6 E40`
+Se marca con: `npm run revisado -- O22-O31 R4 E3-E6 E40 --lote a37c5169`
+<!-- lote a37c5169: O22 1167747b, O23 97f03bc7, O24 4a7fae44, E3 857c7232, E4 3832e219, E5 82eb9ff3, E6 2442123b, E40 8cc85f95, R4 d584cd92, O25 8a0b8e20, O26 ce1857bf, O27 b97c8654, O28 cc21cdb6, O29 0f3c2899, O30 aa234282, O31 bc47b0f9 -->
 
 ### Orden de la frase: Perfectum
 
@@ -444,7 +447,8 @@ Se marca con: `npm run revisado -- O22-O31 R4 E3-E6 E40`
 
 ## Lote O32 a O40, R5, E7 a E9, E20, E22 a E23 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- O32-O40 R5 E7-E9 E20 E22-E23`
+Se marca con: `npm run revisado -- O32-O40 R5 E7-E9 E20 E22-E23 --lote e2e3ba77`
+<!-- lote e2e3ba77: O32 655effb6, E7 f856c8ec, E22 3bdfd314, E23 55af7579, R5 286a5c00, O33 b8ca5a29, O34 5f0985de, O35 4c3b7b6d, O36 7f9a450c, O37 a5b6fd75, O38 fbbadc96, O39 d4ef51b0, O40 1fb48810, E8 bb379ae4, E9 2d4120d6, E20 c6ae2e3c -->
 
 ### Orden de la frase: Verbos separables
 
@@ -569,7 +573,8 @@ Se marca con: `npm run revisado -- O32-O40 R5 E7-E9 E20 E22-E23`
 
 ## Lote O41 a O48, R6, E10 a E11, E18, E21, E30, E32 (unos 14 minutos)
 
-Se marca con: `npm run revisado -- O41-O48 R6 E10-E11 E18 E21 E30 E32`
+Se marca con: `npm run revisado -- O41-O48 R6 E10-E11 E18 E21 E30 E32 --lote 13fb605d`
+<!-- lote 13fb605d: E21 674e505a, E32 6f66add8, R6 b6710449, O41 ff08e265, O42 6faecd53, O43 4d5b2a63, O44 76b29332, O45 497ff04a, O46 0b131d07, O47 1b0554c0, O48 2fb61f07, E10 13b9cd3f, E11 4dc1711d, E18 6bd82e72, E30 92162485 -->
 
 ### Explicaciones de errores: «Niet» y «geen»
 
@@ -679,7 +684,8 @@ Se marca con: `npm run revisado -- O41-O48 R6 E10-E11 E18 E21 E30 E32`
 
 ## Lote O49 a O59, R7 a R8, E13 a E14, E34 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- O49-O59 R7-R8 E13-E14 E34`
+Se marca con: `npm run revisado -- O49-O59 R7-R8 E13-E14 E34 --lote 0b9c00a1`
+<!-- lote 0b9c00a1: R7 4394bc2e, O49 29d54709, O50 ba377cab, O51 fd9a8bb9, O52 793e0fa1, O53 72d58494, O54 ab949aed, O55 4454c424, O56 cb7e1899, E13 7fff36fa, E14 0dc36bb6, E34 c9af5aba, R8 b9bdc9de, O57 b2fbe39e, O58 d797d12a, O59 208678f3 -->
 
 ### Orden de la frase: Subordinadas
 
@@ -805,7 +811,8 @@ Se marca con: `npm run revisado -- O49-O59 R7-R8 E13-E14 E34`
 
 ## Lote O60 a O64, R9 a R12, R14, V1 a V3, E15 a E16 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- O60-O64 R9-R12 R14 V1-V3 E15-E16`
+Se marca con: `npm run revisado -- O60-O64 R9-R12 R14 V1-V3 E15-E16 --lote acf5f018`
+<!-- lote acf5f018: O60 e4f78262, O61 ef64eeb0, O62 b2ac7b9b, O63 9e581618, O64 6bcf0287, E15 0a65c09e, E16 3e8846cf, R9 9df0e699, R10 846101e1, R11 5d107eea, R12 5e1ab120, R14 d08bfa54, V1 6092a17e, V2 fa80c88a, V3 24cb10c9 -->
 
 ### Orden de la frase: Subordinada delante
 
@@ -915,7 +922,8 @@ Se marca con: `npm run revisado -- O60-O64 R9-R12 R14 V1-V3 E15-E16`
 
 ## Lote V4 a V19 (unos 14 minutos)
 
-Se marca con: `npm run revisado -- V4-V19`
+Se marca con: `npm run revisado -- V4-V19 --lote eac34282`
+<!-- lote eac34282: V4 19535a26, V5 6f0c3e82, V6 a168a57f, V7 f96d641b, V8 20533138, V9 1b375519, V10 44526a8c, V11 fddcf7af, V12 2d8afa3a, V13 4dc2ae40, V14 46681803, V15 4c953f6f, V16 6203612b, V17 592c8574, V18 273b1bc3, V19 e069a8ab -->
 
 ### Verbos
 
@@ -1014,7 +1022,8 @@ Se marca con: `npm run revisado -- V4-V19`
 
 ## Lote V20 a V33 (unos 14 minutos)
 
-Se marca con: `npm run revisado -- V20-V33`
+Se marca con: `npm run revisado -- V20-V33 --lote c3d8c4b4`
+<!-- lote c3d8c4b4: V20 5b4e44a4, V21 94344ac7, V22 6dc2c55c, V23 9c76f3fc, V24 618a5c48, V25 9b02ef12, V26 ec844090, V27 a015f615, V28 804f0c5e, V29 24a5ba01, V30 12eb31c7, V31 fb00d6d3, V32 3ea47efa, V33 3ceec994 -->
 
 ### Verbos
 
@@ -1114,7 +1123,8 @@ Se marca con: `npm run revisado -- V20-V33`
 
 ## Lote V34 a V52 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- V34-V52`
+Se marca con: `npm run revisado -- V34-V52 --lote bc77ad08`
+<!-- lote bc77ad08: V34 f33f1eed, V35 1924e733, V36 e4fc06f9, V37 1c0f446d, V38 5d2693a1, V39 6266b305, V40 e2798c9e, V41 69342a5a, V42 bf984573, V43 3c1e5e36, V44 bdd0fd08, V45 405d5629, V46 2cc2627b, V47 185f6176, V48 379ade82, V49 12bde102, V50 7afdbdcf, V51 2c13eab9, V52 6debbe12 -->
 
 ### Verbos
 
@@ -1230,7 +1240,8 @@ Se marca con: `npm run revisado -- V34-V52`
 
 ## Lote R13, V53 a V58, S1, E24 a E29, E36 a E39, T30, T33 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- R13 V53-V58 S1 E24-E29 E36-E39 T30 T33`
+Se marca con: `npm run revisado -- R13 V53-V58 S1 E24-E29 E36-E39 T30 T33 --lote dee73c1d`
+<!-- lote dee73c1d: V53 043c74ad, V54 57719715, V55 b6e09333, V56 188b3123, V57 ea435e1a, V58 70692600, T30 eebf8989, T33 c50c7089, E24 3445d3e3, E25 63cf5007, E26 1831fa99, E27 a3973f67, E28 caf4d928, E29 e7607390, E36 51a77777, E37 258efc83, E38 69404de0, E39 33dd9b51, R13 cc813e87, S1 7b29ff1a -->
 
 ### Verbos
 
@@ -1330,7 +1341,8 @@ Se marca con: `npm run revisado -- R13 V53-V58 S1 E24-E29 E36-E39 T30 T33`
 
 ## Lote S2 a S15, P1 a P6, E35, T26 a T27, T29, T31 a T32 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- S2-S15 P1-P6 E35 T26-T27 T29 T31-T32`
+Se marca con: `npm run revisado -- S2-S15 P1-P6 E35 T26-T27 T29 T31-T32 --lote 4d226554`
+<!-- lote 4d226554: S2 293ea41c, S3 3d49cd1f, S4 8dab7bde, S5 1a0b321e, S6 ec13af61, S7 92b096a3, S8 e52737a5, S9 b1e00f88, S10 b6b46ba1, S11 dbc6d521, S12 07016c0d, S13 1f51dda8, S14 1d568b43, S15 362f8576, E35 d97a5e9a, T26 9734e6a1, T27 f15130a3, T29 73177f3a, T31 20edef6e, T32 1f0f72a7, P1 6a78dfc8, P2 41467e46, P3 412b2f4a, P4 96cdd512, P5 cd35db6f, P6 67da2851 -->
 
 ### Verbos separables
 
@@ -1433,7 +1445,8 @@ Se marca con: `npm run revisado -- S2-S15 P1-P6 E35 T26-T27 T29 T31-T32`
 
 ## Lote P7 a P88 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- P7-P88`
+Se marca con: `npm run revisado -- P7-P88 --lote a9767691`
+<!-- lote a9767691: P7 72cad6d7, P8 ed5d8faf, P9 aaeac683, P10 9c8101dd, P11 ec4f9b7e, P12 52e6daab, P13 396b4664, P14 38cf71b8, P15 dc3cdf22, P16 21d31997, P17 189e8e00, P18 e74d3be2, P19 5ba59dce, P20 d6fa3fa0, P21 4e05eb58, P22 32942345, P23 e570e44e, P24 c57f77e6, P25 312331a0, P26 3d8d5c85, P27 04398544, P28 0063172e, P29 a2887f36, P30 772df69c, P31 6023f647, P32 f12a94f2, P33 5772060e, P34 d9d895c4, P35 e4c350f6, P36 3c3ba415, P37 00d94d94, P38 d2a1cefd, P39 1bfffc91, P40 231361a1, P41 856a03a0, P42 3cc3aa27, P43 ae90af22, P44 c802e28e, P45 03109d0b, P46 3c1832f7, P47 77e1ee50, P48 619b1449, P49 306c0dc7, P50 4f5f3223, P51 1551d4e2, P52 8e65c188, P53 04d05fb3, P54 325651cd, P55 69253e7f, P56 6017c8c7, P57 a6acbc39, P58 f45f9fc3, P59 9ae62714, P60 3198b5b5, P61 691eee2d, P62 a1f9817f, P63 0f5bad89, P64 1e1678a1, P65 72f1efbb, P66 5dcaee98, P67 06e1bb33, P68 f7138d0c, P69 5b6efc1e, P70 27a77127, P71 e5bda42e, P72 e6be73b8, P73 3a80476a, P74 00d4a738, P75 1b6f4029, P76 5af4160e, P77 a3f37611, P78 1cd1edbf, P79 c8c1f6e6, P80 cb74472e, P81 1b118edf, P82 a7110099, P83 aed4d27c, P84 9a895732, P85 9b7e4808, P86 a7a1b784, P87 f0ee3695, P88 e448dc15 -->
 
 ### Vocabulario: Familia y gente
 
@@ -1534,7 +1547,8 @@ Se marca con: `npm run revisado -- P7-P88`
 
 ## Lote P89 a P128, E41 a E43, T1 a T22 (unos 15 minutos)
 
-Se marca con: `npm run revisado -- P89-P128 E41-E43 T1-T22`
+Se marca con: `npm run revisado -- P89-P128 E41-E43 T1-T22 --lote b549d473`
+<!-- lote b549d473: P89 72c17a19, P90 24591187, P91 e5f87404, P92 031673af, P93 18d5c9d0, P94 ad500790, P95 542930c7, P96 36a590e5, P97 658e6513, P98 05e82898, P99 b719f828, P100 ab450652, P101 f49f3330, P102 e8362601, P103 999a8174, P104 cd780eda, P105 c405fd1b, P106 215f31c4, P107 f29f3427, P108 d4f84774, P109 f77af643, P110 2e6ee972, P111 d5eaba07, P112 a3004f1e, P113 1b125e6e, P114 a571bf28, P115 b2b552f4, P116 751cc03e, P117 00887fe0, P118 ec11ed4a, P119 3cc77dc3, P120 c20bc24a, P121 7a9a194b, P122 9e934756, P123 ffc8007b, P124 94200242, P125 1226b07a, P126 a1b9cb9e, P127 52783f9d, P128 68c1bca4, E41 197d87c3, E42 d6d444fd, E43 7b9e01ad, T1 a62ee7eb, T2 24406458, T3 19dc53d3, T4 e377e55f, T5 b24e9804, T6 0abb2447, T7 d70312e5, T8 9502ea79, T9 f14dbaa0, T10 cad84e7b, T11 7368b293, T12 c5e119af, T13 8a933a16, T14 afdb3472, T15 1ff8bd67, T16 c0dac55b, T17 52e7b631, T18 615ae5e5, T19 97a9d9ef, T20 52948181, T21 ecf059d7, T22 4b9151c1 -->
 
 ### Vocabulario: Para conversar
 
@@ -1623,7 +1637,8 @@ Se marca con: `npm run revisado -- P89-P128 E41-E43 T1-T22`
 
 ## Lote T23 a T25 (un minuto)
 
-Se marca con: `npm run revisado -- T23-T25`
+Se marca con: `npm run revisado -- T23-T25 --lote b68a0f0e`
+<!-- lote b68a0f0e: T23 12db17de, T24 947b5c3f, T25 30c7ed26 -->
 
 ### Otros textos de la app
 
@@ -1639,8 +1654,8 @@ Nada todavía.
 
 Este archivo se genera con `npm run revision` y no se edita a mano: las correcciones van en los datos (`src/neerlandes/*/datos.ts`) o en el código de donde sale cada texto.
 
-1. Primero se marca el lote, con la orden que lleva debajo de su título y los códigos de la copia que se leyó, no los de un archivo generado después. La orden no marca nada si hay cambios sin guardar en `src/neerlandes`.
-2. Después se aplican las correcciones. Lo corregido vuelve solo a pendiente y sale en el lote siguiente, para que la persona nativa vea cómo ha quedado.
+1. Al terminar un lote se marca con la orden que lleva debajo de su título, tal como sale en la copia que se leyó; si no se terminó, solo con los códigos que se leyeron. Se apunta lo que decía esa copia (su orden lleva el id con que se encuentra en este archivo o en su historial de git), no lo que diga el código al marcar, y no se puede marcar nada que no sea de ese lote.
+2. Las correcciones se aplican antes o después de marcar, da igual: lo que haya cambiado desde la copia, también lo corregido, vuelve solo a pendiente y sale en el lote siguiente, para que la persona nativa vea cómo ha quedado.
 3. Si se corrige una regla (R), hay que mirar también las explicaciones (E) y las pistas (T26, T27 y T29) que la repiten con otras palabras.
 4. Si cambia algo que suena (una frase, una palabra o un ejemplo), hay que lanzar `npm run audio` en el Mac antes de instalar la app (`npm run iphone`): hasta entonces lo lee la voz del dispositivo.
 5. Los tiempos son una estimación (`ESTIMACION` en `src/neerlandes/revision/documento.ts`); con lo que tarde de verdad el primer lote se ajusta `RITMO`.

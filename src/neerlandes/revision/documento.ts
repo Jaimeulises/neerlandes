@@ -7,7 +7,7 @@
 // necesita quien aplica las correcciones, al final.
 
 import { elementosDeRevision, NOMBRES_TIPO, palabrasDe, type ElementoRevision, type Tipo } from './elementos';
-import { estaRevisado, tramos, type Registro } from './estado';
+import { estaRevisado, lineaDeLote, tramos, type Registro } from './estado';
 import REVISADO from './revisado.json';
 
 /** Lo que cabe en un lote: unos 15 minutos. */
@@ -219,8 +219,8 @@ const PARA_QUIEN_CORRIGE: readonly string[] = [
   '',
   'Este archivo se genera con `npm run revision` y no se edita a mano: las correcciones van en los datos (`src/neerlandes/*/datos.ts`) o en el código de donde sale cada texto.',
   '',
-  '1. Primero se marca el lote, con la orden que lleva debajo de su título y los códigos de la copia que se leyó, no los de un archivo generado después. La orden no marca nada si hay cambios sin guardar en `src/neerlandes`.',
-  '2. Después se aplican las correcciones. Lo corregido vuelve solo a pendiente y sale en el lote siguiente, para que la persona nativa vea cómo ha quedado.',
+  '1. Al terminar un lote se marca con la orden que lleva debajo de su título, tal como sale en la copia que se leyó; si no se terminó, solo con los códigos que se leyeron. Se apunta lo que decía esa copia (su orden lleva el id con que se encuentra en este archivo o en su historial de git), no lo que diga el código al marcar, y no se puede marcar nada que no sea de ese lote.',
+  '2. Las correcciones se aplican antes o después de marcar, da igual: lo que haya cambiado desde la copia, también lo corregido, vuelve solo a pendiente y sale en el lote siguiente, para que la persona nativa vea cómo ha quedado.',
   '3. Si se corrige una regla (R), hay que mirar también las explicaciones (E) y las pistas (T26, T27 y T29) que la repiten con otras palabras.',
   '4. Si cambia algo que suena (una frase, una palabra o un ejemplo), hay que lanzar `npm run audio` en el Mac antes de instalar la app (`npm run iphone`): hasta entonces lo lee la voz del dispositivo.',
   '5. Los tiempos son una estimación (`ESTIMACION` en `src/neerlandes/revision/documento.ts`); con lo que tarde de verdad el primer lote se ajusta `RITMO`.',
@@ -236,8 +236,10 @@ export function documentoDeRevision(registro: Registro = REVISADO, elementos: re
   if (lotes.length === 0) l.push('Todo está revisado.', '');
   for (const lote of lotes) {
     const codigos = lote.map((e) => e.codigo);
-    // El lote se llama por sus códigos, no por su número: el número cambiaría al marcar o corregir otros.
-    l.push(`## Lote ${tramos(codigos)} (${unosMinutos(segundosDeTodos(lote))})`, '', `Se marca con: \`npm run revisado -- ${tramos(codigos, '-', ' ')}\``, '', ...pintar(lote));
+    // El lote se llama por sus códigos, no por su número: el número cambiaría al marcar o corregir otros. Su orden
+    // lleva el id de la línea oculta con las huellas de lo que enseña esta copia, que es lo que se apunta al marcar.
+    const { id, linea } = lineaDeLote(lote);
+    l.push(`## Lote ${tramos(codigos)} (${unosMinutos(segundosDeTodos(lote))})`, '', `Se marca con: \`npm run revisado -- ${tramos(codigos, '-', ' ')} --lote ${id}\``, linea, '', ...pintar(lote));
   }
 
   l.push('## Ya revisado', '');
