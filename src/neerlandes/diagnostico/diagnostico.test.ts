@@ -621,8 +621,20 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(casos(verbos.diagnosticar?.(perfectumDe('hebben'), 'Vorige week heb ik griep gehat') ?? [])).toEqual(['participio-irregular']);
     expect(casos(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik hebt vorige week griep gehat') ?? [])).toEqual(['presente-otra', 'participio-irregular']);
     expect(casos(verbos.diagnosticar?.(perfectumDe('zijn'), 'Ik ben nog nooit in Groningen gewest') ?? [])).toEqual(['participio-irregular']);
-    // Sin participio sigue siendo otro tiempo.
+    // Sin participio sigue siendo otro tiempo, aunque cerca del final vaya una palabra con ge- que no se le parece.
     expect(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik had vorige week griep')).toEqual([]);
+    expect(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik had een week geleden griep')).toEqual([]);
+    expect(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik heb een week geleden griep')).toEqual([]);
+    expect(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik had vorige week geen griep')).toEqual([]);
+  });
+
+  it('lo que es del verbo del participio le gana a lo que solo se le parece', () => {
+    // «spel» o «kop» se escriben como la raíz de su verbo, pero el participio mal formado es el que va al final.
+    const spel = verbos.diagnosticar?.(perfectumDe('spelen'), 'De kinderen hebben de hele middag buiten een spel gespeelt') ?? [];
+    expect(spel.map((d) => d.titulo)).toEqual(['«gespeelt» no: «gespeeld»']);
+    expect(verbos.diagnosticar?.(perfectumDe('kopen'), 'Ik heb een kop koffie gekochd')?.map((d) => d.titulo)).toEqual(['«gekochd» no: «gekocht»']);
+    // Y una forma de su verbo, a una palabra con ge- que no lo es.
+    expect(verbos.diagnosticar?.(perfectumDe('werken'), 'Ik heb een week geleden gewerkd')?.map((d) => d.titulo)).toEqual(['«gewerkd» no: «gewerkt»']);
   });
 
   it('un participio mal formado no mueve «niet», aunque no se parezca al bueno', () => {

@@ -138,10 +138,13 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     if (p.tipoFinal === 'participio') {
       const participio = p.finales.at(-1) ?? '';
       // Con el auxiliar, lo que va detrás y es del verbo del participio intenta serlo («ik ben … was»), y también lo
-      // que empieza por ge- al final, como en la comprobación del participio («ik heb … gehat»); sin él, lo que es
-      // del verbo y no se escribe como una forma conjugada.
+      // que va en las dos últimas posiciones con ge- y se parece al participio («ik heb … gehat», «gewest»), lleva ge-
+      // delante de una forma de su verbo («gezijn») o es el participio de otro verbo («gegaan»): «geleden» o «geen»
+      // no lo intentan. Sin el auxiliar, lo que es del verbo y no se escribe como una forma conjugada.
+      const comoElParticipio = (w: string): boolean =>
+        w.startsWith('ge') && (w.startsWith(participio.slice(0, 3)) || mismoVerbo(w.slice(2), participio) || formasDe(w).some((f) => f.tipo === 'participio'));
       const intentaParticipio = (w: string, i: number): boolean =>
-        w === participio || (iVerbo >= 0 ? i > iVerbo && (mismoVerbo(w, participio) || (w.startsWith('ge') && i >= u.length - 2)) : mismoVerbo(w, participio) && !pareceConjugada(w, participio));
+        w === participio || (iVerbo >= 0 ? i > iVerbo && (mismoVerbo(w, participio) || (comoElParticipio(w) && i >= u.length - 2)) : mismoVerbo(w, participio) && !pareceConjugada(w, participio));
       enOtroTiempo = !u.some(intentaParticipio) && (iVerbo < 0 ? u.some((w) => pareceConjugada(w, participio)) : pareceConjugada(u[iVerbo] ?? '', participio));
     }
     const dada = exacto < 0 ? u[iVerbo] : undefined;
@@ -165,16 +168,22 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
 
   // El participio, si lo hay. Dicha en otro tiempo («Ik werkte de hele dag», «Mijn moeder belde gisteren») o con
   // otro verbo conjugado («Ik ga de hele dag werken»), lo que lleva del verbo no intenta ser el participio. Sin
-  // auxiliar, una forma que se escribe como conjugada tampoco; con él, sí, aunque sea la raíz sola de un verbo cuyo
-  // presente no está en los datos («Ik heb het niet begrijp»).
+  // auxiliar, una forma que se escribe como conjugada tampoco. Primero cuenta lo que es de su verbo; si no hay, lo que
+  // lleva ge- en una de las dos últimas posiciones («Ik heb een kop koffie gekochd»), y con el auxiliar, por último, lo
+  // que se escribe como una forma de su verbo, aunque sea la raíz sola («Ik heb het niet begrijp»): una palabra así
+  // puede ir antes del participio sin intentarlo («een spel», «een kop»).
   // Lo que intenta ser el participio queda apuntado: «niet» se compara con él como si fuera el bueno.
   let intentoParticipio: string | undefined;
   if (p.tipoFinal === 'participio' && !otroVerboAntes(iVerbo) && !enOtroTiempo) {
     const participio = p.finales.at(-1) ?? '';
     if (!u.includes(participio)) {
       const otroTiempo = (w: string): boolean => iVerbo < 0 && pareceConjugada(w, participio);
-      const delParticipio = (w: string): boolean => mismoVerbo(w, participio) || (iVerbo >= 0 && pareceConjugada(w, participio)) || formasDe(w).some((f) => formasDe(participio).some((g) => g.inf === f.inf));
-      intentoParticipio = u.find((w, i) => i > iVerbo && w !== participio && !otroTiempo(w) && (delParticipio(w) || (w.startsWith('ge') && i >= u.length - 2)));
+      const puedeSer = (w: string, i: number): boolean => i > iVerbo && w !== participio && !otroTiempo(w);
+      const delParticipio = (w: string): boolean => mismoVerbo(w, participio) || formasDe(w).some((f) => formasDe(participio).some((g) => g.inf === f.inf));
+      intentoParticipio =
+        u.find((w, i) => puedeSer(w, i) && delParticipio(w)) ??
+        u.find((w, i) => puedeSer(w, i) && w.startsWith('ge') && i >= u.length - 2) ??
+        (iVerbo >= 0 ? u.find((w, i) => puedeSer(w, i) && pareceConjugada(w, participio)) : undefined);
       if (intentoParticipio !== undefined && !enAlgunaValida(validas, intentoParticipio)) anadir(explicarParticipio(participio, intentoParticipio));
     }
   }
