@@ -13,7 +13,7 @@ Quien la usa entiende bastante neerlandés, pero al hablar pone las palabras en 
 3. **Producir, no reconocer.** El ejercicio central es escribir la frase entera desde el español. El corrector compara palabra a palabra con todas las formas buenas, perdona mayúsculas, puntuación y tildes, no perdona una letra en el verbo y dice si el fallo es de orden o de palabras. Como ninguna lista de formas buenas es completa, el alumno puede dar la suya por buena («Mi respuesta también vale»).
 4. **Intentar antes de ver.** Lo que sale de una regla (el orden de cada frase, el presente regular, el participio regular) no se enseña antes de preguntarlo: la regla se presenta una vez, al abrir su grupo, con un ejemplo que no es la frase que se pregunta, y se repite al corregir. Si cada frase se enseñara antes, el primer ejercicio sería copiar lo que se acaba de leer. Lo irregular, los separables, el pasado y las palabras sí se presentan, porque no se deducen.
 5. **Escalera de formas por frase**: la primera vez, fichas; desde el primer repaso, escribirla; después también decirla en voz alta y el dictado.
-6. **Voz del dispositivo** (síntesis del navegador, voz neerlandesa local). Sin claves ni red. Sin voz neerlandesa, no hay dictado.
+6. **Voz del dispositivo** (síntesis del navegador, voz neerlandesa local). Sin claves ni red. Sin voz neerlandesa, no hay dictado. *Sustituido por la decisión 0006: ahora suena audio grabado dentro de la app y la voz del dispositivo queda de reserva.*
 7. **Web primero.** Se usa en el navegador del móvil; sin Capacitor ni tiendas mientras sea para uso personal.
 8. **Nombre provisional «Stap»** (paso). Solo aparece en `index.html`, `src/estado/app.ts` y las pantallas.
 

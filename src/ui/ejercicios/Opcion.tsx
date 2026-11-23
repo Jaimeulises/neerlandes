@@ -33,6 +33,7 @@ export function Opcion({ ejercicio, repeticion, voz, diagnosticar, onTerminar }:
       <p className={ejercicio.enunciadoEnIdioma ? 'enunciado enunciado--nl' : 'enunciado'} lang={ejercicio.enunciadoEnIdioma ? 'nl' : 'es'}>
         {ejercicio.enunciado}
       </p>
+      {ejercicio.significado ? <p className="texto-2">{ejercicio.significado}</p> : null}
       <div className="opciones" role="group" aria-label="Opciones">
         {ejercicio.opciones.map((o) => {
           const clase =

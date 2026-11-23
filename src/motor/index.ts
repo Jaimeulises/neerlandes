@@ -13,6 +13,7 @@ export type {
   EjercicioOpcion,
   EjercicioOrdenar,
   EjercicioTraducir,
+  Ejemplo,
   Elemento,
   ExplicacionFallo,
   Ficha,

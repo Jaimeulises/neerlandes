@@ -22,6 +22,7 @@ import {
   type EjercicioOrdenar,
   type EjercicioTraducir,
 } from '../motor';
+import { vozGrabada } from '../neerlandes/audio';
 import { boton, buscarBoton, enPantalla, escribirEn, esperar, limpiar, montar, prepararNavegador, pulsar } from '../pruebas/pantalla';
 import type { Voz } from '../estado/voz';
 import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../neerlandes/orden/pista';
@@ -106,9 +107,15 @@ describe('la app de punta a punta', () => {
     expect(enPantalla()).toContain('Últimas dos semanas');
     await pulsar(boton('Ajustes'));
     expect(enPantalla()).toContain('Copia de seguridad');
-    expect(enPantalla()).toContain('no tiene voz neerlandesa');
     expect(enPantalla()).toContain('Ejercicios en los repasos');
-    expect(enPantalla()).toContain('Dictado (necesita la voz)');
+    // El navegador de las pruebas no tiene voz: si hay audio grabado, suena ese y hay dictado; si no, no hay voz.
+    if (vozGrabada()) {
+      expect(enPantalla()).toContain('grabada con Azure');
+      expect(enPantalla()).not.toContain('Dictado (necesita la voz)');
+    } else {
+      expect(enPantalla()).toContain('no tiene voz neerlandesa');
+      expect(enPantalla()).toContain('Dictado (necesita la voz)');
+    }
   });
 });
 

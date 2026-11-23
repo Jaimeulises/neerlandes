@@ -41,6 +41,12 @@ export function Presentacion({ presentacion, voz, onSeguir }: Props): ReactEleme
             </tbody>
           </table>
         ) : null}
+        {presentacion.ejemplos?.map((e) => (
+          <div key={e.texto} className="ejemplo">
+            <p lang="nl">{e.texto}</p>
+            <p className="texto-2">{e.significado}</p>
+          </div>
+        ))}
         {presentacion.detalle ? <p className="aclaracion">{presentacion.detalle}</p> : null}
         {presentacion.nota ? <p className="texto-2 pequeno">{presentacion.nota}</p> : null}
       </div>

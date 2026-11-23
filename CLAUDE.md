@@ -7,7 +7,7 @@ Stap (nombre provisional) es una app personal para practicar neerlandés hablado
 - Español directo, sin rayas (ni raya larga ni media) en código, textos, documentación ni commits: comas, dos puntos, paréntesis o puntos.
 - Antes de un commit, en verde: `npm run check` (tipos, lint, pruebas y compilación).
 - Cambios pequeños y commits que expliquen el porqué. Nunca un push forzado a `main`.
-- No está publicada en ninguna web: se usa en el móvil servida desde el ordenador (`npm run movil`, ver `docs/decisiones/0002-movil-sin-publicar.md`).
+- No está publicada en ninguna web. En el iPhone se instala como app por cable (`npm run iphone`, ver `docs/decisiones/0005-app-de-iphone.md`); también se puede servir por la wifi (`npm run movil`, ver `docs/decisiones/0002-movil-sin-publicar.md`).
 - Nada personal (nombres, familia, datos de contacto) en código, contenido, documentos ni commits: el repositorio ha sido público.
 
 ## Lo que no se hace nunca
@@ -33,3 +33,5 @@ Stap (nombre provisional) es una app personal para practicar neerlandés hablado
 - `docs/decisiones/`: una nota corta por cada decisión que otro tenga que entender después.
 - `public/`: icono (`icono.svg`; los PNG se sacan de él) y manifiesto para añadirla a la pantalla de inicio.
 - `docs/revision.md`: se genera; no se edita a mano.
+- `ios/`: el proyecto de Xcode de Capacitor. `ios/App/App/public` se copia de `dist/` al compilar y no se edita.
+- `public/audio/` y `src/neerlandes/audio-manifiesto.json`: el audio grabado (decisión 0006). Los escribe `npm run audio`; no se editan a mano. Si cambia el contenido, se vuelve a lanzar.
