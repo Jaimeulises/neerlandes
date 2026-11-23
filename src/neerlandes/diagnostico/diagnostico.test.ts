@@ -558,6 +558,12 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(casos(diagnostico('Als ik tijd heb', 'Als heb ik tijd, ik kom langs'))).toEqual(['subordinada-un-verbo', 'subordinada-delante']);
     expect(casos(diagnostico('Als ik tijd heb', 'Als ik tijd heb, ik kom langs'))).toEqual(['subordinada-delante']);
     expect(diagnostico('Als ik tijd heb', 'Als ik tijd heb, kom ik langs')).toEqual([]);
+    // Con la subordinada sin sujeto, como en español, el pronombre de justo delante del verbo es el de la principal.
+    expect(casos(diagnostico('Nadat we gegeten hebben', 'Nadat gegeten hebben, we gaan wandelen'))).toEqual(['subordinada-delante']);
+    expect(casos(diagnostico('Nadat we gegeten hebben', 'Nadat hebben gegeten, we gaan wandelen'))).toEqual(['subordinada-delante']);
+    expect(casos(diagnostico('Als ik tijd heb', 'Als tijd heb, ik kom langs'))).toEqual(['subordinada-delante']);
+    expect(casos(diagnostico('Als ik tijd heb', 'Als heb tijd, ik kom langs'))).toEqual(['subordinada-un-verbo', 'subordinada-delante']);
+    expect(casos(diagnostico('Als ik tijd heb', 'Als heb ik tijd, kom langs'))).toEqual(['subordinada-un-verbo']);
   });
 
   it('el perfectum dicho en otro tiempo o con otro verbo conjugado no lleva un participio sin ge-', () => {

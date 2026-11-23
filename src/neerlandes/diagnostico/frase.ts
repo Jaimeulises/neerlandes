@@ -311,7 +311,13 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
         if (i < 0) break;
         porSalir.splice(i, 1);
       }
-      const iSujetoPrincipal = sub.delante ? buscar(u, p.sujeto, Math.max(iVerboSub + 1, finSubordinada)) : -1;
+      let iSujetoPrincipal = sub.delante ? buscar(u, p.sujeto, Math.max(iVerboSub + 1, finSubordinada)) : -1;
+      // Con la subordinada sin sujeto, como en español («Nadat gegeten hebben, we gaan wandelen»), el recorrido se
+      // lleva el de la principal: si no queda otro detrás y va justo delante del verbo de la principal, es ese.
+      if (sub.delante && iSujetoPrincipal < 0 && iVerbo > iVerboSub) {
+        const antes = buscar(u, p.sujeto, iVerboSub + 1);
+        if (antes >= 0 && antes + p.sujeto.length === iVerbo) iSujetoPrincipal = antes;
+      }
       const finSub = sub.delante ? Math.min(...[iVerbo, iSujetoPrincipal, u.length].filter((i) => i > iVerboSub)) : u.length;
       // Lo de la subordinada que aún no ha salido antes de su verbo y sale detrás: eso está fuera de sitio.
       const pendientes = [...sub.resto];
