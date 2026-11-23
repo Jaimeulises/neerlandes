@@ -585,6 +585,14 @@
   line-height: 1.5;
 }
 
+.reintento__nota {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--texto-2);
+}
+
 @media (prefers-color-scheme: dark) {
   .reintento__titulo {
     color: var(--acento);

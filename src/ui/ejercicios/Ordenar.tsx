@@ -9,7 +9,7 @@ import type { Voz } from '../../estado/voz';
 import { corregir, type Calificacion, type Correccion, type Diagnostico, type EjercicioOrdenar, type Veredicto } from '../../motor';
 import { Boton } from '../componentes/Boton';
 import { Marcas } from '../componentes/Marcas';
-import { Reintento } from '../componentes/Reintento';
+import { Reintento, VerSolucion } from '../componentes/Reintento';
 import { Resultado } from '../componentes/Resultado';
 
 interface Props {
@@ -129,11 +129,7 @@ export function Ordenar({ ejercicio, repeticion, voz, diagnosticar, pistasDeRein
           <Boton ancho onClick={comprobar} disabled={!completa || igualQueElPrimero}>
             Comprobar
           </Boton>
-          {primero ? (
-            <Boton ancho variante="texto" onClick={verSolucion}>
-              Ver la solución
-            </Boton>
-          ) : null}
+          {primero ? <VerSolucion onVer={verSolucion} /> : null}
         </>
       ) : (
         <Resultado

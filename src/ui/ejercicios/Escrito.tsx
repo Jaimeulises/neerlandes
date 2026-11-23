@@ -2,7 +2,8 @@
 // hueco y el dictado. Al corregir se separa el fallo de orden del de palabras,
 // y si la respuesta es buena pero no estaba en la lista, el alumno puede darla
 // por buena. Si la pista lo pide, el primer fallo no enseña la solución: da una
-// pista y deja intentarlo otra vez (corregir pidiendo).
+// pista y deja intentarlo otra vez (corregir pidiendo). La pista va encima del
+// campo y sin volver a enfocarlo: en el móvil, el teclado tapa lo de debajo.
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactElement, type SyntheticEvent } from 'react';
 import type { Voz } from '../../estado/voz';
@@ -10,7 +11,7 @@ import { calificacionDe, corregir, normalizar, type Calificacion, type Correccio
 import { Boton } from '../componentes/Boton';
 import { BotonVoz } from '../componentes/BotonVoz';
 import { Marcas } from '../componentes/Marcas';
-import { Reintento } from '../componentes/Reintento';
+import { Reintento, VerSolucion } from '../componentes/Reintento';
 import { Resultado } from '../componentes/Resultado';
 
 interface Props {
@@ -76,7 +77,6 @@ export function Escrito({ ejercicio, repeticion, voz, diagnosticar, pistasDeRein
       if (pistas.length > 0) {
         // Sin voz ni solución: se oiría la respuesta.
         setPrimero({ respuesta, correccion: c, diagnosticos: ds, pistas });
-        campo.current?.focus();
         return;
       }
     }
@@ -136,6 +136,8 @@ export function Escrito({ ejercicio, repeticion, voz, diagnosticar, pistasDeRein
         </div>
       ) : null}
 
+      {correccion === null && primero ? <Reintento pistas={primero.pistas} /> : null}
+
       {ejercicio.forma === 'completar' ? (
         <>
           <p className="frase-hueco" lang="nl">
@@ -173,18 +175,12 @@ export function Escrito({ ejercicio, repeticion, voz, diagnosticar, pistasDeRein
         />
       )}
 
-      {correccion === null && primero ? <Reintento pistas={primero.pistas} /> : null}
-
       {correccion === null ? (
         <>
           <Boton ancho type="submit" disabled={respuesta.trim() === '' || igualQueLaPrimera}>
             Comprobar
           </Boton>
-          {primero ? (
-            <Boton ancho variante="texto" onClick={verSolucion}>
-              Ver la solución
-            </Boton>
-          ) : null}
+          {primero ? <VerSolucion onVer={verSolucion} /> : null}
         </>
       ) : (
         <Resultado

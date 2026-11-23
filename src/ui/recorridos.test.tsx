@@ -318,6 +318,30 @@ describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () 
     expect(terminados).toEqual([['otra_vez', ['inversion'], true]]);
   });
 
+  it('en el móvil la pista se ve: va encima del campo, se desplaza hasta ella y no vuelve a abrir el teclado', async () => {
+    prepararNavegador();
+    const desplazados: Element[] = [];
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      value(this: Element) {
+        desplazados.push(this);
+      },
+      configurable: true,
+      writable: true,
+    });
+    const campo = await montarEscrito([]);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    // Como al tocar Comprobar en el móvil: el teclado se cierra.
+    campo.blur();
+    await pulsar(boton('Comprobar'));
+    const panel = document.querySelector('.reintento');
+    if (!panel) throw new Error('falta la pista');
+    expect(panel.compareDocumentPosition(campo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(desplazados).toEqual([panel]);
+    expect(document.activeElement).not.toBe(campo);
+    // Y queda dicho dónde se da por buena una respuesta que no está apuntada.
+    expect(enPantalla()).toContain('Si crees que la tuya también vale, en la solución puedes darla por buena.');
+  });
+
   it('se puede ver la solución sin intentarlo otra vez: es la corrección del primer intento', async () => {
     prepararNavegador();
     const terminados: Terminado[] = [];
