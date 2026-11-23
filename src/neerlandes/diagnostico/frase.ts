@@ -162,15 +162,17 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
 
   // El participio, si lo hay. Dicha en otro tiempo («Ik werkte de hele dag», «Mijn moeder belde gisteren») o con
   // otro verbo conjugado («Ik ga de hele dag werken»), lo que lleva del verbo no intenta ser el participio. Sin
-  // auxiliar, una forma que se escribe como conjugada tampoco.
+  // auxiliar, una forma que se escribe como conjugada tampoco; con él, sí, aunque sea la raíz sola de un verbo cuyo
+  // presente no está en los datos («Ik heb het niet begrijp»).
+  // Lo que intenta ser el participio queda apuntado: «niet» se compara con él como si fuera el bueno.
+  let intentoParticipio: string | undefined;
   if (p.tipoFinal === 'participio' && !otroVerboAntes(iVerbo) && !enOtroTiempo) {
     const participio = p.finales.at(-1) ?? '';
     if (!u.includes(participio)) {
       const otroTiempo = (w: string): boolean => iVerbo < 0 && pareceConjugada(w, participio);
-      const dado = u.find(
-        (w, i) => i > iVerbo && w !== participio && !otroTiempo(w) && (mismoVerbo(w, participio) || formasDe(w).some((f) => formasDe(participio).some((g) => g.inf === f.inf)) || (w.startsWith('ge') && i >= u.length - 2)),
-      );
-      if (dado && !enAlgunaValida(validas, dado)) anadir(explicarParticipio(participio, dado));
+      const delParticipio = (w: string): boolean => mismoVerbo(w, participio) || (iVerbo >= 0 && pareceConjugada(w, participio)) || formasDe(w).some((f) => formasDe(participio).some((g) => g.inf === f.inf));
+      intentoParticipio = u.find((w, i) => i > iVerbo && w !== participio && !otroTiempo(w) && (delParticipio(w) || (w.startsWith('ge') && i >= u.length - 2)));
+      if (intentoParticipio !== undefined && !enAlgunaValida(validas, intentoParticipio)) anadir(explicarParticipio(participio, intentoParticipio));
     }
   }
 
@@ -386,10 +388,11 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     });
   } else if (modelo.includes('niet') && u.includes('niet')) {
     // Los vecinos de niet sin contar los verbos: si el verbo está mal puesto, eso ya se dice aparte. Un participio o un
-    // infinitivo del final mal formado cuenta como el bueno («Ik heb het niet begrijpt»): lo que falla es la forma.
+    // infinitivo del final mal formado cuenta como el bueno («Ik heb het niet begrijpt», «… gebegrepen»): lo que falla
+    // es la forma.
     const verbos = new Set([p.verbo, u[iVerbo] ?? '', sub?.verbo ?? '', ...(sub?.verbos ?? [])].filter((x) => x !== ''));
     const finalVerbal = p.tipoFinal === 'participio' || p.tipoFinal === 'infinitivo' ? p.finales : [];
-    const comoElBueno = (x: string): string => finalVerbal.find((f) => x !== f && mismoVerbo(x, f)) ?? x;
+    const comoElBueno = (x: string): string => (x === intentoParticipio ? (p.finales.at(-1) ?? x) : (finalVerbal.find((f) => x !== f && mismoVerbo(x, f)) ?? x));
     const sinVerbos = (w: readonly string[]): string[] => w.filter((x) => !verbos.has(x)).map(comoElBueno);
     const vecinos = (w: readonly string[]): string => {
       const i = w.indexOf('niet');

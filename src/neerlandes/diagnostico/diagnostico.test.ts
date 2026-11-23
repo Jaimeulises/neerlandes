@@ -625,6 +625,15 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik had vorige week griep')).toEqual([]);
   });
 
+  it('un participio mal formado no mueve «niet», aunque no se parezca al bueno', () => {
+    expect(casos(verbos.diagnosticar?.(perfectumDe('begrijpen'), 'Ik heb het niet gebegrepen') ?? [])).toEqual(['participio-irregular']);
+    expect(casos(verbos.diagnosticar?.(perfectumDe('begrijpen'), 'Ik heb het niet gebegrijp') ?? [])).toEqual(['participio-irregular']);
+    // Con el auxiliar, la raíz sola también intenta ser el participio, aunque los datos no traigan el presente del verbo.
+    expect(casos(verbos.diagnosticar?.(perfectumDe('begrijpen'), 'Ik heb het niet begrijp') ?? [])).toEqual(['participio-irregular']);
+    // Con «niet» fuera de sitio, se dicen las dos cosas.
+    expect(casos(verbos.diagnosticar?.(perfectumDe('begrijpen'), 'Ik heb niet het gebegrepen') ?? [])).toEqual(['participio-irregular', 'niet-sitio']);
+  });
+
   it('«zij» es el sujeto, no una forma de «zijn»', () => {
     expect(casos(verbos.diagnosticar?.(perfectumDe('trouwen'), 'Zij hebben in juni getrouwd') ?? [])).toEqual(['auxiliar-zijn']);
     expect(casos(diagnostico('Ze zijn vorig jaar', 'Zij hebben vorig jaar naar Spanje verhuisd'))).toEqual(['auxiliar-zijn']);
