@@ -87,7 +87,7 @@ try {
     console.log(`${tramos(cambiados)}: ha cambiado desde esa copia, así que se apunta lo que se leyó y sigue pendiente. Sale en el lote siguiente para confirmarlo.`);
   }
   const sinGrabar = textosEnVozAlta(5).filter((t) => audioDe(t) === null);
-  if (sinGrabar.length > 0) console.warn(`${String(sinGrabar.length)} textos que suenan no tienen audio grabado: lanza npm run audio en el Mac antes de instalar la app.`);
+  if (sinGrabar.length > 0) console.warn(`${sinGrabar.length === 1 ? 'Un texto que suena no tiene' : `${String(sinGrabar.length)} textos que suenan no tienen`} audio grabado: lanza npm run audio en el Mac antes de instalar la app.`);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);

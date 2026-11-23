@@ -11,4 +11,4 @@ writeFileSync(destino, documentoDeRevision());
 console.log(`Escrito ${destino.pathname}`);
 
 const sinGrabar = textosEnVozAlta(5).filter((t) => audioDe(t) === null);
-if (sinGrabar.length > 0) console.warn(`${String(sinGrabar.length)} textos que suenan no tienen audio grabado: lanza npm run audio en el Mac antes de instalar la app.`);
+if (sinGrabar.length > 0) console.warn(`${sinGrabar.length === 1 ? 'Un texto que suena no tiene' : `${String(sinGrabar.length)} textos que suenan no tienen`} audio grabado: lanza npm run audio en el Mac antes de instalar la app.`);
