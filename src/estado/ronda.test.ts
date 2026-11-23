@@ -135,7 +135,7 @@ describe('la ronda de hoy', () => {
     const nuevos = tipos(conInterruptor);
     expect(nuevos).toHaveLength(180);
     expect(new Set(nuevos)).toEqual(new Set(['verbos.presente.completar', 'verbos.presente.pregunta']));
-    // Se elige sin el interruptor, con el presente flojo y si completar no sale: lo nuevo nunca lleva una forma quitada.
+    // Se elige sin el interruptor, con el presente flojo y si completar no sale, aunque elegir tampoco: es el andamiaje de siempre.
     expect(new Set(tipos({ ...conInterruptor, sinAndamiaje: false }))).toEqual(new Set(['verbos.presente.elegir']));
     expect(new Set(tipos({ ...conInterruptor, dominio: () => 0.2 }))).toEqual(new Set(['verbos.presente.elegir']));
     expect(new Set(tipos({ ...conInterruptor, formas: new Set(['opcion', 'traducir']) }))).toEqual(new Set(['verbos.presente.elegir']));

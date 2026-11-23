@@ -143,7 +143,7 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
           />
         </label>
         <p id="explica-grupos" className="texto-2 pequeno">
-          Para quien ya conoce lo básico. Cada ronda abre como mucho un grupo nuevo de cada parte (orden, verbos y vocabulario) sin esperar a ver entero el anterior; en orden y en verbos, empezando por su regla. Lo nuevo de orden y de verbos se escribe en vez de ordenarse con fichas o elegirse, salvo que su regla esté floja.
+          Para quien ya conoce lo básico. Cada ronda abre como mucho un grupo nuevo de cada parte (orden, verbos y vocabulario) sin esperar a ver entero el anterior; en orden y en verbos, empezando por su regla. Lo nuevo de orden y de verbos se escribe en vez de ordenarse con fichas o elegirse, salvo que su regla esté floja o que en “Ejercicios en los repasos” esté quitado el de escribir que le toca: “Traducir escribiendo la frase entera” en las frases y los separables, “Completar el hueco” en el presente.
         </p>
       </section>
 
@@ -196,7 +196,7 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
       <section className="tarjeta">
         <h2>Ejercicios en los repasos</h2>
         <p className="texto-2 pequeno" style={{ marginTop: 8 }}>
-          Lo nuevo suele empezar con fichas en las frases y los separables y eligiendo o completando la forma en los verbos; con “Abrir todos los grupos”, se escribe, salvo que su regla esté floja. Las palabras empiezan siempre por “¿Qué significa?”, también con ese ajuste: no salen de ninguna regla, y una palabra hay que reconocerla antes de escribirla. Aquí eliges qué más sale en los repasos. Si ninguna de las elegidas sirve para un ejercicio, sale el de siempre: fichas en las frases y los separables, completar en los verbos y escribir la palabra en el vocabulario.
+          Lo nuevo suele empezar con fichas en las frases y los separables y eligiendo o completando la forma en los verbos; con “Abrir todos los grupos”, se escribe si aquí está elegido el ejercicio de escribir que le toca, salvo que su regla esté floja. Las palabras empiezan siempre por “¿Qué significa?”, también con ese ajuste: no salen de ninguna regla, y una palabra hay que reconocerla antes de escribirla. Aquí eliges qué más sale en los repasos. Si ninguna de las elegidas sirve para un ejercicio, sale el de siempre: fichas en las frases y los separables, completar en los verbos y escribir la palabra en el vocabulario.
         </p>
         {ORDEN_FORMAS.map((forma) => (
           <label key={forma} className="ajuste">
