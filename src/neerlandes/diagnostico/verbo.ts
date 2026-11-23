@@ -41,9 +41,17 @@ function singularRegular(presente: NonNullable<ReturnType<typeof presenteDelVerb
   return hij[0] === conT && raiz !== conT ? { raiz, conT } : null;
 }
 
+/** Si un pasado es regular: la raíz del verbo con -te o -de, y -n en plural («werkte», «woonden»). */
+function pasadoRegular(pasado: string): boolean {
+  return formasDe(pasado).some((f) => {
+    const raiz = f.verbo?.raiz;
+    return f.tipo === 'pasado' && raiz !== undefined && pasado.startsWith(raiz) && /^[td]en?$/.test(pasado.slice(raiz.length));
+  });
+}
+
 /**
  * Por qué una forma conjugada no es la buena. null si las dos palabras no son del mismo verbo (entonces no es
- * un fallo de conjugación sino de palabra).
+ * un fallo de conjugación sino de palabra) o si no se sabe qué falla.
  */
 export function explicarConjugacion(esperada: string, dada: string, sujeto: readonly string[], invertido: boolean): DiagnosticoNl | null {
   if (!mismoVerbo(esperada, dada) || esperada === dada) return null;
@@ -94,6 +102,9 @@ export function explicarConjugacion(esperada: string, dada: string, sujeto: read
         `¿-te o -de? Mira qué letra va delante de -en en el infinitivo${delVerbo}: ¿está en ${cita('’t kofschip')} (t, k, f, s, ch, p)?`,
       );
     }
+    // Un pasado regular mal escrito («makte», «wonden») o el participio por el pasado: no se sabe qué regla falla,
+    // y decir que es irregular sería falso.
+    if (pasadoRegular(esperada)) return null;
     return explicar(
       'pasado-irregular',
       'pasado',

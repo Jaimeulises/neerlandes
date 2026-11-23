@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { crearAzar, type Diagnostico, type Ejercicio } from '../../motor';
 import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../orden/pista';
+import { VERBOS } from '../verbos/datos';
 import { ELEMENTOS_VERBOS, verbos } from '../verbos/pista';
 import { vocabulario, ELEMENTOS_VOCABULARIO } from '../vocabulario/pista';
 import { DESTREZAS } from '../destrezas';
@@ -429,5 +430,28 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     const frase = verbos.crearEjercicio(fietsen, contexto);
     expect(frase.forma).toBe('traducir');
     expect(verbos.diagnosticar?.(frase, 'Ik ben naar mijn werk gelopen')).toEqual([]);
+  });
+
+  it('un pasado regular nunca se explica como irregular', () => {
+    // La vocal mal escrita o el participio por el pasado: no se sabe qué regla falla, y llamarlo irregular es falso.
+    for (const [esperada, dada, sujeto] of [
+      ['maakte', 'makte', ['mijn', 'moeder']],
+      ['woonden', 'wonden', ['we']],
+      ['werkte', 'gewerkt', ['ik']],
+    ] as const) {
+      expect(explicarConjugacion(esperada, dada, sujeto, false), `${esperada}: ${dada}`).toBeNull();
+    }
+    for (const v of VERBOS.filter((x) => x.raiz !== undefined && (x.pasado?.[0] ?? '').startsWith(x.raiz))) {
+      for (const esperada of v.pasado ?? []) expect(explicarConjugacion(esperada, v.participio ?? '', ['ik'], false), `${esperada}: ${v.participio ?? ''}`).toBeNull();
+    }
+    // Lo que sí se sabe de los regulares sigue saliendo, y el irregular hecho con la regla también.
+    expect(explicarConjugacion('woonden', 'woonten', ['we'], false)?.caso).toBe('pasado-te-de');
+    expect(explicarConjugacion('kwam', 'komde', ['hij'], false)?.caso).toBe('pasado-irregular');
+    // En su primer ejercicio, el hueco: sin diagnóstico, para que salga la pista general.
+    const maken = ELEMENTOS_VERBOS.find((x) => x.grupo === 'pasado' && x.verbo?.inf === 'maken');
+    if (!maken) throw new Error('falta maken');
+    const hueco = verbos.crearEjercicio(maken, { ...contexto, repeticiones: 0 });
+    expect(hueco.forma).toBe('completar');
+    expect(verbos.diagnosticar?.(hueco, 'makte')).toEqual([]);
   });
 });
