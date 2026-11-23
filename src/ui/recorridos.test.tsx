@@ -125,6 +125,20 @@ describe('la app de punta a punta', () => {
       expect(enPantalla()).toContain('Dictado (necesita la voz)');
     }
   });
+
+  it('abrir todos los grupos se guarda y Progreso lo dice', async () => {
+    prepararNavegador();
+    await montar(<App almacen={almacenEnMemoria()} />);
+    await pulsar(boton('Ajustes'));
+    const interruptor = document.querySelector<HTMLInputElement>('input[aria-describedby="explica-grupos"]');
+    if (!interruptor) throw new Error('falta el interruptor');
+    expect(interruptor.checked).toBe(false);
+    await pulsar(interruptor);
+    expect(interruptor.checked).toBe(true);
+    expect(JSON.parse(localStorage.getItem('stap/ajustes') ?? '{}')).toMatchObject({ gruposAbiertos: true });
+    await pulsar(boton('Progreso'));
+    expect(enPantalla()).toContain('Todos los grupos están abiertos');
+  });
 });
 
 /** Elige un archivo en el campo de la copia, como si el alumno lo hubiera escogido en el móvil. */

@@ -27,7 +27,7 @@ export function textoDeRonda(repasos: number, nuevos: number, pendientes: number
 export function Hoy({ pistas, datos, opciones, onEmpezar }: Props): ReactElement {
   const ahora = useAhora();
   const vistos = vistosPorPista(pistas, datos.progreso);
-  const resumenes = pistas.map((p) => ({ pista: p, resumen: resumirPista(p, datos.progreso, ahora, vistos) }));
+  const resumenes = pistas.map((p) => ({ pista: p, resumen: resumirPista(p, datos.progreso, ahora, vistos, opciones.gruposAbiertos === true) }));
   const pendientes = resumenes.reduce((s, r) => s + r.resumen.paraRepasar, 0);
   const prevision = preverRonda(pistas, datos.progreso, ahora, opciones);
   const dias = racha(datos.historial, ahora);

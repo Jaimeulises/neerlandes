@@ -24,6 +24,8 @@ interface Props {
   readonly pistas: readonly Pista[];
   readonly datos: Datos;
   readonly niveles: ReadonlyMap<string, EstadoDestreza>;
+  /** Si el alumno ha abierto todos los grupos en Ajustes. */
+  readonly gruposAbiertos?: boolean;
 }
 
 function estadoDe(e: EstadoDestreza | undefined): { texto: string; clase: string } {
@@ -111,7 +113,7 @@ function Nivel({ niveles, historial, ahora }: { readonly niveles: ReadonlyMap<st
   );
 }
 
-export function Progreso({ pistas, datos, niveles }: Props): ReactElement {
+export function Progreso({ pistas, datos, niveles, gruposAbiertos = false }: Props): ReactElement {
   const ahora = useAhora();
   const dias = ultimosDias(datos.historial, ahora, 14);
   const maximo = Math.max(1, ...dias.map((d) => d.respuestas));
@@ -180,7 +182,8 @@ export function Progreso({ pistas, datos, niveles }: Props): ReactElement {
       })}
 
       <p className="texto-3">
-        Asentada: acertada a la primera en al menos {DIAS_PARA_ASENTAR} días distintos. Los grupos se abren en orden, cuando has visto todo el anterior.
+        Asentada: acertada a la primera en al menos {DIAS_PARA_ASENTAR} días distintos.{' '}
+        {gruposAbiertos ? 'Todos los grupos están abiertos (se cambia en Ajustes).' : 'Los grupos se abren en orden, cuando has visto todo el anterior.'}
       </p>
     </div>
   );

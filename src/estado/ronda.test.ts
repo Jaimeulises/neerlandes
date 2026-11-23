@@ -75,6 +75,15 @@ describe('la ronda de hoy', () => {
     expect(new Set(primeros).size).toBe(3);
   });
 
+  it('con todos los grupos abiertos, lo nuevo de una pista sale de varios grupos y cada uno empieza por su regla', () => {
+    const orden = PISTAS.find((p) => p.id === 'orden');
+    if (!orden) throw new Error('falta la pista de orden');
+    const pasos = construirRondaDe([orden], PROGRESO_VACIO, AHORA, crearAzar(7), { ...OPCIONES, nuevosMaximo: 4, gruposAbiertos: true });
+    const grupos = pasos.map((p) => orden.elementos.find((e) => e.id === p.paso.ejercicio.elementoId)?.grupo);
+    expect(grupos).toEqual(orden.grupos.slice(0, 4));
+    for (const p of pasos) expect(p.paso.presentacion, p.paso.ejercicio.elementoId).not.toBeNull();
+  });
+
   it('la previsión cuenta lo que trae la ronda', () => {
     expect(preverRonda(PISTAS, PROGRESO_VACIO, AHORA, OPCIONES)).toEqual({ repasos: 0, nuevos: 4 });
     expect(preverRonda(PISTAS, PROGRESO_VACIO, AHORA, { ...OPCIONES, nuevosMaximo: 0 })).toEqual({ repasos: 0, nuevos: 0 });

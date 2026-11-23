@@ -12,6 +12,8 @@ export interface Ajustes {
   readonly voz: boolean;
   readonly vozLenta: boolean;
   readonly formas: readonly Forma[];
+  /** Lo nuevo entra de todos los grupos a la vez, sin esperar a ver entero el anterior. */
+  readonly gruposAbiertos: boolean;
 }
 
 export const AJUSTES_POR_DEFECTO: Ajustes = {
@@ -20,6 +22,7 @@ export const AJUSTES_POR_DEFECTO: Ajustes = {
   voz: true,
   vozLenta: false,
   formas: [...TODAS_LAS_FORMAS],
+  gruposAbiertos: false,
 };
 
 export const TAMANOS_RONDA = [8, 12, 20] as const;
@@ -49,6 +52,7 @@ export function leerAjustes(): Ajustes {
     voz: typeof g.voz === 'boolean' ? g.voz : AJUSTES_POR_DEFECTO.voz,
     vozLenta: typeof g.vozLenta === 'boolean' ? g.vozLenta : AJUSTES_POR_DEFECTO.vozLenta,
     formas: formas.length > 0 ? formas : AJUSTES_POR_DEFECTO.formas,
+    gruposAbiertos: typeof g.gruposAbiertos === 'boolean' ? g.gruposAbiertos : AJUSTES_POR_DEFECTO.gruposAbiertos,
   };
 }
 

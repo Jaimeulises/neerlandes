@@ -116,6 +116,21 @@ export function Ajustes({ ajustes, voz, hayVozEnElDispositivo, datos, onCambiar,
             }}
           />
         </div>
+        <label className="ajuste">
+          <span>Abrir todos los grupos</span>
+          <input
+            type="checkbox"
+            className="interruptor"
+            checked={ajustes.gruposAbiertos}
+            aria-describedby="explica-grupos"
+            onChange={(e) => {
+              onCambiar({ ...ajustes, gruposAbiertos: e.target.checked });
+            }}
+          />
+        </label>
+        <p id="explica-grupos" className="texto-2 pequeno">
+          Lo nuevo entra de todos los grupos a la vez, cada uno empezando por su regla, sin esperar a ver entero el anterior. Para quien ya conoce lo básico.
+        </p>
       </section>
 
       <section className="tarjeta">

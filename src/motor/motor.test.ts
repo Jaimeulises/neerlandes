@@ -250,6 +250,18 @@ describe('rondas y desbloqueos', () => {
     expect(gruposDesbloqueados(pista, p)).toEqual(['uno', 'dos']);
   });
 
+  it('con los grupos abiertos, todos lo están desde el principio y lo nuevo entra en rueda, cada grupo por su primero', () => {
+    const pista = pistaDePrueba('abcdef', ['uno', 'dos', 'tres'], 2);
+    expect(gruposDesbloqueados(pista, PROGRESO_VACIO, new Map(), true)).toEqual(['uno', 'dos', 'tres']);
+    const opciones = { ...RONDA_POR_DEFECTO, nuevosMaximo: 4, gruposAbiertos: true };
+    const ronda = construirRonda(pista, PROGRESO_VACIO, AHORA, crearAzar(1), opciones);
+    expect(ronda.map((p) => p.ejercicio.elementoId)).toEqual(['a', 'c', 'e', 'b']);
+    expect(resumirPista(pista, PROGRESO_VACIO, AHORA, new Map(), true).nuevosDisponibles).toBe(6);
+    // Con los grupos en orden, lo de siempre: solo el primero, y en su orden.
+    expect(construirRonda(pista, PROGRESO_VACIO, AHORA, crearAzar(1), { ...opciones, gruposAbiertos: false }).map((p) => p.ejercicio.elementoId)).toEqual(['a', 'b']);
+    expect(resumirPista(pista, PROGRESO_VACIO, AHORA).nuevosDisponibles).toBe(2);
+  });
+
   it('una pista con requisito espera a otra pista', () => {
     const conRequisito: Pista<Letra> = { ...pista, grupoListo: (g, vistos) => g !== 'uno' || (vistos.get('otra')?.has('k') ?? false) };
     expect(gruposDesbloqueados(conRequisito, PROGRESO_VACIO)).toEqual([]);
