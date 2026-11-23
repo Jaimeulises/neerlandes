@@ -66,11 +66,9 @@ compilar() {
     DEVELOPMENT_TEAM="$equipo" CODE_SIGN_STYLE=Automatic -quiet build
 }
 
-npm run build
-# La CLI de Capacitor trae telemetría activada: en una terminal la enciende sola y manda datos de cada orden a
-# un servidor. Se apaga antes de usarla (queda apagada en este ordenador, también para otros proyectos; esta
-# orden no manda nada). Sin analítica, como dice CLAUDE.md.
+# La CLI de Capacitor manda telemetría si no se apaga: Stap no lleva analítica, tampoco al compilar.
 npx cap telemetry off >/dev/null
+npm run build
 npx cap sync ios
 prevista="$(perfil_previsto)"
 escribir_firma "$prevista"
