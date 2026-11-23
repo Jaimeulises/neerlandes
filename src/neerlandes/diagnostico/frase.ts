@@ -114,8 +114,13 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     };
     const delVerbo = (w: string): boolean => mismoVerbo(w, p.verbo) || (esAux && (FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w)));
     // Un pronombre no es el verbo aunque se escriba casi igual («zij» y «zijn»): es el sujeto, aunque no sea el de la
-    // frase buena. Solo con el sujeto en otro sitio es el verbo sin la -n («We zij in het weekend…»).
-    const iSujetoDicho = buscar(u, p.sujeto, desde);
+    // frase buena. Solo con el sujeto en otro sitio es el verbo sin la -n («We zij in het weekend…»), también si el
+    // sujeto va justo detrás y se escribe como él, con algo delante que no es un artículo ni un posesivo («Vorig jaar
+    // zij ze…», «In juni zij zij…»).
+    const primerSujeto = buscar(u, p.sujeto, desde);
+    const sujetoDetras =
+      primerSujeto > desde && !trasDeterminante(primerSujeto) && p.sujeto.length === 1 && delVerbo(u[primerSujeto] ?? '') && buscar(u, p.sujeto, primerSujeto + 1) === primerSujeto + 1;
+    const iSujetoDicho = sujetoDetras ? primerSujeto + 1 : primerSujeto;
     const pronombreSujeto = (w: string, i: number): boolean => TONICAS[w] !== undefined && (iSujetoDicho < 0 || (i >= iSujetoDicho && i < iSujetoDicho + p.sujeto.length));
     const conjugado = (w: string): boolean => FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w) || formasDe(w).some((f) => f.tipo === 'presente' || f.tipo === 'pasado');
     // Un sustantivo que se escribe como un verbo: detrás de un artículo o un posesivo, también con un adjetivo en medio

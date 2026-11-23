@@ -656,5 +656,11 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(casos(verbos.diagnosticar?.(perfectumDe('blijven'), 'Zij heb de hele dag thuis gebleven') ?? [])).toEqual(['auxiliar-zijn']);
     // Con el sujeto en otro sitio, «zij» es «zijn» sin la -n.
     expect(casos(diagnostico('We zijn in het weekend', 'We zij in het weekend naar Utrecht gegaan'))).toEqual(['presente-plural']);
+    // También con la frase invertida y el sujeto justo detrás, aunque se escriba igual: no hay inversión que explicar.
+    expect(casos(diagnostico('Ze zijn vorig jaar', 'Vorig jaar zij ze naar Spanje verhuist'))).toEqual(['participio-kofschip']);
+    expect(diagnostico('Ze zijn vorig jaar', 'Vorig jaar zij zij naar Spanje verhuisd')).toEqual([]);
+    expect(verbos.diagnosticar?.(perfectumDe('trouwen'), 'In juni zij zij getrouwd')).toEqual([]);
+    // Detrás de un artículo o un posesivo no es el verbo: lo es el «zij» que va después.
+    expect(casos(diagnostico('Ze zijn vorig jaar', 'Vorig jaar de zij zij naar Spanje verhuisd'))).toEqual(['inversion-otro-delante']);
   });
 });
