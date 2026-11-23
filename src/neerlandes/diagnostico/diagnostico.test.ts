@@ -33,6 +33,14 @@ const CASOS_VALIDOS = new Set<string>(CASOS);
 /** El caso de cada diagnóstico (todos los de neerlandés lo llevan). */
 const casos = (ds: readonly Diagnostico[]): string[] => ds.map((d) => ('caso' in d && typeof d.caso === 'string' ? d.caso : 'sin caso'));
 
+/**
+ * Si unos códigos E son únicos y van en orden. Puede haber huecos: el código de un ejemplo borrado va a RETIRADOS
+ * (codigos.test.ts comprueba que cada hueco está allí), porque renumerar los de detrás reutilizaría códigos.
+ */
+function codigosEnOrden(codigos: readonly string[]): boolean {
+  return codigos.every((c, i) => /^E[1-9]\d*$/.test(c) && (i === 0 || Number(c.slice(1)) > Number((codigos[i - 1] ?? '').slice(1))));
+}
+
 describe('papeles de las frases de orden', () => {
   it('todas tienen verbo y sujeto donde toca, y lo que va al final está en la frase', () => {
     for (const f of ELEMENTOS_ORDEN) {
@@ -260,8 +268,13 @@ describe('ejemplos de error de docs/revision.md', () => {
     for (const c of Object.keys(CASOS_SIN_EJEMPLO)) expect(conEjemplo.has(c as (typeof CASOS)[number]), `${c} tiene ejemplo: quítalo de CASOS_SIN_EJEMPLO`).toBe(false);
   });
 
-  it('los códigos son únicos y siguen el orden', () => {
-    expect(EJEMPLOS_DE_ERROR.map((e) => e.codigo)).toEqual(EJEMPLOS_DE_ERROR.map((_, i) => `E${String(i + 1)}`));
+  it('los códigos son únicos y van en orden, y retirar uno deja su hueco sin renumerar los demás', () => {
+    const codigos = EJEMPLOS_DE_ERROR.map((e) => e.codigo);
+    expect(codigosEnOrden(codigos)).toBe(true);
+    // Lo que pide CLAUDE.md al borrar un ejemplo: su código va a RETIRADOS y los de detrás no cambian.
+    expect(codigosEnOrden(codigos.filter((c) => c !== 'E16'))).toBe(true);
+    expect(codigosEnOrden(['E1', 'E3', 'E2'])).toBe(false);
+    expect(codigosEnOrden(['E1', 'E2', 'E2'])).toBe(false);
   });
 });
 
