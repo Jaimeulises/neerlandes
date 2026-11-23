@@ -67,6 +67,10 @@ compilar() {
 }
 
 npm run build
+# La CLI de Capacitor trae telemetría activada: en una terminal la enciende sola y manda datos de cada orden a
+# un servidor. Se apaga antes de usarla (queda apagada en este ordenador, también para otros proyectos; esta
+# orden no manda nada). Sin analítica, como dice CLAUDE.md.
+npx cap telemetry off >/dev/null
 npx cap sync ios
 prevista="$(perfil_previsto)"
 escribir_firma "$prevista"

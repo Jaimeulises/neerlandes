@@ -128,21 +128,26 @@ async function principal(): Promise<void> {
   // Con otra voz u otra velocidad se regraba todo; lo que ya no suena en la app se borra.
   const mismaVoz = anterior.voz === voz && anterior.velocidad === VELOCIDAD;
   const grabados = new Set(mismaVoz ? anterior.archivos.filter((h) => huellas.has(h) && existsSync(resolve(CARPETA, `${h}.mp3`))) : []);
+  const faltan = [...huellas].filter(([h]) => !grabados.has(h));
+  console.log(`${textos.length} textos, ${grabados.size} ya grabados, faltan ${faltan.length} (${nombre}, ${VELOCIDAD}).`);
+
+  // Antes de borrar nada, la clave y el primer audio: si la clave falta o Azure no responde, el audio de antes
+  // sigue entero (al cambiar de voz se borraría todo antes de saber si se puede regrabar).
+  const k = faltan.length > 0 ? clave() : '';
+  const [primero] = faltan;
+  const audioPrimero = primero ? await sintetizar(primero[1], voz, region, k) : null;
+
   for (const archivo of readdirSync(CARPETA)) {
     if (archivo.endsWith('.mp3') && !grabados.has(archivo.slice(0, -4))) rmSync(resolve(CARPETA, archivo));
   }
-
   const manifiesto = (): ManifiestoAudio => ({ voz, nombre, velocidad: VELOCIDAD, archivos: [...grabados] });
   // El manifiesto no puede apuntar a archivos borrados: la app intentaría tocarlos en vez de usar la voz del dispositivo.
   guardarManifiesto(manifiesto());
-  const faltan = [...huellas].filter(([h]) => !grabados.has(h));
-  console.log(`${textos.length} textos, ${grabados.size} ya grabados, faltan ${faltan.length} (${nombre}, ${VELOCIDAD}).`);
-  if (faltan.length === 0) return;
+  if (!primero || !audioPrimero) return;
 
-  const k = clave();
   let hechos = 0;
   for (const [huella, texto] of faltan) {
-    writeFileSync(resolve(CARPETA, `${huella}.mp3`), await sintetizar(texto, voz, region, k));
+    writeFileSync(resolve(CARPETA, `${huella}.mp3`), huella === primero[0] ? audioPrimero : await sintetizar(texto, voz, region, k));
     grabados.add(huella);
     hechos++;
     // Se guarda cada poco: si se corta, la siguiente vez sigue donde lo dejó.

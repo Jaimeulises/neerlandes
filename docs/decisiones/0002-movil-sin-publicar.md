@@ -15,5 +15,5 @@
 
 ## Qué queda abierto
 
-- Usarla fuera de casa: publicarla (Pages con GitHub Pro, u otro alojamiento) o instalarla en el móvil con Capacitor.
+- Usarla fuera de casa: publicarla (Pages con GitHub Pro, u otro alojamiento) o instalarla en el móvil con Capacitor. *Resuelto con Capacitor en la decisión 0005.*
 - Que funcione sin conexión (con un service worker).
