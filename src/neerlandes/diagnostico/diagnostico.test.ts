@@ -624,4 +624,12 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     // Sin participio sigue siendo otro tiempo.
     expect(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik had vorige week griep')).toEqual([]);
   });
+
+  it('«zij» es el sujeto, no una forma de «zijn»', () => {
+    expect(casos(verbos.diagnosticar?.(perfectumDe('trouwen'), 'Zij hebben in juni getrouwd') ?? [])).toEqual(['auxiliar-zijn']);
+    expect(casos(diagnostico('Ze zijn vorig jaar', 'Zij hebben vorig jaar naar Spanje verhuisd'))).toEqual(['auxiliar-zijn']);
+    // Dicha en pasado, igual que con «ze»: sin un participio que explicar.
+    expect(verbos.diagnosticar?.(perfectumDe('trouwen'), 'Zij trouwden in juni')).toEqual([]);
+    expect(verbos.diagnosticar?.(perfectumDe('komen'), 'Zij kwamen te laat')).toEqual([]);
+  });
 });

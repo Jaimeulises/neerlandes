@@ -112,7 +112,8 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
       const antes = u[i - 1] ?? '';
       return DETERMINANTES.has(antes) && !(sujetoJij && iguales(antes, 'je'));
     };
-    const delVerbo = (w: string): boolean => mismoVerbo(w, p.verbo) || (esAux && (FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w)));
+    // Un pronombre no es el verbo, aunque se escriba casi igual («zij» y «zijn»).
+    const delVerbo = (w: string): boolean => TONICAS[w] === undefined && (mismoVerbo(w, p.verbo) || (esAux && (FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w))));
     const conjugado = (w: string): boolean => FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w) || formasDe(w).some((f) => f.tipo === 'presente' || f.tipo === 'pasado');
     // Un sustantivo que se escribe como un verbo: detrás de un artículo o un posesivo, también con un adjetivo en medio
     // («een nieuwe fiets»).
