@@ -395,3 +395,14 @@ describe('cobertura de los datos del diagnóstico', () => {
     }
   });
 });
+
+// Una pista que señala otro sitio es peor que la general, y el diagnóstico falso cuenta además como regla
+// fallada: baja su nivel y la ronda la practica. Si no se puede asegurar qué falla, no se diagnostica nada.
+describe('lo que la revisión de las pistas encontró mal diagnosticado', () => {
+  it('niet entre el sujeto y el verbo: la regla es la de la frase principal, que en la subordinada sí va ahí', () => {
+    const d = diagnostico('Dat is niet waar', 'Dat niet is waar');
+    expect(casos(d)).toEqual(['inversion-niet']);
+    // «omdat ik niet lekker ben» (O49): en la subordinada, «niet» va entre el sujeto y el verbo conjugado.
+    expect(d[0]?.texto).toContain('en la frase principal, «niet» nunca va entre el sujeto y el verbo conjugado');
+  });
+});

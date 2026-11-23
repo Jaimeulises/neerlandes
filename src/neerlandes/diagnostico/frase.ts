@@ -188,7 +188,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
           caso: 'inversion-niet',
           destreza: 'inversion',
           titulo: 'El verbo conjugado va en segunda posición',
-          texto: `${principio}, y «niet» después: ${conSujeto ?? frase}${fin} En español el “no” va delante del verbo; en neerlandés, «niet» nunca va entre el sujeto y el verbo conjugado.`,
+          texto: `${principio}, y «niet» después: ${conSujeto ?? frase}${fin} En español el “no” va delante del verbo; en neerlandés, en la frase principal, «niet» nunca va entre el sujeto y el verbo conjugado.`,
           pista: `Has puesto ${cita('niet')} delante del verbo, como el “no” del español. En neerlandés, ¿en qué posición va siempre el verbo conjugado?`,
         });
       } else {

@@ -575,7 +575,7 @@ Se marca con: `npm run revisado -- O41-O48 R6 E10-E11 E18 E21 E30 E32`
 
 **E21.** Sobre O35: «Dat is niet waar.» → respuesta: «Dat niet is waar»
 
-- **El verbo conjugado va en segunda posición.** Empezando por el sujeto («dat»), el verbo («is») va justo detrás, y «niet» después: «Dat is niet waar». En español el “no” va delante del verbo; en neerlandés, «niet» nunca va entre el sujeto y el verbo conjugado.
+- **El verbo conjugado va en segunda posición.** Empezando por el sujeto («dat»), el verbo («is») va justo detrás, y «niet» después: «Dat is niet waar». En español el “no” va delante del verbo; en neerlandés, en la frase principal, «niet» nunca va entre el sujeto y el verbo conjugado.
   - *Pista antes del segundo intento:* Has puesto «niet» delante del verbo, como el “no” del español. En neerlandés, ¿en qué posición va siempre el verbo conjugado?
 
 **E32.** Sobre O37: «Ik begrijp het niet.» → respuesta: «Ik begrijpen het niet»
