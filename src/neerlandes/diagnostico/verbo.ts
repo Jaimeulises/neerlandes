@@ -3,6 +3,7 @@
 // participio (’t kofschip, ge-, los irregulares) y hebben o zijn. Cada una dice
 // la regla con el verbo y el sujeto de la frase, no en abstracto.
 
+import { alternativas } from '../comun';
 import type { Caso, DiagnosticoNl } from './casos';
 import { formasDe, mismoVerbo, presenteDelVerbo } from './formas';
 
@@ -41,11 +42,14 @@ function singularRegular(presente: NonNullable<ReturnType<typeof presenteDelVerb
   return hij[0] === conT && raiz !== conT ? { raiz, conT } : null;
 }
 
-/** Si un pasado es regular: la raíz del verbo con -te o -de, y -n en plural («werkte», «woonden»). */
+/**
+ * Si un pasado es regular: la raíz del verbo con -te o -de, y -n en plural («werkte», «woonden», «wilde»). Si los
+ * datos no traen la raíz, es la forma de ik del presente («wil»).
+ */
 function pasadoRegular(pasado: string): boolean {
   return formasDe(pasado).some((f) => {
-    const raiz = f.verbo?.raiz;
-    return f.tipo === 'pasado' && raiz !== undefined && pasado.startsWith(raiz) && /^[td]en?$/.test(pasado.slice(raiz.length));
+    const raices = f.verbo?.raiz !== undefined ? [f.verbo.raiz] : alternativas(f.verbo?.presente?.[0] ?? '');
+    return f.tipo === 'pasado' && raices.some((raiz) => pasado.startsWith(raiz) && /^[td]en?$/.test(pasado.slice(raiz.length)));
   });
 }
 

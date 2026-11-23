@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { crearAzar, type Diagnostico, type Ejercicio } from '../../motor';
+import { alternativas } from '../comun';
 import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../orden/pista';
 import { VERBOS } from '../verbos/datos';
 import { ELEMENTOS_VERBOS, verbos } from '../verbos/pista';
@@ -459,9 +460,16 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     ] as const) {
       expect(explicarConjugacion(esperada, dada, sujeto, false), `${esperada}: ${dada}`).toBeNull();
     }
-    for (const v of VERBOS.filter((x) => x.raiz !== undefined && (x.pasado?.[0] ?? '').startsWith(x.raiz))) {
-      for (const esperada of v.pasado ?? []) expect(explicarConjugacion(esperada, v.participio ?? '', ['ik'], false), `${esperada}: ${v.participio ?? ''}`).toBeNull();
-    }
+    // También sin raíz en los datos: la de «willen» es la forma de ik («wil»), y «wilde» es regular aunque «wou» no.
+    expect(explicarConjugacion('wilde', 'gewild', ['ze'], false)).toBeNull();
+    expect(explicarConjugacion('wilde', 'wild', ['ze'], false)).toBeNull();
+    expect(explicarConjugacion('wou', 'wilde', ['ze'], false)?.caso).toBe('pasado-irregular');
+    const regulares = VERBOS.flatMap((v) => {
+      const raiz = v.raiz ?? alternativas(v.presente?.[0] ?? '')[0] ?? '';
+      return (v.pasado ?? []).flatMap(alternativas).filter((p) => raiz !== '' && p.startsWith(raiz) && /^[td]en?$/.test(p.slice(raiz.length))).map((p) => [p, v.participio ?? ''] as const);
+    });
+    for (const [esperada, participio] of regulares) expect(explicarConjugacion(esperada, participio, ['ik'], false), `${esperada}: ${participio}`).toBeNull();
+    expect(regulares.map(([p]) => p)).toEqual(expect.arrayContaining(['werkte', 'woonden', 'maakte', 'wilde', 'wilden']));
     // Lo que sí se sabe de los regulares sigue saliendo, y el irregular hecho con la regla también.
     expect(explicarConjugacion('woonden', 'woonten', ['we'], false)?.caso).toBe('pasado-te-de');
     expect(explicarConjugacion('kwam', 'komde', ['hij'], false)?.caso).toBe('pasado-irregular');
