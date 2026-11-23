@@ -4,7 +4,9 @@ import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../orden/p
 import { ELEMENTOS_VERBOS, verbos } from '../verbos/pista';
 import { vocabulario, ELEMENTOS_VOCABULARIO } from '../vocabulario/pista';
 import { DESTREZAS } from '../destrezas';
+import { CASOS } from './casos';
 import { diagnosticarEjemplos } from './ejemplos';
+import { formasDe, mismoVerbo } from './formas';
 import { papelesDe } from './papeles';
 import { explicarConjugacion, explicarParticipio } from './verbo';
 
@@ -27,6 +29,9 @@ function diagnostico(texto: string, respuesta: string): readonly Diagnostico[] {
 
 const destrezas = (ds: readonly Diagnostico[]): string[] => ds.map((d) => d.destreza);
 const IDS = new Set<string>(DESTREZAS.map((d) => d.id));
+const CASOS_VALIDOS = new Set<string>(CASOS);
+/** El caso de cada diagnóstico (todos los de neerlandés lo llevan). */
+const casos = (ds: readonly Diagnostico[]): string[] => ds.map((d) => ('caso' in d && typeof d.caso === 'string' ? d.caso : 'sin caso'));
 
 describe('papeles de las frases de orden', () => {
   it('todas tienen verbo y sujeto donde toca, y lo que va al final está en la frase', () => {
@@ -96,7 +101,11 @@ describe('diagnóstico del orden', () => {
   });
 
   it('separables: falta la partícula', () => {
-    expect(destrezas(diagnostico('Ik bel je morgen', 'Ik bel je morgen'))).toEqual(['separables']);
+    expect(destrezas(diagnostico('Ik nodig mijn vrienden', 'Ik nodig mijn vrienden voor zaterdag'))).toEqual(['separables']);
+  });
+
+  it('separables: sin la partícula no falta nada si también vale sin ella (bellen)', () => {
+    expect(diagnostico('Ik bel je morgen', 'Ik bel je morgen')).toEqual([]);
   });
 
   it('niet en el sitio del inglés', () => {
@@ -243,5 +252,123 @@ describe('robustez', () => {
 describe('ejemplos de error de docs/revision.md', () => {
   it('cada uno tiene al menos un diagnóstico', () => {
     for (const e of diagnosticarEjemplos()) expect(e.diagnosticos.length, e.respuesta).toBeGreaterThan(0);
+  });
+});
+
+describe('lo que el inventario de la fase 1 encontró mal explicado', () => {
+  it('pregunta con je delante: no se queda sin explicar', () => {
+    const d = diagnostico('Wat ga je', 'Wat je gaat dit weekend doen?');
+    expect(casos(d)).toEqual(['pregunta-interrogativa']);
+    expect(d[0]?.texto).toContain('«ga je»');
+  });
+
+  it('pregunta con jij delante: la -t estaba bien para ese orden y no se da por mal conjugada', () => {
+    for (const [f, r] of [
+      ['Werk jij morgen', 'Jij werkt morgen?'],
+      ['Kom jij ook', 'Jij komt ook naar het feest?'],
+      ['Kun je het zout', 'Je kunt het zout even aangeven?'],
+    ] as const) {
+      const d = diagnostico(f, r);
+      expect(casos(d), r).toEqual(['pregunta-si-no']);
+      expect(d[0]?.texto, r).toContain('pierde la -t');
+    }
+  });
+
+  it('con jij detrás, la -t de un irregular como gaan también se cae', () => {
+    expect(casos(diagnostico('Wat ga je', 'Wat gaat je dit weekend doen?'))).toEqual(['presente-jij-detras']);
+    expect(casos(diagnostico('Hoe laat sta je', 'Hoe laat staat je op?'))).toEqual(['presente-jij-detras']);
+  });
+
+  it('la frase que se enseña empieza como la respuesta y no contradice la explicación', () => {
+    const d = diagnostico('Meestal eten we', 'Om zes uur we eten meestal');
+    expect(casos(d)).toEqual(['inversion-otro-delante']);
+    expect(d[0]?.texto).toContain('«Om zes uur eten we meestal»');
+    expect(d[0]?.texto).toContain('O empieza por el sujeto: «We eten meestal om zes uur»');
+    const segunda = diagnostico('Meestal eten we', 'We meestal eten om zes uur');
+    expect(segunda[0]?.texto).toContain('«We eten meestal om zes uur»');
+  });
+
+  it('en la subordinada también se mira la conjugación', () => {
+    expect(casos(diagnostico('Ik blijf thuis omdat', 'Ik blijf thuis omdat ik niet lekker is'))).toEqual(['presente-otra']);
+  });
+
+  it('el participio sin ge- en la frase de un verbo', () => {
+    const e = ELEMENTOS_VERBOS.find((x) => x.grupo === 'perfectum' && x.verbo?.inf === 'spelen');
+    if (!e) throw new Error('falta spelen');
+    const ejercicio = verbos.crearEjercicio(e, { ...contexto, formas: new Set(['traducir'] as const) });
+    expect(casos(verbos.diagnosticar?.(ejercicio, 'De kinderen hebben de hele middag buiten speeld') ?? [])).toEqual(['participio-sin-ge']);
+  });
+
+  it('el inglés de cada subordinada es el suyo', () => {
+    const d = diagnostico('Als ik tijd heb', 'Als ik heb tijd, kom ik langs');
+    expect(d[0]?.texto).toContain('“if I have time”');
+    expect(d[0]?.texto).not.toContain('because');
+  });
+
+  it('los participios que no están en los verbos: irregular y separable', () => {
+    expect(casos(diagnostico('Mijn schoonmoeder', 'Mijn schoonmoeder heeft een taart gebakt'))).toEqual(['participio-irregular']);
+    expect(casos(diagnostico('Hij is om tien uur', 'Hij is om tien uur gethuiskomen'))).toEqual(['participio-separable']);
+  });
+
+  it('niet entre el sujeto y el verbo: el contraste es con el español', () => {
+    const d = diagnostico('Dat is niet waar', 'Dat niet is waar');
+    expect(casos(d)).toEqual(['inversion-niet']);
+    expect(d[0]?.texto).toContain('En español');
+  });
+
+  it('el pasado donde va el presente', () => {
+    expect(casos(diagnostico('Vandaag werk ik', 'Vandaag werkte ik thuis'))).toEqual(['presente-con-pasado']);
+  });
+
+  it('je de «je zus» no es el sujeto: la -t no se cae', () => {
+    const d = diagnostico('Waar woont je zus', 'Waar woon je zus?');
+    expect(casos(d)).toEqual(['presente-je-posesivo']);
+    expect(d[0]?.texto).toContain('«tu»');
+  });
+
+  it('un irregular hecho con la regla se reconoce como el mismo verbo', () => {
+    for (const [buena, inventada] of [
+      ['kwam', 'komde'],
+      ['sliep', 'slaapte'],
+      ['woonden', 'woonten'],
+      ['werkte', 'werkde'],
+      ['gingen', 'gaanden'],
+      ['gespeeld', 'speeld'],
+    ] as const) {
+      expect(mismoVerbo(buena, inventada), `${buena} y ${inventada}`).toBe(true);
+    }
+    expect(mismoVerbo('werk', 'woon')).toBe(false);
+    expect(explicarConjugacion('kwam', 'komde', ['hij'], false)?.caso).toBe('pasado-irregular');
+    expect(explicarConjugacion('woonden', 'woonten', ['we'], false)?.caso).toBe('pasado-te-de');
+  });
+
+  it('con ik o hij, la forma de otra persona de un irregular no se explica con la -t', () => {
+    expect(explicarConjugacion('ben', 'bent', ['ik'], false)?.caso).toBe('presente-otra');
+    expect(explicarConjugacion('ga', 'gaat', ['ik'], false)?.caso).toBe('presente-ik-con-t');
+    expect(explicarConjugacion('gaat', 'ga', ['hij'], false)?.caso).toBe('presente-falta-t');
+  });
+});
+
+describe('cobertura de los datos del diagnóstico', () => {
+  it('cada participio de las frases de orden se sabe de qué verbo es', () => {
+    for (const f of ELEMENTOS_ORDEN) {
+      const p = papelesDe(f);
+      if (p.tipoFinal !== 'participio') continue;
+      const participio = p.finales.at(-1) ?? '';
+      expect(
+        formasDe(participio).some((x) => x.tipo === 'participio'),
+        `${f.codigo}: «${participio}» no está en verbos/datos.ts ni en diagnostico/datos.ts`,
+      ).toBe(true);
+    }
+  });
+
+  it('cualquier orden de las fichas da diagnósticos con un caso que existe', () => {
+    const azar = crearAzar(11);
+    for (const f of ELEMENTOS_ORDEN) {
+      const ejercicio = ejercicioDeFrase(f, 'ordenar', contexto);
+      for (let i = 0; i < 10; i++) {
+        for (const c of casos(orden.diagnosticar?.(ejercicio, azar.barajar(f.fichas).join(' ')) ?? [])) expect(CASOS_VALIDOS.has(c), c).toBe(true);
+      }
+    }
   });
 });

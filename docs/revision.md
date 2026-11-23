@@ -35,7 +35,7 @@ Al terminar un lote: aplica sus correcciones y marca el lote con la orden que ll
 | Verbos (V) | 58 | 0 | 58 |
 | Verbos separables (S) | 15 | 0 | 13 |
 | Vocabulario (P) | 128 | 0 | 25 |
-| Explicaciones de errores (E) | 16 | 0 | 19 |
+| Explicaciones de errores (E) | 16 | 0 | 18 |
 | Otros textos de la app (T) | 29 | 0 | 12 |
 | **Total** | **324** | **0** | **203** |
 
@@ -97,7 +97,7 @@ Para marcarlo cuando esté corregido: `npm run revisado -- O11-O24 R3`
 | O23 | We hebben veel gelachen. | Nos hemos reído mucho.<br>*Pista:* En perfectum, con «lachen». |
 | O24 | Hij is om tien uur thuisgekomen.<br>*También:* Om tien uur is hij thuisgekomen. | Llegó a casa a las diez.<br>*Pista:* En perfectum, con «thuiskomen»; él es «hij». |
 
-## Lote 3 (unos 14 minutos)
+## Lote 3 (unos 15 minutos)
 
 Para marcarlo cuando esté corregido: `npm run revisado -- O25-O38 R4-R5`
 
@@ -107,7 +107,7 @@ Para marcarlo cuando esté corregido: `npm run revisado -- O25-O38 R4-R5`
 
 | # | Neerlandés | Español |
 |---|---|---|
-| O25 | Ik bel je morgen op.<br>*También:* Morgen bel ik je op. / Ik bel jou morgen op. / Morgen bel ik jou op. | Te llamo mañana.<br>*Pista:* Con «opbellen». |
+| O25 | Ik bel je morgen op.<br>*También:* Morgen bel ik je op. / Ik bel jou morgen op. / Morgen bel ik jou op. / Ik bel je morgen. / Morgen bel ik je. / Ik bel jou morgen. / Morgen bel ik jou. | Te llamo mañana.<br>*Pista:* Con «opbellen». |
 | O26 | Hoe laat sta je op?<br>*También:* Hoe laat sta jij op? | ¿A qué hora te levantas?<br>*Pista:* Con «opstaan». |
 | O27 | Neem jij de wijn mee?<br>*También:* Neem je de wijn mee? | ¿Traes tú el vino?<br>*Pista:* Con «meenemen». |
 | O28 | De trein komt om vijf uur aan.<br>*También:* Om vijf uur komt de trein aan. / De trein komt aan om vijf uur. | El tren llega a las cinco.<br>*Pista:* Con «aankomen». |
@@ -842,8 +842,8 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E1-E13`
 
 **E1.** «Morgen ga ik naar mijn schoonouders.» → respuesta: «Morgen ik ga naar mijn schoonouders»
 
-- **Tras «morgen», el verbo va antes que el sujeto.** Empezaste por «morgen», así que eso ocupa la primera posición: el verbo («ga») va segundo y el sujeto («ik») justo detrás: «Morgen ga ik naar mijn schoonouders». En inglés el sujeto va antes del verbo (“Tomorrow I go”); por eso sale así.
-  - *Pista antes del segundo intento:* Has empezado por «morgen», y eso ya ocupa la primera posición. En inglés iría ahora el sujeto (“Tomorrow I go”); en neerlandés, el verbo conjugado. ¿Dónde va «ga»?
+- **Tras «morgen», el verbo va antes que el sujeto.** Empezaste por «morgen», así que eso ocupa la primera posición: el verbo («ga») va segundo y el sujeto («ik») justo detrás: «Morgen ga ik naar mijn schoonouders». En inglés el sujeto iría delante del verbo (como en “Tomorrow I go”); por eso sale así.
+  - *Pista antes del segundo intento:* Has empezado por «morgen», y eso ya ocupa la primera posición. En inglés iría ahora el sujeto (como en “Tomorrow I go”); en neerlandés, el verbo conjugado. ¿Dónde va «ga»?
 
 **E2.** «Ik wil morgen een nieuwe fiets kopen.» → respuesta: «Ik wil kopen morgen een nieuwe fiets»
 
@@ -872,7 +872,7 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E1-E13`
 
 **E7.** «Ik bel je morgen op.» → respuesta: «Ik opbel je morgen»
 
-- **«opbel» se separa en la frase principal.** Con el verbo conjugado en la principal, la partícula «op» se separa y se va al final: «Ik bel je morgen op». Solo va pegada con un modal («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio («opgebeld»).
+- **«opbel» se separa en la frase principal.** Con el verbo conjugado en la principal, la partícula «op» se separa y se va al final: «Ik bel je morgen op». Solo va pegada con un modal, en una subordinada y en el participio (con opbellen: «ik wil je opbellen», «omdat ik je opbel», «opgebeld»).
   - *Pista antes del segundo intento:* «opbel» es un verbo separable, y conjugado en la frase principal se parte en dos. ¿Qué parte va en segunda posición y cuál se va al final?
 
 **E8.** «Ik heb het niet gezien.» → respuesta: «Ik heb niet het gezien»
@@ -887,7 +887,7 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E1-E13`
 
 **E10.** «Waar woont je zus?» → respuesta: «Waar je zus woont?»
 
-- **En la pregunta, el verbo va justo detrás de «waar».** Después de «waar» va el verbo («woont») y luego el sujeto («je zus»): «Waar woont je zus?» Con el sujeto antes del verbo sería una subordinada («…waar je zus woont»), no una pregunta.
+- **En la pregunta, el verbo va justo detrás de «waar».** Después de «waar» va el verbo («woont») y luego el sujeto («je zus»): «Waar woont je zus?» Con el sujeto delante, suena a subordinada (como en «Ik weet niet waar je zus woont»), no a pregunta.
   - *Pista antes del segundo intento:* En inglés el sujeto va detrás de do o does (“Where does your sister live?”); en neerlandés no hay do, y es el verbo el que va delante del sujeto. ¿Dónde va «woont»?
 
 **E11.** «Werk jij morgen?» → respuesta: «Werkt jij morgen?»
@@ -902,7 +902,7 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E1-E13`
 
 **E13.** «Ik blijf thuis omdat ik niet lekker ben.» → respuesta: «Ik blijf thuis omdat ik ben niet lekker»
 
-- **Después de «omdat», el verbo va al final.** «omdat» abre una subordinada, y en la subordinada el verbo conjugado («ben») se va al final: «omdat ik niet lekker ben». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).
+- **Después de «omdat», el verbo va al final.** «omdat» abre una subordinada, y en la subordinada el verbo conjugado («ben») se va al final: «omdat ik niet lekker ben». Lo dejaste en medio, como en inglés (“because I am not well”).
   - *Pista antes del segundo intento:* «omdat» abre una subordinada, y en una subordinada el verbo conjugado se va al final. En inglés se queda en medio (“because I am not well”). ¿Qué tienes que mover?
 
 ## Lote 14 (unos 15 minutos)
@@ -913,8 +913,8 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E14-E16 T1-T28`
 
 **E14.** «Ik denk dat het morgen gaat regenen.» → respuesta: «Ik denk dat het gaat regenen morgen»
 
-- **Después de «dat», el verbo va al final.** «dat» abre una subordinada, y en la subordinada los verbos («gaat regenen») van juntos al final: «dat het morgen gaat regenen». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).
-  - *Pista antes del segundo intento:* «dat» abre una subordinada, y en una subordinada los verbos se van juntos al final. En inglés se queda en medio (“because I am not well”). ¿Qué tienes que mover?
+- **Después de «dat», el verbo va al final.** «dat» abre una subordinada, y en la subordinada los verbos («gaat regenen») van juntos al final: «dat het morgen gaat regenen». Lo dejaste en medio, como en inglés (“that it is going to rain”).
+  - *Pista antes del segundo intento:* «dat» abre una subordinada, y en una subordinada los verbos se van juntos al final. En inglés se queda en medio (“that it is going to rain”). ¿Qué tienes que mover?
 
 **E15.** «Als ik tijd heb, kom ik langs.» → respuesta: «Als ik tijd heb, ik kom langs»
 
@@ -923,8 +923,8 @@ Para marcarlo cuando esté corregido: `npm run revisado -- E14-E16 T1-T28`
 
 **E16.** «Als ik tijd heb, kom ik langs.» → respuesta: «Als ik heb tijd, kom ik langs»
 
-- **Después de «als», el verbo va al final.** «als» abre una subordinada, y en la subordinada el verbo conjugado («heb») se va al final: «als ik tijd heb». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).
-  - *Pista antes del segundo intento:* «als» abre una subordinada, y en una subordinada el verbo conjugado se va al final. En inglés se queda en medio (“because I am not well”). ¿Qué tienes que mover?
+- **Después de «als», el verbo va al final.** «als» abre una subordinada, y en la subordinada el verbo conjugado («heb») se va al final: «als ik tijd heb». Lo dejaste en medio, como en inglés (“if I have time”).
+  - *Pista antes del segundo intento:* «als» abre una subordinada, y en una subordinada el verbo conjugado se va al final. En inglés se queda en medio (“if I have time”). ¿Qué tienes que mover?
 
 ### Otros textos de la app
 

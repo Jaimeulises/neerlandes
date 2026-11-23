@@ -17,6 +17,9 @@ import {
 } from '../diagnostico';
 import { ejercicioDeFrase, type Frase } from '../orden/pista';
 import { SEPARABLES, VERBOS, type DatosSeparable, type DatosVerbo, type Formas } from './datos';
+import { formaConJij, formasPresente } from './conjugacion';
+
+export { formaConJij, formasPresente } from './conjugacion';
 
 export const GRUPOS_VERBOS = ['presente', 'perfectum', 'perfectum-irregular', 'separables', 'pasado'] as const;
 export type GrupoVerbos = (typeof GRUPOS_VERBOS)[number];
@@ -65,22 +68,9 @@ export interface Verbo extends Elemento {
   readonly separable?: DatosSeparable;
 }
 
-/** Las seis formas del presente, con sus alternativas. */
-export function formasPresente(v: DatosVerbo): Formas {
-  if (v.presente) return v.presente;
-  const raiz = v.raiz ?? v.inf;
-  const conT = raiz.endsWith('t') ? raiz : `${raiz}t`;
-  return [raiz, conT, conT, v.inf, v.inf, v.inf];
-}
-
 /** La forma de una persona (0 a 5). */
 function formaDe(formas: Formas, i: number): string {
   return formas[i] ?? formas[0];
-}
-
-/** La forma con jij detrás del verbo (sin la -t). */
-export function formaConJij(v: DatosVerbo): string {
-  return v.conJij ?? formasPresente(v)[0];
 }
 
 export interface Sujeto {

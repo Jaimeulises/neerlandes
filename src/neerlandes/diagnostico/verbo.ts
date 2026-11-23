@@ -3,9 +3,8 @@
 // participio (’t kofschip, ge-, los irregulares) y hebben o zijn. Cada una dice
 // la regla con el verbo y el sujeto de la frase, no en abstracto.
 
-import type { Diagnostico } from '../../motor';
-import { SEPARABLES } from '../verbos/datos';
-import { formasDe, mismoVerbo } from './formas';
+import type { Caso, DiagnosticoNl } from './casos';
+import { formasDe, mismoVerbo, presenteDelVerbo } from './formas';
 
 const cita = (p: readonly string[] | string): string => `«${typeof p === 'string' ? p : p.join(' ')}»`;
 
@@ -33,117 +32,157 @@ function infinitivoDe(...formas: string[]): string | null {
   return null;
 }
 
+/** La raíz y la forma con -t de un verbo del que se sabe el presente, si su singular sigue la regla: ik con la raíz, jij y hij con la -t (aunque se escriba distinto: ga, gaat). */
+function singularRegular(presente: NonNullable<ReturnType<typeof presenteDelVerbo>>): { raiz: string; conT: string } | null {
+  const [ik = [], jij = [], hij = []] = presente.formas;
+  const [raiz] = ik;
+  const [conT] = jij;
+  if (raiz === undefined || conT === undefined || ik.length !== 1 || jij.length !== 1 || hij.length !== 1) return null;
+  return hij[0] === conT && raiz !== conT ? { raiz, conT } : null;
+}
+
 /**
  * Por qué una forma conjugada no es la buena. null si las dos palabras no son del mismo verbo (entonces no es
  * un fallo de conjugación sino de palabra).
  */
-export function explicarConjugacion(esperada: string, dada: string, sujeto: readonly string[], invertido: boolean): Diagnostico | null {
+export function explicarConjugacion(esperada: string, dada: string, sujeto: readonly string[], invertido: boolean): DiagnosticoNl | null {
   if (!mismoVerbo(esperada, dada) || esperada === dada) return null;
   const formasEsperada = formasDe(esperada);
+  const formasDada = formasDe(dada);
   const esPasado = formasEsperada.some((f) => f.tipo === 'pasado') && !formasEsperada.some((f) => f.tipo === 'presente');
   const persona = personaDe(sujeto, esperada);
   const inf = infinitivoDe(esperada, dada);
   const suj = sujeto.length > 0 ? cita(sujeto) : 'el sujeto';
   const titulo = `${cita(dada)} no: ${cita(esperada)}`;
   const delVerbo = inf ? ` de ${cita(inf)}` : '';
+  const explicar = (caso: Caso, destreza: string, texto: string, pista: string): DiagnosticoNl => ({ caso, destreza, titulo, texto, pista });
 
   if (esPasado) {
-    const dadaEsPresente = formasDe(dada).some((f) => f.tipo === 'presente' || f.tipo === 'infinitivo') && !formasDe(dada).some((f) => f.tipo === 'pasado');
+    const dadaEsPresente = formasDada.some((f) => f.tipo === 'presente' || f.tipo === 'infinitivo') && !formasDada.some((f) => f.tipo === 'pasado');
     if (dadaEsPresente) {
-      return {
-        destreza: 'pasado',
-        titulo,
-        texto: `La frase va en pasado simple: el pasado${delVerbo} con ${suj} es ${cita(esperada)}. ${cita(dada)} es presente.`,
-        pista: `La frase va en pasado simple y ${cita(dada)} es presente. ¿Cuál es el pasado${delVerbo} con ${suj}?`,
-      };
+      return explicar(
+        'pasado-con-presente',
+        'pasado',
+        `La frase va en pasado simple: el pasado${delVerbo} con ${suj} es ${cita(esperada)}. ${cita(dada)} es presente.`,
+        `La frase va en pasado simple y ${cita(dada)} es presente. ¿Cuál es el pasado${delVerbo} con ${suj}?`,
+      );
     }
     if (esperada === `${dada}n` || esperada === `${dada}en`) {
-      return {
-        destreza: 'pasado',
-        titulo,
-        texto: `En pasado, el plural (${suj}) lleva -n: ${cita(esperada)}. Sin -n es el singular (ik, jij, hij).`,
-        pista: `${cita(dada)} es el pasado del singular, y ${suj} es plural. ¿Qué le falta?`,
-      };
+      return explicar(
+        'pasado-plural-sin-n',
+        'pasado',
+        `En pasado, el plural (${suj}) lleva -n: ${cita(esperada)}. Sin -n es el singular (ik, jij, hij).`,
+        `${cita(dada)} es el pasado del singular, y ${suj} es plural. ¿Qué le falta?`,
+      );
     }
     if (dada === `${esperada}n` || dada === `${esperada}en`) {
-      return {
-        destreza: 'pasado',
-        titulo,
-        texto: `Con ${suj} (singular), el pasado va sin -n: ${cita(esperada)}. La -n es para el plural (wij, jullie, zij).`,
-        pista: `${cita(dada)} es el pasado del plural, y ${suj} es singular. ¿Qué le sobra?`,
-      };
+      return explicar(
+        'pasado-singular-con-n',
+        'pasado',
+        `Con ${suj} (singular), el pasado va sin -n: ${cita(esperada)}. La -n es para el plural (wij, jullie, zij).`,
+        `${cita(dada)} es el pasado del plural, y ${suj} es singular. ¿Qué le sobra?`,
+      );
     }
     const te = /te(n)?$/.test(esperada) && /de(n)?$/.test(dada);
     const de = /de(n)?$/.test(esperada) && /te(n)?$/.test(dada);
     if (te || de) {
-      return {
-        destreza: 'pasado',
-        titulo,
-        texto: `En los regulares, -te o -de sale de la misma regla que el participio, ’t kofschip: si en el infinitivo${delVerbo} va t, k, f, s, ch o p delante de -en, -te; si no, -de. Aquí: ${cita(esperada)}.`,
-        pista: `¿-te o -de? Sale de la misma regla que el participio: mira qué letra va delante de -en en el infinitivo${delVerbo} y si está en ’t kofschip (t, k, f, s, ch, p).`,
-      };
+      return explicar(
+        'pasado-te-de',
+        'pasado',
+        `En los regulares, -te o -de sale de la misma regla que el participio, ’t kofschip: si en el infinitivo${delVerbo} va t, k, f, s, ch o p delante de -en, -te; si no, -de. Aquí: ${cita(esperada)}.`,
+        `¿-te o -de? Sale de la misma regla que el participio: mira qué letra va delante de -en en el infinitivo${delVerbo} y si está en ’t kofschip (t, k, f, s, ch, p).`,
+      );
     }
-    return {
-      destreza: 'pasado',
-      titulo,
-      texto: `El pasado${delVerbo} con ${suj} es ${cita(esperada)}: es irregular y hay que aprenderlo.`,
-      pista: `El pasado${delVerbo} es irregular: no lleva -te ni -de. ¿Cuál es con ${suj}?`,
-    };
+    return explicar(
+      'pasado-irregular',
+      'pasado',
+      `El pasado${delVerbo} con ${suj} es ${cita(esperada)}: es irregular y hay que aprenderlo.`,
+      `El pasado${delVerbo} es irregular: no lleva -te ni -de. ¿Cuál es con ${suj}?`,
+    );
   }
 
-  if (dada === `${esperada}t` && persona === 'jij' && invertido) {
-    return {
-      destreza: 'presente',
-      titulo,
-      texto: `Cuando jij o je va detrás del verbo (en una pregunta o tras «morgen», por ejemplo), la -t se cae: ${cita([esperada, ...sujeto])}. Con jij delante sí lleva -t: «jij ${dada}».`,
-      pista: `Aquí ${cita(sujeto)} va detrás del verbo. Con jij o je detrás, el verbo pierde algo que lleva con jij delante. ¿Qué le sobra a ${cita(dada)}?`,
-    };
+  // Se esperaba el presente y ha puesto el pasado: falla el tiempo, no la persona.
+  const dadaEsPasado = formasDada.some((f) => f.tipo === 'pasado') && !formasDada.some((f) => f.tipo === 'presente' || f.tipo === 'infinitivo');
+  if (dadaEsPasado) {
+    return explicar(
+      'presente-con-pasado',
+      'presente',
+      `La frase va en presente: con ${suj}, ${cita(esperada)}. ${cita(dada)} es pasado simple.`,
+      `La frase va en presente y ${cita(dada)} es pasado. ¿Cuál es el presente${delVerbo} con ${suj}?`,
+    );
   }
-  if (dada === `${esperada}t` && persona === 'ik') {
-    return {
-      destreza: 'presente',
-      titulo,
-      texto: `Con ik va la raíz sola, sin -t: «ik ${esperada}». La -t es para jij, hij, zij y u.`,
-      pista: `Con ik va la raíz sola, sin nada detrás. ¿Qué le sobra a ${cita(dada)}?`,
-    };
+
+  // Con los verbos de los datos se mira qué forma va con cada persona; con los demás, la regla (raíz, raíz + t).
+  const presente = presenteDelVerbo(esperada) ?? presenteDelVerbo(dada);
+  const regular = presente ? singularRegular(presente) : null;
+  const jijDelante = presente ? (presente.formas[1] ?? []) : [`${esperada}t`];
+  const conJij = presente ? presente.conJij : [esperada];
+  const ikConT = regular ? esperada === regular.raiz && dada === regular.conT : !presente && dada === `${esperada}t`;
+  const faltaT = regular ? esperada === regular.conT && dada === regular.raiz : !presente && esperada === `${dada}t`;
+
+  if (persona === 'jij' && invertido && jijDelante.includes(dada) && !conJij.includes(dada) && conJij.includes(esperada)) {
+    return explicar(
+      'presente-jij-detras',
+      'presente',
+      `Cuando jij o je va detrás del verbo (en una pregunta o tras «morgen», por ejemplo), la -t se cae: ${cita([esperada, ...sujeto])}. Con jij delante sí lleva -t: «jij ${dada}».`,
+      `Aquí ${cita(sujeto)} va detrás del verbo. Con jij o je detrás, el verbo pierde algo que lleva con jij delante. ¿Qué le sobra a ${cita(dada)}?`,
+    );
   }
-  if (esperada === `${dada}t`) {
+  if (persona === 'ik' && ikConT) {
+    return explicar(
+      'presente-ik-con-t',
+      'presente',
+      `Con ik va la raíz sola, sin -t: «ik ${esperada}». La -t es para jij, hij, zij y u.`,
+      `Con ik va la raíz sola, sin nada detrás. ¿Qué le sobra a ${cita(dada)}?`,
+    );
+  }
+  if (faltaT) {
+    const posesivo = sujeto[0];
+    // «je zus», «jouw vriend»: ese je no es el sujeto «tú» sino «tu», y la -t no se cae aunque vaya detrás.
+    if (persona === 'tercera' && sujeto.length > 1 && (posesivo === 'je' || posesivo === 'jouw')) {
+      return explicar(
+        'presente-je-posesivo',
+        'presente',
+        `Aquí ${cita(posesivo)} es «tu», no el sujeto «tú»: el sujeto es ${suj}, que va en tercera persona, así que el verbo lleva -t: ${cita(invertido ? [esperada, ...sujeto] : [...sujeto, esperada])}. La -t solo se cae si el sujeto es jij o je y va detrás del verbo.`,
+        `Aquí ${cita(posesivo)} no es el sujeto «tú» sino «tu» (${suj}): el sujeto va en tercera persona. ¿Qué le falta a ${cita(dada)}?`,
+      );
+    }
     const quien = persona === 'jij' ? 'Con jij delante del verbo' : persona === 'u' ? 'Con u' : `Con ${suj} (él, ella, eso o un nombre en singular)`;
     // La -s de «he works» es la misma idea que la -t de «hij werkt»: con la tercera persona, el contraste ayuda.
     const ingles = persona === 'tercera' ? ' Como en inglés “he works” lleva -s, aquí la raíz también lleva algo detrás.' : '';
-    return {
-      destreza: 'presente',
-      titulo,
-      texto: `${quien} va raíz + t: ${cita([...sujeto, esperada])}. Solo se cae la -t si jij o je va detrás del verbo.`,
-      pista: `${quien}, la raíz sola no basta.${ingles} ¿Qué le falta a ${cita(dada)}?`,
-    };
+    return explicar(
+      'presente-falta-t',
+      'presente',
+      `${quien} va raíz + t: ${cita([...sujeto, esperada])}. Solo se cae la -t si jij o je va detrás del verbo.`,
+      `${quien}, la raíz sola no basta.${ingles} ¿Qué le falta a ${cita(dada)}?`,
+    );
   }
   if (persona === 'plural') {
-    return {
-      destreza: 'presente',
-      titulo,
-      texto: `Con ${suj} (plural), el verbo va en infinitivo: ${cita([...sujeto, esperada])}.`,
-      pista: `${suj} es plural. ¿Qué forma lleva el verbo con wij, jullie y zij?`,
-    };
+    return explicar(
+      'presente-plural',
+      'presente',
+      `Con ${suj} (plural), el verbo va en infinitivo: ${cita([...sujeto, esperada])}.`,
+      `${suj} es plural. ¿Qué forma lleva el verbo con wij, jullie y zij?`,
+    );
   }
-  const dadaEsInfinitivo = formasDe(dada).some((f) => f.tipo === 'infinitivo') || (inf !== null && dada === inf);
+  const dadaEsInfinitivo = formasDada.some((f) => f.tipo === 'infinitivo') || (inf !== null && dada === inf);
   if (dadaEsInfinitivo) {
-    return {
-      destreza: 'presente',
-      titulo,
-      texto: `Has dejado el verbo sin conjugar. Con ${suj}, ${cita(inf ?? dada)} es ${cita(esperada)}; el infinitivo solo va con wij, jullie y zij (plural).`,
-      pista: `${cita(dada)} es el infinitivo, que solo va con wij, jullie y zij. ¿Qué forma lleva con ${suj}?`,
-    };
+    return explicar(
+      'presente-infinitivo',
+      'presente',
+      `Has dejado el verbo sin conjugar. Con ${suj}, ${cita(inf ?? dada)} es ${cita(esperada)}; el infinitivo solo va con wij, jullie y zij (plural).`,
+      `${cita(dada)} es el infinitivo, que solo va con wij, jullie y zij. ¿Qué forma lleva con ${suj}?`,
+    );
   }
   const irregular = formasEsperada.some((f) => f.verbo?.presente !== undefined);
-  return {
-    destreza: 'presente',
-    titulo,
-    texto: `Con ${suj}, el presente${delVerbo} es ${cita(esperada)}.${irregular ? ' Es irregular: sus formas hay que aprenderlas.' : ''}`,
-    pista: irregular
-      ? `${cita(inf ?? dada)} es irregular en presente: sus formas no salen de la regla. ¿Cuál va con ${suj}?`
-      : `Con ${suj}, ¿va la raíz sola, raíz + t o el infinitivo?`,
-  };
+  // Con jij detrás se dice, porque la forma no es la de jij delante.
+  const con = persona === 'jij' && invertido ? `${suj} detrás del verbo` : suj;
+  return explicar(
+    'presente-otra',
+    'presente',
+    `Con ${con}, el presente${delVerbo} es ${cita(esperada)}.${irregular ? ' Es irregular: sus formas hay que aprenderlas.' : ''}`,
+    irregular ? `${cita(inf ?? dada)} es irregular en presente: sus formas no salen de la regla. ¿Cuál va con ${con}?` : `Con ${con}, ¿va la raíz sola, raíz + t o el infinitivo?`,
+  );
 }
 
 const KOFSCHIP = ['t', 'k', 'f', 's', 'ch', 'p'];
@@ -155,18 +194,18 @@ function letraAntesDeEn(inf: string): string {
 }
 
 /** Por qué un participio no es el bueno. null si no se puede decir nada concreto. */
-export function explicarParticipio(esperado: string, dado: string): Diagnostico | null {
+export function explicarParticipio(esperado: string, dado: string): DiagnosticoNl | null {
   if (esperado === dado) return null;
   const forma = formasDe(esperado).find((f) => f.tipo === 'participio');
   const inf = forma?.inf ?? null;
   const titulo = `${cita(dado)} no: ${cita(esperado)}`;
-  const separable = inf ? SEPARABLES.find((s) => s.inf === inf) : undefined;
   // Las pistas nombran el verbo por su infinitivo, salvo si el participio es igual (vergeten): lo darían hecho.
   const verbo = inf && inf !== esperado ? cita(inf) : 'este verbo';
   const Verbo = inf && inf !== esperado ? cita(inf) : 'Este verbo';
 
-  if (separable) {
+  if (forma?.separable) {
     return {
+      caso: 'participio-separable',
       destreza: 'separables',
       titulo,
       texto: `En los separables, ge- va entre la partícula y el verbo: ${cita(esperado)}. Primero la partícula, luego ge- y luego el participio del verbo.`,
@@ -175,6 +214,7 @@ export function explicarParticipio(esperado: string, dado: string): Diagnostico 
   }
   if (forma?.irregular) {
     return {
+      caso: 'participio-irregular',
       destreza: 'participio-irregular',
       titulo,
       texto: `${cita(inf ?? esperado)} tiene participio irregular: ${cita(esperado)}. No sigue la regla de ge + raíz + t o d, así que hay que aprenderlo de memoria.`,
@@ -183,6 +223,7 @@ export function explicarParticipio(esperado: string, dado: string): Diagnostico 
   }
   if (!inf) {
     return {
+      caso: 'participio-sin-datos',
       destreza: 'participio',
       titulo,
       texto: `El participio es ${cita(esperado)}.`,
@@ -193,6 +234,7 @@ export function explicarParticipio(esperado: string, dado: string): Diagnostico 
   const conGe = esperado.startsWith('ge');
   if (!conGe && dado.startsWith('ge')) {
     return {
+      caso: 'participio-prefijo',
       destreza: 'participio',
       titulo,
       texto: `${cita(inf)} empieza por un prefijo átono (be-, ver-, ge-, her-, ont-, er-), y con ellos el participio no lleva ge-: ${cita(esperado)}.`,
@@ -201,6 +243,7 @@ export function explicarParticipio(esperado: string, dado: string): Diagnostico 
   }
   if (conGe && !dado.startsWith('ge')) {
     return {
+      caso: 'participio-sin-ge',
       destreza: 'participio',
       titulo,
       texto: `El participio regular empieza por ge-: ge + raíz + t o d. ${cita(inf)} da ${cita(esperado)}.`,
@@ -212,6 +255,7 @@ export function explicarParticipio(esperado: string, dado: string): Diagnostico 
   const raizAcabaEnTD = (letra === 't' || letra === 'd') && (dado === `${esperado}t` || dado === `${esperado}d` || /(tt|td|dt|dd)$/.test(dado));
   if (raizAcabaEnTD) {
     return {
+      caso: 'participio-raiz-td',
       destreza: 'participio',
       titulo,
       texto: `La raíz de ${cita(inf)} ya acaba en ${letra}, y no se añade otra: ${cita(esperado)}.`,
@@ -219,6 +263,7 @@ export function explicarParticipio(esperado: string, dado: string): Diagnostico 
     };
   }
   return {
+    caso: 'participio-kofschip',
     destreza: 'participio',
     titulo,
     texto: `’t kofschip: en ${cita(inf)} va ${cita(letra)} delante de -en, ${conT ? 'que está en ’t kofschip (t, k, f, s, ch, p), así que acaba en -t' : 'que no está en ’t kofschip (t, k, f, s, ch, p), así que acaba en -d'}: ${cita(esperado)}. Se mira el infinitivo, no la raíz.`,
@@ -227,13 +272,14 @@ export function explicarParticipio(esperado: string, dado: string): Diagnostico 
 }
 
 /** Por qué el auxiliar del perfectum no es el bueno. */
-export function explicarAuxiliar(usado: string, esperado: string, participio: string, fraseBuena: string): Diagnostico {
+export function explicarAuxiliar(usado: string, esperado: string, participio: string, fraseBuena: string): DiagnosticoNl {
   const forma = formasDe(participio).find((f) => f.tipo === 'participio');
   const inf = forma?.inf;
   const conZijn = ['ben', 'bent', 'is', 'zijn', 'was', 'waren'].includes(esperado);
   const verbo = inf ? `El perfectum de ${cita(inf)}` : 'Este perfectum';
   const fin = fraseBuena.endsWith('?»') ? '' : '.';
   return {
+    caso: conZijn ? 'auxiliar-zijn' : 'auxiliar-hebben',
     destreza: 'auxiliar',
     titulo: `${cita(usado)} no: ${cita(esperado)}`,
     texto: conZijn

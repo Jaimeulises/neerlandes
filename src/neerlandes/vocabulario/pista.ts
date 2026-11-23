@@ -4,6 +4,7 @@
 
 import { palabras, type ContextoEjercicio, type Diagnostico, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
 import { conFormasTonicas, elegirForma, idFijo, opcionesCon } from '../comun';
+import type { DiagnosticoNl } from '../diagnostico/casos';
 import { GRUPOS_VOCABULARIO, NOMBRES_GRUPO_VOCABULARIO, PALABRAS, type DatosPalabra, type GrupoVocabulario } from './datos';
 
 export interface Palabra extends Elemento {
@@ -159,17 +160,17 @@ export const vocabulario: Pista<Palabra> = {
     const mismoSustantivo = ejercicio.forma === 'opcion' || dado.slice(1).join(' ') === sustantivo;
     if ((articulo !== 'de' && articulo !== 'het') || articulo === e.articulo || !mismoSustantivo) return [];
     const diminutivo = sustantivo.endsWith('je');
-    return [
-      {
-        destreza: 'articulo',
-        titulo: `Es «${e.articulo} ${sustantivo}», no «${articulo} ${sustantivo}»`,
-        texto: diminutivo
-          ? 'Acaba en -je: los diminutivos siempre van con het.'
-          : e.articulo === 'het'
-            ? 'Es de las palabras con het: hay menos que con de, así que conviene aprenderlas con su artículo, como una sola palabra.'
-            : 'Va con de, que es lo más común (todos los plurales y la mayoría de las palabras en singular). Apréndela con su artículo, como una sola palabra.',
-      },
-    ];
+    const d: DiagnosticoNl = {
+      caso: diminutivo ? 'articulo-diminutivo' : e.articulo === 'het' ? 'articulo-het' : 'articulo-de',
+      destreza: 'articulo',
+      titulo: `Es «${e.articulo} ${sustantivo}», no «${articulo} ${sustantivo}»`,
+      texto: diminutivo
+        ? 'Acaba en -je: los diminutivos siempre van con het.'
+        : e.articulo === 'het'
+          ? 'Es de las palabras con het: hay menos que con de, así que conviene aprenderlas con su artículo, como una sola palabra.'
+          : 'Va con de, que es lo más común (todos los plurales y la mayoría de las palabras en singular). Apréndela con su artículo, como una sola palabra.',
+    };
+    return [d];
   },
   presentar(e): Presentacion {
     return { principal: e.nl, significado: e.es, nota: e.nota, audio: e.nl };

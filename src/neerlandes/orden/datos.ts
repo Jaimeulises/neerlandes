@@ -132,7 +132,15 @@ export const FRASES: readonly DatosFrase[] = [
   { codigo: 'O24', grupo: 'perfectum', fichas: 'hij|is|om tien uur|thuisgekomen', es: 'Llegó a casa a las diez.', otras: ['om tien uur is hij thuisgekomen'], pista: 'En perfectum, con «thuiskomen»; él es «hij».' },
 
   // Verbos separables
-  { codigo: 'O25', grupo: 'separables', fichas: 'ik|bel|je|morgen|op', es: 'Te llamo mañana.', otras: ['morgen bel ik je op', 'ik bel jou morgen op', 'morgen bel ik jou op'], pista: 'Con «opbellen».' },
+  // Sin op también vale: bellen es llamar por teléfono, igual que opbellen.
+  {
+    codigo: 'O25',
+    grupo: 'separables',
+    fichas: 'ik|bel|je|morgen|op',
+    es: 'Te llamo mañana.',
+    otras: ['morgen bel ik je op', 'ik bel jou morgen op', 'morgen bel ik jou op', 'ik bel je morgen', 'morgen bel ik je', 'ik bel jou morgen', 'morgen bel ik jou'],
+    pista: 'Con «opbellen».',
+  },
   { codigo: 'O26', grupo: 'separables', fichas: 'hoe laat|sta|je|op', es: '¿A qué hora te levantas?', final: '?', otras: ['hoe laat sta jij op'], pista: 'Con «opstaan».' },
   { codigo: 'O27', grupo: 'separables', fichas: 'neem|jij|de wijn|mee', es: '¿Traes tú el vino?', final: '?', otras: ['neem je de wijn mee'], pista: 'Con «meenemen».' },
   { codigo: 'O28', grupo: 'separables', fichas: 'de trein|komt|om vijf uur|aan', es: 'El tren llega a las cinco.', otras: ['om vijf uur komt de trein aan', 'de trein komt aan om vijf uur'], pista: 'Con «aankomen».' },

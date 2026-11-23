@@ -27,6 +27,8 @@ export interface Papeles {
     readonly conjuncion: string;
     /** El verbo conjugado de la subordinada (el que se va al final). */
     readonly verbo: string;
+    /** El sujeto de la subordinada, si se sabe (para ver si su verbo está bien conjugado). */
+    readonly sujeto: readonly string[];
     /** Todos los verbos del final de la subordinada, en su orden («gaat regenen»). */
     readonly verbos: readonly string[];
     /** Las demás palabras de la subordinada, sin la conjunción ni los verbos. */
@@ -37,6 +39,7 @@ export interface Papeles {
 }
 
 const INTERROGATIVAS = new Set(['wat', 'waar', 'hoe', 'hoelang', 'waarom', 'wanneer', 'wie', 'welke', 'welk', 'hoeveel']);
+const PRONOMBRES_SUJETO = new Set(['ik', 'jij', 'je', 'hij', 'zij', 'ze', 'het', 'we', 'wij', 'jullie', 'u', 'er']);
 
 export function esInterrogativa(trozo: readonly string[]): boolean {
   return trozo.length > 0 && INTERROGATIVAS.has(trozo[0] ?? '');
@@ -94,7 +97,7 @@ export function papelesDe(frase: Frase): Papeles {
         finales: [],
         tipoFinal: null,
         pregunta,
-        subordinada: { conjuncion: (t[1] ?? [])[0] ?? '', verbo: verbos[0] ?? '', verbos, resto: medio, delante: false },
+        subordinada: { conjuncion: (t[1] ?? [])[0] ?? '', verbo: verbos[0] ?? '', sujeto: t[2] ?? [], verbos, resto: medio, delante: false },
       };
     }
     case 'subordinada-delante': {
@@ -115,13 +118,13 @@ export function papelesDe(frase: Frase): Papeles {
         finales: [],
         tipoFinal: null,
         pregunta,
-        subordinada: { conjuncion, verbo: verboSub, verbos, resto: sub.slice(1, -dosVerbos), delante: true },
+        // El sujeto es el pronombre de detrás de la conjunción («als ik tijd heb»); si no lo es, no se sabe.
+        subordinada: { conjuncion, verbo: verboSub, sujeto: PRONOMBRES_SUJETO.has(sub[1] ?? '') ? sub.slice(1, 2) : [], verbos, resto: sub.slice(1, -dosVerbos), delante: true },
       };
     }
   }
 }
 
-const PRONOMBRES_SUJETO = new Set(['ik', 'jij', 'je', 'hij', 'zij', 'ze', 'het', 'we', 'wij', 'jullie', 'u', 'er']);
 const DETERMINANTES = new Set(['mijn', 'de', 'het', 'ons', 'onze', 'je', 'jouw', 'zijn', 'haar', 'hun', 'die', 'dat', 'deze', 'dit']);
 
 /**
