@@ -84,8 +84,8 @@ describe('las pistas del segundo intento', () => {
     }
   });
 
-  it('los ejemplos de revision.md traen su pista', () => {
-    for (const e of diagnosticarEjemplos()) for (const d of e.diagnosticos) comprobarPista(d, [], `${e.codigo} ${e.respuesta}`);
+  it('los ejemplos de revision.md traen su pista, salvo los del vocabulario, que no se reintenta', () => {
+    for (const e of diagnosticarEjemplos()) for (const d of e.diagnosticos) if (d.destreza !== 'articulo') comprobarPista(d, [], `${e.codigo} ${e.respuesta}`);
   });
 });
 

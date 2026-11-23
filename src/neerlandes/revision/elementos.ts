@@ -210,7 +210,7 @@ function explicaciones(): ElementoRevision[] {
     apartado: NOMBRES_TIPO.E,
     formato: 'bloque',
     lineas: [
-      `**${e.codigo}.** «${e.frase}» → respuesta: «${e.respuesta}»`,
+      `**${e.codigo}.** Sobre ${e.de}: «${e.frase}» → respuesta: «${e.respuesta}»`,
       '',
       ...e.diagnosticos.flatMap((d) => [`- **${d.titulo}.** ${d.texto}`, ...(d.pista ? [`  - *Pista antes del segundo intento:* ${d.pista}`] : [])]),
     ],

@@ -4,8 +4,8 @@ import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../orden/p
 import { ELEMENTOS_VERBOS, verbos } from '../verbos/pista';
 import { vocabulario, ELEMENTOS_VOCABULARIO } from '../vocabulario/pista';
 import { DESTREZAS } from '../destrezas';
-import { CASOS } from './casos';
-import { diagnosticarEjemplos } from './ejemplos';
+import { CASOS, CASOS_SIN_EJEMPLO } from './casos';
+import { diagnosticarEjemplos, EJEMPLOS_DE_ERROR } from './ejemplos';
 import { formasDe, mismoVerbo } from './formas';
 import { papelesDe } from './papeles';
 import { explicarConjugacion, explicarParticipio } from './verbo';
@@ -250,8 +250,18 @@ describe('robustez', () => {
 });
 
 describe('ejemplos de error de docs/revision.md', () => {
-  it('cada uno tiene al menos un diagnóstico', () => {
-    for (const e of diagnosticarEjemplos()) expect(e.diagnosticos.length, e.respuesta).toBeGreaterThan(0);
+  it('cada uno da justo el caso que dice', () => {
+    for (const e of diagnosticarEjemplos()) expect(casos(e.diagnosticos), `${e.codigo}: ${e.respuesta}`).toEqual([e.caso]);
+  });
+
+  it('cada caso tiene su ejemplo, salvo los que ningún contenido puede provocar', () => {
+    const conEjemplo = new Set(EJEMPLOS_DE_ERROR.map((e) => e.caso));
+    for (const c of CASOS) expect(conEjemplo.has(c) || c in CASOS_SIN_EJEMPLO, `${c} no tiene ejemplo en ejemplos.ts`).toBe(true);
+    for (const c of Object.keys(CASOS_SIN_EJEMPLO)) expect(conEjemplo.has(c as (typeof CASOS)[number]), `${c} tiene ejemplo: quítalo de CASOS_SIN_EJEMPLO`).toBe(false);
+  });
+
+  it('los códigos son únicos y siguen el orden', () => {
+    expect(EJEMPLOS_DE_ERROR.map((e) => e.codigo)).toEqual(EJEMPLOS_DE_ERROR.map((_, i) => `E${String(i + 1)}`));
   });
 });
 
