@@ -23,6 +23,7 @@
 - **La pantalla Hoy dice cuándo caduca la firma** y, a dos días o menos, pide reinstalar. `npm run iphone` deja la fecha del perfil en `firma.json`, dentro de la app; en el navegador no hay archivo y no sale nada.
 - **La app guarda su progreso aparte del de Safari** (su dirección es `capacitor://localhost`). Para pasar el progreso de una a otra: Ajustes, Sacar copia, y en la otra, Restaurar copia.
 - Después de cambiar el código hay que volver a lanzar `npm run iphone`; la app no se actualiza sola.
+- **La telemetría de la CLI de Capacitor va apagada**: `npm run iphone` lanza `npx cap telemetry off` antes de compilar (se apaga para todo el ordenador), por la regla de no llevar analítica.
 - Lo de `ios/App/App/public` se copia de `dist/` en cada compilación y no se guarda en git.
 
 ## Qué queda abierto

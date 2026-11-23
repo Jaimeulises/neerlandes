@@ -66,6 +66,8 @@ compilar() {
     DEVELOPMENT_TEAM="$equipo" CODE_SIGN_STYLE=Automatic -quiet build
 }
 
+# La CLI de Capacitor manda telemetría si no se apaga: Stap no lleva analítica, tampoco al compilar.
+npx cap telemetry off >/dev/null
 npm run build
 npx cap sync ios
 prevista="$(perfil_previsto)"
