@@ -533,6 +533,36 @@
   margin: 0;
 }
 
+/* Decir: la cuenta atrás antes de ver y oír la frase. */
+.cuenta-atras {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cuenta-atras__barra {
+  flex: 1;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--tarjeta-2);
+  overflow: hidden;
+}
+
+.cuenta-atras__barra > div {
+  height: 100%;
+  background: var(--acento);
+  border-radius: 99px;
+  transition: width 1s linear;
+}
+
+.cuenta-atras__numero {
+  min-width: 1.5em;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto-2);
+}
+
 /* Corregir pidiendo: la pista del primer fallo, antes del segundo intento. */
 .reintento {
   background: var(--acento-suave);

@@ -19,6 +19,7 @@ import {
   registrarRespuesta,
   serializarCopia,
   type Almacen,
+  type EjercicioDecir,
   type EjercicioOrdenar,
   type EjercicioTraducir,
 } from '../motor';
@@ -27,6 +28,7 @@ import { boton, buscarBoton, enPantalla, escribirEn, esperar, limpiar, montar, p
 import type { Voz } from '../estado/voz';
 import { ELEMENTOS_ORDEN, ejercicioDeFrase, orden, type Frase } from '../neerlandes/orden/pista';
 import { App } from './App';
+import { Decir, segundosParaDecir } from './ejercicios/Decir';
 import { Escrito } from './ejercicios/Escrito';
 import { Ordenar } from './ejercicios/Ordenar';
 
@@ -376,6 +378,86 @@ describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () 
     expect(enPantalla()).toContain('Bien a la segunda');
     await pulsar(boton('Siguiente'));
     expect(terminados).toEqual([['otra_vez', ['inversion'], true]]);
+  });
+});
+
+describe('decir la frase con cuenta atrás', () => {
+  const ejercicio: EjercicioDecir = {
+    forma: 'decir',
+    tipo: 'prueba',
+    elementoId: 'x',
+    instruccion: 'Dila en voz alta antes de que se acabe el tiempo',
+    significado: 'Hoy trabajo en casa.',
+    texto: 'Vandaag werk ik thuis.',
+  };
+  const total = segundosParaDecir(ejercicio.texto);
+
+  async function montarDecir(dichas: string[]): Promise<void> {
+    // Solo el reloj de la cuenta es de mentira: montar y esperar usan setTimeout de verdad.
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    prepararNavegador();
+    const voz: Voz = {
+      disponible: true,
+      nombre: 'prueba',
+      decir: (t) => {
+        dichas.push(t);
+      },
+    };
+    await montar(<Decir ejercicio={ejercicio} repeticion={false} voz={voz} onTerminar={() => undefined} />);
+  }
+
+  function pasan(segundos: number): void {
+    act(() => {
+      vi.advanceTimersByTime(segundos * 1000);
+    });
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  });
+
+  it('dura más cuanto más larga es la frase, entre 5 y 8 segundos', () => {
+    expect(segundosParaDecir('Ja.')).toBe(5);
+    expect(segundosParaDecir('Vandaag werk ik thuis.')).toBe(5);
+    expect(segundosParaDecir('Ik wil morgen een nieuwe fiets kopen.')).toBe(7);
+    expect(segundosParaDecir('In het weekend fietsen we vaak met de kinderen naar het strand.')).toBe(8);
+  });
+
+  it('al acabar la cuenta se ve la frase y suena, una sola vez', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas);
+    expect(document.querySelector('[role="timer"]')?.getAttribute('aria-label')).toBe(`Quedan ${String(total)} segundos`);
+    pasan(total - 1);
+    expect(enPantalla()).not.toContain('Vandaag werk ik thuis.');
+    expect(dichas).toEqual([]);
+    pasan(1);
+    expect(enPantalla()).toContain('Vandaag werk ik thuis.');
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+    pasan(10);
+    expect(dichas).toHaveLength(1);
+  });
+
+  it('se puede ver antes, y la cuenta se para', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas);
+    pasan(2);
+    await pulsar(boton('Ya la he dicho'));
+    expect(enPantalla()).toContain('Vandaag werk ik thuis.');
+    expect(document.querySelector('[role="timer"]')).toBeNull();
+    pasan(10);
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+  });
+
+  it('con la app en segundo plano la cuenta no avanza', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas);
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    pasan(total + 5);
+    expect(enPantalla()).not.toContain('Vandaag werk ik thuis.');
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    pasan(total);
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
   });
 });
 

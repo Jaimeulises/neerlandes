@@ -289,7 +289,7 @@ function decirFrase(e: Verbo, perf: readonly [string, string], tipo: string, pis
     forma: 'decir',
     tipo,
     elementoId: e.id,
-    instruccion: 'Dila en voz alta y luego compruébala',
+    instruccion: 'Dila en voz alta antes de que se acabe el tiempo',
     significado: es,
     texto: comoFrase(nl),
     pista,

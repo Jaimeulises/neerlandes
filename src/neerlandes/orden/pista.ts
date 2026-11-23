@@ -68,7 +68,7 @@ export function ejercicioDeFrase(e: Frase, forma: Ejercicio['forma'], contexto: 
         ...base,
         forma: 'decir',
         tipo: `${prefijo}.decir`,
-        instruccion: 'Dila en voz alta y luego compruébala',
+        instruccion: 'Dila en voz alta antes de que se acabe el tiempo',
         significado: e.es,
         texto: e.frase,
         ...(e.pista ? { pista: e.pista } : {}),
