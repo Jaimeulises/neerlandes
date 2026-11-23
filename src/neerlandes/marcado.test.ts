@@ -11,6 +11,8 @@ import { diagnosticarEjemplos } from './diagnostico/ejemplos';
 import { PISTAS_GENERALES } from './diagnostico/pistas';
 import { PISTAS } from './paquete';
 import { documentoDeRevision } from './revision/documento';
+import { SEPARABLES, VERBOS } from './verbos/datos';
+import { formaConJij, formasPresente } from './verbos/pista';
 
 /** Los textos de la pantalla, cada uno con dónde sale. */
 interface Textos {
@@ -149,8 +151,18 @@ function fueraDeCitas(texto: string): string {
   return texto.replace(/«[^»]*»/g, ' ').replace(/“[^”]*”/g, ' ');
 }
 
-/** Las palabras de los textos enteramente neerlandeses de la pantalla. */
-const NEERLANDESAS = new Set([...TEXTOS.neerlandes.keys()].flatMap(palabrasDe));
+/**
+ * Las formas de los verbos que la app tiene en sus datos o construye (infinitivo, raíz, presente, participio y pasado),
+ * aunque no salgan solas en ningún texto en neerlandés: la raíz «zeg» solo sale dentro de «gezegd». El presente solo
+ * si sale de los datos (formas o raíz), como en la pista: sin ellos, formasPresente inventaría «helpent».
+ */
+const FORMAS_DE_VERBOS = [
+  ...VERBOS.flatMap((v) => [v.inf, v.raiz, v.conJij, v.participio, ...(v.pasado ?? []), ...(v.presente || v.raiz ? [...formasPresente(v), formaConJij(v)] : [])]),
+  ...SEPARABLES.flatMap((s) => [s.inf, s.participio]),
+].flatMap((f) => (f ? f.split('/') : []));
+
+/** Las palabras de los textos enteramente neerlandeses de la pantalla y las formas de los verbos. */
+const NEERLANDESAS = new Set([...TEXTOS.neerlandes.keys(), ...FORMAS_DE_VERBOS].flatMap(palabrasDe));
 /** Las palabras de las traducciones: si también son neerlandesas (de, al, leer...), son de los dos idiomas. */
 const ESPANOLAS = new Set([...TEXTOS.traducciones].flatMap((t) => palabrasDe(fueraDeCitas(t))));
 /** Se escriben igual en los dos idiomas, aunque las frases de la app no las traigan en los dos: «en» (y) y van (de ir). */

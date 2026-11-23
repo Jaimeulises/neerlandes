@@ -955,7 +955,7 @@ Se marca con: `npm run revisado -- V4-V19`
 - Presente: ik betaal, jij betaalt, hij betaalt, wij, jullie, zij betalen. «Ik betaal de rekening.» «Betaal jij de rekening?»
 - En español: pago, pagas, paga, pagamos, pagáis, pagan + «la cuenta». La pregunta: «¿Pagas la cuenta?»
 - Perfectum: heeft betaald. «Ik heb de rekening al betaald.» Ya he pagado la cuenta.
-- Nota: Aquí be- es un prefijo átono (el acento cae en ta), por eso «betaald» no lleva ge-.
+- Nota: Aquí be- es un prefijo átono (el acento cae en «ta»), por eso «betaald» no lleva ge-.
 
 **V10. spelen**: jugar
 
@@ -1226,7 +1226,7 @@ Se marca con: `npm run revisado -- V34-V52`
 - Presente (solo sale como opción mala en el pasado): ik zeg, jij zegt, hij zegt, wij, jullie, zij zeggen.
 - Perfectum: heeft gezegd. «Ze heeft niets gezegd.» Ella no ha dicho nada.
 - Pasado: zei, zeiden. «Hij zei dat hij moe was.» Dijo que estaba cansado.
-- Nota: El participio es regular (ge + zeg + d); lo irregular es el pasado: «zei, zeiden».
+- Nota: El participio es regular (ge + «zeg» + d); lo irregular es el pasado: «zei, zeiden».
 
 ## Lote R13, V53 a V58, S1, E24 a E29, E36 a E39, T30, T33 (unos 15 minutos)
 
