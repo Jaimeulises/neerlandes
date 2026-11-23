@@ -113,10 +113,16 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     // Un sustantivo que se escribe como un verbo: detrás de un artículo o un posesivo, también con un adjetivo en medio
     // («een nieuwe fiets»).
     const sustantivo = (i: number): boolean => trasDeterminante(i) || (trasDeterminante(i - 1) && /e$/.test(u[i - 1] ?? '') && formasDe(u[i - 1] ?? '').length === 0);
-    // El verbo de la subordinada no cuenta: si está mal conjugado, no se sabe dónde acaba y se mira desde el principio.
-    const deLaSubordinada = (w: string): boolean => sub !== null && [sub.verbo, ...sub.verbos].some((v) => mismoVerbo(w, v));
-    iOtroVerbo = u.findIndex((w, i) => i >= desde && !sustantivo(i) && conjugado(w) && !delVerbo(w) && !deLaSubordinada(w));
+    // Lo de la subordinada no cuenta, ni su verbo ni lo demás («als ik slaap heb»: «slaap» también es una forma de
+    // «slapen»): si su verbo está mal conjugado o en medio, no se sabe dónde acaba y se mira desde el principio.
+    const deLaSubordinada = (w: string): boolean => sub !== null && ([sub.verbo, ...sub.verbos].some((v) => mismoVerbo(w, v)) || sub.resto.some((r) => iguales(r, w)));
     const exacto = u.indexOf(p.verbo, desde);
+    // Tampoco es otro verbo conjugado el infinitivo del final dicho antes del verbo, aunque se escriba como el plural
+    // («We morgen naar de markt gaan zullen?»), ni, con el verbo de la frase tal cual y sin ser él un infinitivo, una
+    // forma que es la del infinitivo («Ze naar huis gaan wilde»): lo que falla es el orden.
+    const esInfinitivo = (w: string): boolean => formasDe(w).some((f) => f.tipo === 'infinitivo');
+    const infinitivoDelante = (w: string): boolean => p.finales.some((f) => iguales(f, w)) || (exacto >= 0 && !esInfinitivo(p.verbo) && esInfinitivo(w));
+    iOtroVerbo = u.findIndex((w, i) => i >= desde && !sustantivo(i) && conjugado(w) && !delVerbo(w) && !deLaSubordinada(w) && !infinitivoDelante(w));
     iVerbo = exacto >= 0 ? exacto : u.findIndex((w, i) => i >= desde && !trasDeterminante(i) && delVerbo(w));
     // Con otro verbo conjugado delante («Ik ga vandaag thuis werken», «Vroeger heb ik … gewerkt»), lo que lleva del
     // verbo de la frase es un infinitivo, un participio o un nombre («met fiets»), no su verbo conjugado fuera de sitio.
@@ -294,7 +300,18 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
       if (dadaSub !== undefined && dadaSub !== sub.verbo && sub.sujeto.length > 0 && !enAlgunaValida(validas, dadaSub)) {
         anadir(explicarConjugacion(sub.verbo, dadaSub, sub.sujeto, false));
       }
-      const iSujetoPrincipal = sub.delante ? buscar(u, p.sujeto, iVerboSub + 1) : -1;
+      // Dónde acaba la subordinada: desde su conjunción, mientras sigan saliendo sus palabras, aunque sea en otro orden
+      // («als heb ik tijd»). El sujeto de la principal se busca detrás: si no, el «ik» de una subordinada con el verbo
+      // en medio pasaría por el de la principal.
+      const porSalir = [...sub.resto, ...sub.verbos];
+      let finSubordinada = iConj + 1;
+      for (; finSubordinada < u.length; finSubordinada++) {
+        const w = u[finSubordinada];
+        const i = porSalir.findIndex((r) => iguales(r, w) || (sub.verbos.includes(r) && w !== undefined && mismoVerbo(r, w)));
+        if (i < 0) break;
+        porSalir.splice(i, 1);
+      }
+      const iSujetoPrincipal = sub.delante ? buscar(u, p.sujeto, Math.max(iVerboSub + 1, finSubordinada)) : -1;
       const finSub = sub.delante ? Math.min(...[iVerbo, iSujetoPrincipal, u.length].filter((i) => i > iVerboSub)) : u.length;
       // Lo de la subordinada que aún no ha salido antes de su verbo y sale detrás: eso está fuera de sitio.
       const pendientes = [...sub.resto];

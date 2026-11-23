@@ -538,6 +538,26 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(casos(diagnostico('Ik bel je morgen', 'Ik opbel je morgen'))).toEqual(['separable-pegado']);
     // Un sustantivo que se escribe como un verbo («fiets», con un adjetivo detrás del artículo) no es otro verbo.
     expect(casos(diagnostico('Ik wil morgen', 'Een nieuwe fiets wil ik kopen morgen'))).toEqual(['infinitivo-al-final']);
+    // Tampoco lo de la subordinada («slaap», que también es una forma de «slapen») ni el infinitivo dicho antes del
+    // verbo: es la misma frase, mal ordenada.
+    expect(casos(diagnostico('Als ik slaap heb', 'Als ik heb slaap, ik spreek slechter Nederlands'))).toEqual(['subordinada-un-verbo', 'subordinada-delante']);
+    expect(casos(diagnostico('Als ik slaap heb', 'Als ik slaap hebt, ik spreek slechter Nederlands'))).toEqual(['presente-otra', 'subordinada-delante']);
+    expect(casos(diagnostico('Zullen we morgen', 'We morgen naar de markt gaan zullen?'))).toEqual(['pregunta-si-no']);
+    const willen = ELEMENTOS_VERBOS.find((x) => x.grupo === 'pasado' && x.verbo?.inf === 'willen');
+    if (!willen) throw new Error('falta willen');
+    expect(casos(verbos.diagnosticar?.(verbos.crearEjercicio(willen, contexto), 'Ze naar huis gaan wilde') ?? [])).toEqual(['inversion-segunda']);
+  });
+
+  it('con el verbo de la subordinada en medio, su sujeto no pasa por el de la principal', () => {
+    // En «Als heb ik tijd», el «ik» de detrás de «heb» es de la subordinada: falla el sitio de su verbo, no la
+    // principal, que ya empieza por el verbo.
+    expect(casos(diagnostico('Als ik tijd heb', 'Als heb ik tijd, kom ik langs'))).toEqual(['subordinada-un-verbo']);
+    expect(casos(diagnostico('Als ik slaap heb', 'Als heb ik slaap, spreek ik slechter Nederlands'))).toEqual(['subordinada-un-verbo']);
+    expect(casos(diagnostico('Toen ik in Spanje woonde', 'Toen woonde ik in Spanje, sprak ik geen Nederlands'))).toEqual(['subordinada-un-verbo']);
+    // Con la principal mal también, salen las dos; y con la subordinada bien, solo lo de la principal.
+    expect(casos(diagnostico('Als ik tijd heb', 'Als heb ik tijd, ik kom langs'))).toEqual(['subordinada-un-verbo', 'subordinada-delante']);
+    expect(casos(diagnostico('Als ik tijd heb', 'Als ik tijd heb, ik kom langs'))).toEqual(['subordinada-delante']);
+    expect(diagnostico('Als ik tijd heb', 'Als ik tijd heb, kom ik langs')).toEqual([]);
   });
 
   it('el perfectum dicho en otro tiempo o con otro verbo conjugado no lleva un participio sin ge-', () => {
