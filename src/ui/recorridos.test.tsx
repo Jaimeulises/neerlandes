@@ -387,9 +387,32 @@ describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () 
     expect(terminados).toEqual([['otra_vez', ['inversion'], false]]);
   });
 
-  it('al ordenar, las fichas se quedan donde estaban para moverlas', async () => {
+  it('si el segundo intento no está en la lista y se da por bueno, cuenta como bien a la segunda; tras ver la solución, como bien', async () => {
     prepararNavegador();
-    const terminados: Terminado[] = [];
+    const segundo: Terminado[] = [];
+    const campo = await montarEscrito(segundo);
+    escribirEn(campo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    escribirEn(campo, 'Morgen ga ik naar mijn schoonfamilie');
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('No es así');
+    await pulsar(boton('Mi respuesta también vale'));
+    // Lo mismo que si esa respuesta estuviera apuntada: lo espontáneo no salió.
+    expect(segundo).toEqual([['otra_vez', ['inversion'], true]]);
+
+    // Tras ver la solución, lo que se da por bueno es el primer intento, que no tuvo pista.
+    prepararNavegador();
+    const primero: Terminado[] = [];
+    const otroCampo = await montarEscrito(primero);
+    escribirEn(otroCampo, 'morgen ik ga naar mijn schoonouders');
+    await pulsar(boton('Comprobar'));
+    await pulsar(boton('Ver la solución'));
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(primero).toEqual([['bien', [], false]]);
+  });
+
+  /** Ordenar la frase de morgen, apuntando cómo termina. */
+  async function montarOrdenar(terminados: Terminado[]): Promise<Frase> {
     const f = fraseDeMorgen();
     const ejercicio = ejercicioDeFrase(f, 'ordenar', { azar: crearAzar(1), vistos: new Set(), repeticiones: 0, formas: new Set(['ordenar']) }) as EjercicioOrdenar;
     await montar(
@@ -404,12 +427,20 @@ describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () 
         }}
       />,
     );
+    return f;
+  }
+
+  const puestas = (): HTMLButtonElement[] => [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Tu frase"] button')];
+
+  it('al ordenar, las fichas se quedan donde estaban para moverlas', async () => {
+    prepararNavegador();
+    const terminados: Terminado[] = [];
+    const f = await montarOrdenar(terminados);
     // El orden del inglés: morgen ik ga…
     const [morgen, ga, ik, ...resto] = f.fichas;
     for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
     await pulsar(boton('Comprobar'));
     expect(enPantalla()).toContain('Inténtalo otra vez');
-    const puestas = () => [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Tu frase"] button')];
     expect(puestas().map((b) => b.textContent)).toEqual([morgen, ik, ga, ...resto]);
     // Se quitan desde ik y se vuelven a poner en su orden.
     for (const b of puestas().slice(1)) await pulsar(b);
@@ -418,6 +449,30 @@ describe('corregir pidiendo: una pista y otro intento tras el primer fallo', () 
     expect(enPantalla()).toContain('Bien a la segunda');
     await pulsar(boton('Siguiente'));
     expect(terminados).toEqual([['otra_vez', ['inversion'], true]]);
+  });
+
+  it('al ordenar, dar por bueno el segundo orden cuenta como bien a la segunda; tras ver la solución, como bien', async () => {
+    prepararNavegador();
+    const segundo: Terminado[] = [];
+    const f = await montarOrdenar(segundo);
+    const [morgen, ga, ik, ...resto] = f.fichas;
+    for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    for (const b of puestas()) await pulsar(b);
+    for (const texto of [ik, morgen, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    expect(enPantalla()).toContain('No va en ese orden');
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(segundo).toEqual([['otra_vez', ['inversion'], true]]);
+
+    prepararNavegador();
+    const primero: Terminado[] = [];
+    await montarOrdenar(primero);
+    for (const texto of [morgen, ik, ga, ...resto]) await pulsar(ficha(texto ?? ''));
+    await pulsar(boton('Comprobar'));
+    await pulsar(boton('Ver la solución'));
+    await pulsar(boton('Mi respuesta también vale'));
+    expect(primero).toEqual([['bien', [], false]]);
   });
 });
 

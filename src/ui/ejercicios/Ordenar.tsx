@@ -151,7 +151,9 @@ export function Ordenar({ ejercicio, repeticion, voz, diagnosticar, pistasDeRein
               <Boton
                 variante="texto"
                 onClick={() => {
-                  onTerminar('bien');
+                  // Tras la pista, dar por bueno el segundo orden es acertar a la segunda, como si estuviera apuntado.
+                  if (primero) onTerminar('otra_vez', primero.diagnosticos, true);
+                  else onTerminar('bien');
                 }}
               >
                 Mi respuesta también vale
