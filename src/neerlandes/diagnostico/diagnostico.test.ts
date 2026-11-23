@@ -640,5 +640,9 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     // Dicha en pasado, igual que con «ze»: sin un participio que explicar.
     expect(verbos.diagnosticar?.(perfectumDe('trouwen'), 'Zij trouwden in juni')).toEqual([]);
     expect(verbos.diagnosticar?.(perfectumDe('komen'), 'Zij kwamen te laat')).toEqual([]);
+    // También cuando no es el sujeto de la frase buena: falla el auxiliar, no «zijn».
+    expect(casos(verbos.diagnosticar?.(perfectumDe('blijven'), 'Zij heb de hele dag thuis gebleven') ?? [])).toEqual(['auxiliar-zijn']);
+    // Con el sujeto en otro sitio, «zij» es «zijn» sin la -n.
+    expect(casos(diagnostico('We zijn in het weekend', 'We zij in het weekend naar Utrecht gegaan'))).toEqual(['presente-plural']);
   });
 });

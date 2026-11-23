@@ -112,8 +112,11 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
       const antes = u[i - 1] ?? '';
       return DETERMINANTES.has(antes) && !(sujetoJij && iguales(antes, 'je'));
     };
-    // Un pronombre no es el verbo, aunque se escriba casi igual («zij» y «zijn»).
-    const delVerbo = (w: string): boolean => TONICAS[w] === undefined && (mismoVerbo(w, p.verbo) || (esAux && (FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w))));
+    const delVerbo = (w: string): boolean => mismoVerbo(w, p.verbo) || (esAux && (FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w)));
+    // Un pronombre no es el verbo aunque se escriba casi igual («zij» y «zijn»): es el sujeto, aunque no sea el de la
+    // frase buena. Solo con el sujeto en otro sitio es el verbo sin la -n («We zij in het weekend…»).
+    const iSujetoDicho = buscar(u, p.sujeto, desde);
+    const pronombreSujeto = (w: string, i: number): boolean => TONICAS[w] !== undefined && (iSujetoDicho < 0 || (i >= iSujetoDicho && i < iSujetoDicho + p.sujeto.length));
     const conjugado = (w: string): boolean => FORMAS_HEBBEN.has(w) || FORMAS_ZIJN.has(w) || formasDe(w).some((f) => f.tipo === 'presente' || f.tipo === 'pasado');
     // Un sustantivo que se escribe como un verbo: detrás de un artículo o un posesivo, también con un adjetivo en medio
     // («een nieuwe fiets»).
@@ -128,7 +131,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     const esInfinitivo = (w: string): boolean => formasDe(w).some((f) => f.tipo === 'infinitivo');
     const infinitivoDelante = (w: string): boolean => p.finales.some((f) => iguales(f, w)) || (exacto >= 0 && !esInfinitivo(p.verbo) && esInfinitivo(w));
     iOtroVerbo = u.findIndex((w, i) => i >= desde && !sustantivo(i) && conjugado(w) && !delVerbo(w) && !deLaSubordinada(w) && !infinitivoDelante(w));
-    iVerbo = exacto >= 0 ? exacto : u.findIndex((w, i) => i >= desde && !trasDeterminante(i) && delVerbo(w));
+    iVerbo = exacto >= 0 ? exacto : u.findIndex((w, i) => i >= desde && !trasDeterminante(i) && !pronombreSujeto(w, i) && delVerbo(w));
     // Con otro verbo conjugado delante («Ik ga vandaag thuis werken», «Vroeger heb ik … gewerkt»), lo que lleva del
     // verbo de la frase es un infinitivo, un participio o un nombre («met fiets»), no su verbo conjugado fuera de sitio.
     if (iOtroVerbo >= 0 && iOtroVerbo < iVerbo) iVerbo = -1;
