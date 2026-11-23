@@ -3,7 +3,7 @@
 
 import { useState, type ReactElement } from 'react';
 import type { Voz } from '../../estado/voz';
-import type { Calificacion, EjercicioDecir } from '../../motor';
+import type { Calificacion, Diagnostico, EjercicioDecir } from '../../motor';
 import { Boton } from '../componentes/Boton';
 import { BotonVoz } from '../componentes/BotonVoz';
 
@@ -11,7 +11,9 @@ interface Props {
   readonly ejercicio: EjercicioDecir;
   readonly repeticion: boolean;
   readonly voz: Voz;
-  readonly onTerminar: (calificacion: Calificacion) => void;
+  /** Qué regla falla en una respuesta. Vacío si no hay nada concreto. */
+  readonly diagnosticar?: (respuesta: string) => readonly Diagnostico[];
+  readonly onTerminar: (calificacion: Calificacion, diagnosticos?: readonly Diagnostico[]) => void;
 }
 
 export function Decir({ ejercicio, repeticion, voz, onTerminar }: Props): ReactElement {

@@ -24,13 +24,19 @@ export interface PasoMixto {
 }
 
 /** Las opciones de una ronda según los ajustes. En una ronda extra no entra nada nuevo y se repasa aunque no toque. */
-export function opcionesDeRonda(ajustes: Ajustes, formas: ReadonlySet<Forma>, extra = false): OpcionesRonda {
+export function opcionesDeRonda(
+  ajustes: Ajustes,
+  formas: ReadonlySet<Forma>,
+  extra = false,
+  dominio?: (destreza: string) => number | null,
+): OpcionesRonda {
   return {
     ...RONDA_POR_DEFECTO,
     tamano: ajustes.tamanoRonda,
     nuevosMaximo: extra ? 0 : ajustes.nuevosPorRonda,
     formas,
     ...(extra ? { incluirNoVencidos: true } : {}),
+    ...(dominio ? { dominio } : {}),
   };
 }
 

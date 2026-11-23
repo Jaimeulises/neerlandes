@@ -476,3 +476,72 @@
   padding: 12px 14px;
   font-size: 0.9rem;
 }
+
+/* Qué ha fallado en una respuesta, regla a regla. */
+.diagnosticos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diagnostico {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-m);
+  padding: 10px 12px;
+}
+
+.diagnostico__titulo {
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.diagnostico__texto {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--texto-2);
+}
+
+.diagnostico .nl {
+  color: var(--texto);
+}
+
+.regla-completa summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--texto-2);
+  margin-bottom: 6px;
+}
+
+.practica {
+  font-size: 0.9rem;
+  color: var(--primario);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* El nivel de cada regla en Progreso. */
+.etiqueta-nivel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--texto-3);
+}
+
+.barra-grupo.nivel--alto > div {
+  background: var(--bien);
+}
+
+.barra-grupo.nivel--medio > div {
+  background: var(--primario);
+}
+
+.barra-grupo.nivel--bajo > div {
+  background: var(--mal);
+}
+
+.lista-fallos {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.95rem;
+}

@@ -4,7 +4,7 @@
 
 import { useState, type ReactElement } from 'react';
 import type { Voz } from '../../estado/voz';
-import { corregir, type Calificacion, type Correccion, type EjercicioOrdenar } from '../../motor';
+import { corregir, type Calificacion, type Correccion, type Diagnostico, type EjercicioOrdenar } from '../../motor';
 import { Boton } from '../componentes/Boton';
 import { Marcas } from '../componentes/Marcas';
 import { Resultado } from '../componentes/Resultado';
@@ -13,20 +13,25 @@ interface Props {
   readonly ejercicio: EjercicioOrdenar;
   readonly repeticion: boolean;
   readonly voz: Voz;
-  readonly onTerminar: (calificacion: Calificacion) => void;
+  /** Qué regla falla en una respuesta. Vacío si no hay nada concreto. */
+  readonly diagnosticar?: (respuesta: string) => readonly Diagnostico[];
+  readonly onTerminar: (calificacion: Calificacion, diagnosticos?: readonly Diagnostico[]) => void;
 }
 
-export function Ordenar({ ejercicio, repeticion, voz, onTerminar }: Props): ReactElement {
+export function Ordenar({ ejercicio, repeticion, voz, diagnosticar, onTerminar }: Props): ReactElement {
   const [puestas, setPuestas] = useState<number[]>([]);
   const [correccion, setCorreccion] = useState<Correccion | null>(null);
+  const [diagnosticos, setDiagnosticos] = useState<readonly Diagnostico[]>([]);
   const porId = new Map(ejercicio.fichas.map((f) => [f.id, f.texto]));
   const sueltas = ejercicio.fichas.filter((f) => !puestas.includes(f.id));
   const completa = puestas.length === ejercicio.fichas.length;
   const bien = correccion?.veredicto === 'exacta' || correccion?.veredicto === 'tildes';
 
   const comprobar = (): void => {
-    const c = corregir(puestas.map((id) => porId.get(id) ?? '').join(' '), ejercicio.validas);
+    const respuesta = puestas.map((id) => porId.get(id) ?? '').join(' ');
+    const c = corregir(respuesta, ejercicio.validas);
     setCorreccion(c);
+    if (c.veredicto !== 'exacta' && c.veredicto !== 'tildes') setDiagnosticos(diagnosticar?.(respuesta) ?? []);
     voz.decir(ejercicio.frase);
   };
 
@@ -82,8 +87,9 @@ export function Ordenar({ ejercicio, repeticion, voz, onTerminar }: Props): Reac
           voz={voz}
           audio={ejercicio.frase}
           aclaracion={bien ? undefined : ejercicio.aclaracion}
+          diagnosticos={diagnosticos}
           onSiguiente={() => {
-            onTerminar(bien ? 'bien' : 'otra_vez');
+            onTerminar(bien ? 'bien' : 'otra_vez', diagnosticos);
           }}
           extra={
             // Ninguna lista de órdenes buenos está completa: como al escribir, el alumno puede dar el suyo por bueno.

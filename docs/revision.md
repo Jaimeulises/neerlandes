@@ -8,7 +8,7 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 
 - Lee cada frase en neerlandés y marca lo que no dirías así, aunque sea correcto.
 - Comprueba que la traducción dice lo mismo que la frase.
-- Apunta el número (O12, V3, S5, P40) y cómo lo dirías tú.
+- Apunta el número (O12, V3, S5, P40, E4) y cómo lo dirías tú.
 - Al traducir, la app acepta además, sin que estén apuntadas, las formas tónicas: wij por we, mij por me, y zij por ze cuando abre la frase.
 
 **Voor wie dit nakijkt:** hier staan alle Nederlandse zinnen en woorden uit de app. Klopt het en klinkt het natuurlijk? Schrijf het nummer op (bijvoorbeeld O12) en hoe jij het zou zeggen.
@@ -703,3 +703,71 @@ Este archivo se genera con `npm run revision`: no se edita a mano. Las correccio
 | P126 | nog | todavía |  |
 | P127 | weer | otra vez |  |
 | P128 | samen | juntos |  |
+
+## Explicaciones de errores (E1 a E16)
+
+Cuando se falla una frase, la app explica qué regla se ha roto con las palabras de esa frase. Las explicaciones se montan solas; aquí van fallos típicos con lo que diría la app. Revisa que la regla esté bien dicha y que el neerlandés de la explicación sea correcto.
+
+**E1.** «Morgen ga ik naar mijn schoonouders.» → respuesta: «Morgen ik ga naar mijn schoonouders»
+
+- **Tras «morgen», el verbo va antes que el sujeto.** Empezaste por «morgen», así que eso ocupa la primera posición: el verbo («ga») va segundo y el sujeto («ik») justo detrás: «Morgen ga ik naar mijn schoonouders». En inglés el sujeto va antes del verbo (“Tomorrow I go”); por eso sale así.
+
+**E2.** «Ik wil morgen een nieuwe fiets kopen.» → respuesta: «Ik wil kopen morgen een nieuwe fiets»
+
+- **El infinitivo «kopen» va al final.** Con «wil», el infinitivo se va al final de la frase y todo lo demás queda en medio: «Ik wil morgen een nieuwe fiets kopen». En inglés va pegado al modal (“I want to buy a bike tomorrow”).
+
+**E3.** «Ik heb gisteren de hele dag gewerkt.» → respuesta: «Ik heb gewerkt gisteren de hele dag»
+
+- **El participio «gewerkt» va al final.** En el perfectum, «heb» se queda en segunda posición y el participio cierra la frase: «Ik heb gisteren de hele dag gewerkt». En inglés el participio va pegado al auxiliar (“I have worked all day”); en neerlandés todo lo demás va en medio.
+
+**E4.** «Ik heb gisteren de hele dag gewerkt.» → respuesta: «Ik heb gisteren de hele dag gewerkd»
+
+- **«gewerkd» no: «gewerkt».** ’t kofschip: en «werken» va «k» delante de -en, que está en ’t kofschip (t, k, f, s, ch, p), así que acaba en -t: «gewerkt». Se mira el infinitivo, no la raíz.
+
+**E5.** «We zijn in het weekend naar Utrecht gegaan.» → respuesta: «We hebben in het weekend naar Utrecht gegaan»
+
+- **«hebben» no: «zijn».** El perfectum de «gaan» va con zijn: «We zijn in het weekend naar Utrecht gegaan». Con zijn van los verbos de movimiento hacia un sitio o de cambio de estado (gaan, komen, verhuizen, worden…), y además zijn y blijven.
+
+**E6.** «Heb je goed geslapen?» → respuesta: «Heb je goed geslaapt?»
+
+- **«geslaapt» no: «geslapen».** «slapen» tiene participio irregular: «geslapen». No sigue la regla de ge + raíz + t o d, así que hay que aprenderlo de memoria.
+
+**E7.** «Ik bel je morgen op.» → respuesta: «Ik opbel je morgen»
+
+- **«opbel» se separa en la frase principal.** Con el verbo conjugado en la principal, la partícula «op» se separa y se va al final: «Ik bel je morgen op». Solo va pegada con un modal («ik wil je opbellen»), en una subordinada («omdat ik je opbel») y en el participio («opgebeld»).
+
+**E8.** «Ik heb het niet gezien.» → respuesta: «Ik heb niet het gezien»
+
+- **Niet va detrás de «het» y delante de «gezien».** Niet va detrás del verbo, del cuándo (morgen, vandaag…) y del objeto definido (het, de film, hem), pero delante del participio, del infinitivo, de la partícula, del adjetivo y del lugar: «Ik heb het niet gezien». En inglés va pegado al auxiliar (“I have not seen it”); en neerlandés se mueve.
+
+**E9.** «Ik heb vandaag geen tijd.» → respuesta: «Ik heb vandaag niet tijd»
+
+- **Aquí va geen, no niet.** Con un sustantivo sin artículo o con een («tijd»), la negación es geen: «Ik heb vandaag geen tijd». Niet niega el verbo, un adjetivo o algo definido (de, het, mijn…).
+
+**E10.** «Waar woont je zus?» → respuesta: «Waar je zus woont?»
+
+- **En la pregunta, el verbo va justo detrás de «waar».** Después de «waar» va el verbo («woont») y luego el sujeto («je zus»): «Waar woont je zus?» Con el sujeto antes del verbo sería una subordinada («…waar je zus woont»), no una pregunta.
+
+**E11.** «Werk jij morgen?» → respuesta: «Werkt jij morgen?»
+
+- **«werkt» no: «werk».** Cuando jij o je va detrás del verbo (en una pregunta o tras «morgen», por ejemplo), la -t se cae: «werk jij». Con jij delante sí lleva -t: «jij werkt».
+
+**E12.** «Vandaag werk ik thuis.» → respuesta: «Vandaag werkt ik thuis»
+
+- **«werkt» no: «werk».** Con ik va la raíz sola, sin -t: «ik werk». La -t es para jij, hij, zij y u.
+
+**E13.** «Ik blijf thuis omdat ik niet lekker ben.» → respuesta: «Ik blijf thuis omdat ik ben niet lekker»
+
+- **Después de «omdat», el verbo va al final.** «omdat» abre una subordinada, y en la subordinada el verbo conjugado («ben») se va al final: «omdat ik niet lekker ben». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).
+
+**E14.** «Ik denk dat het morgen gaat regenen.» → respuesta: «Ik denk dat het gaat regenen morgen»
+
+- **Después de «dat», el verbo va al final.** «dat» abre una subordinada, y en la subordinada los verbos («gaat regenen») van juntos al final: «dat het morgen gaat regenen». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).
+
+**E15.** «Als ik tijd heb, kom ik langs.» → respuesta: «Als ik tijd heb, ik kom langs»
+
+- **Tras la subordinada, primero el verbo y luego el sujeto.** La subordinada entera («als ik tijd heb») cuenta como primera posición, así que detrás va el verbo («kom») y luego el sujeto («ik»): «Als ik tijd heb, kom ik langs». Es la misma regla que con «Morgen ga ik».
+
+**E16.** «Als ik tijd heb, kom ik langs.» → respuesta: «Als ik heb tijd, kom ik langs»
+
+- **Después de «als», el verbo va al final.** «als» abre una subordinada, y en la subordinada el verbo conjugado («heb») se va al final: «als ik tijd heb». Lo dejaste en medio, como en inglés (“because I am not well”, “that it is going to rain”).

@@ -3,6 +3,8 @@ export { crearAzar, semillaNueva } from './azar';
 export type {
   Calificacion,
   ContextoEjercicio,
+  Destreza,
+  Diagnostico,
   Ejercicio,
   EjercicioCompletar,
   EjercicioDecir,
@@ -26,6 +28,8 @@ export type { OpcionesRonda, PasoRonda, ResumenPista } from './ronda';
 export {
   calificarOpcion,
   construirRonda,
+  crearEjercicioDe,
+  practicarDestreza,
   gruposCompletados,
   gruposDesbloqueados,
   repetirTrasFallo,
@@ -57,3 +61,5 @@ export {
   serializarProgreso,
   VERSION_COPIA,
 } from './persistencia';
+export type { EstadoDestreza, NivelEstimado } from './nivel';
+export { dominioDe, estimarNivel, MINIMO_PARA_NIVEL, nivelPorDestreza, PESO_DE_FORMA, UMBRAL_DOMINADA } from './nivel';

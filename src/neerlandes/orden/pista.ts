@@ -3,8 +3,10 @@
 // escribiéndola al oído. Es donde se trabaja lo de no hablar con el orden del
 // inglés.
 
-import type { ContextoEjercicio, Ejercicio, Elemento, Pista, Presentacion } from '../../motor';
+import { UMBRAL_DOMINADA, type ContextoEjercicio, type Ejercicio, type Elemento, type Pista, type Presentacion } from '../../motor';
 import { barajarFichas, comoFrase, conFormasTonicas, elegirForma, idDe } from '../comun';
+import { diagnosticarConFrase } from '../diagnostico';
+import type { IdDestreza } from '../destrezas';
 import { FRASES, GRUPOS_ORDEN, NOMBRES_GRUPO_ORDEN, REGLAS_ORDEN, type DatosFrase, type GrupoOrden } from './datos';
 
 export interface Frase extends Elemento {
@@ -93,6 +95,20 @@ export function ejercicioDeFrase(e: Frase, forma: Ejercicio['forma'], contexto: 
   }
 }
 
+/** La destreza que entrena cada grupo. */
+export const DESTREZA_DE_GRUPO: Readonly<Record<GrupoOrden, IdDestreza>> = {
+  inversion: 'inversion',
+  modal: 'modal',
+  perfectum: 'perfectum-orden',
+  separables: 'separables',
+  niet: 'niet',
+  preguntas: 'preguntas',
+  subordinada: 'subordinada',
+  'subordinada-delante': 'subordinada-delante',
+};
+
+const POR_ID = new Map(ELEMENTOS_ORDEN.map((e) => [e.id, e]));
+
 export const orden: Pista<Frase> = {
   id: 'orden',
   nombre: 'Orden de la frase',
@@ -100,28 +116,56 @@ export const orden: Pista<Frase> = {
   grupos: GRUPOS_ORDEN,
   nombresDeGrupo: NOMBRES_GRUPO_ORDEN,
   elementos: ELEMENTOS_ORDEN,
+  // La dificultad sigue al nivel de la regla: si ya la dominas, ni las frases nuevas se ordenan con fichas
+  // (se escriben o se dicen directamente); si está floja, vuelven más las fichas.
   crearEjercicio(e, contexto) {
-    const forma =
-      contexto.repeticiones === 0
-        ? 'ordenar'
-        : contexto.repeticiones === 1
-          ? elegirForma(contexto.azar, contexto.formas, [['traducir', 1]], 'ordenar')
+    const dominio = contexto.dominio?.(DESTREZA_DE_GRUPO[e.grupo]) ?? null;
+    const nivel = dominio === null ? 'normal' : dominio >= UMBRAL_DOMINADA ? 'alto' : dominio < 0.45 ? 'bajo' : 'normal';
+    const { azar, formas } = contexto;
+    let forma: Ejercicio['forma'];
+    if (nivel === 'alto') {
+      forma =
+        contexto.repeticiones === 0
+          ? elegirForma(azar, formas, [['traducir', 1]], 'ordenar')
           : elegirForma(
-              contexto.azar,
-              contexto.formas,
+              azar,
+              formas,
               [
                 ['traducir', 4],
                 ['decir', 2],
-                ['ordenar', 1],
                 ['dictado', 1],
               ],
               'ordenar',
             );
+    } else if (contexto.repeticiones === 0) {
+      forma = 'ordenar';
+    } else if (contexto.repeticiones === 1) {
+      forma = elegirForma(azar, formas, [['traducir', 1]], 'ordenar');
+    } else {
+      forma = elegirForma(
+        azar,
+        formas,
+        [
+          ['traducir', 4],
+          ['decir', 2],
+          ['ordenar', nivel === 'bajo' ? 3 : 1],
+          ['dictado', 1],
+        ],
+        'ordenar',
+      );
+    }
     return ejercicioDeFrase(e, forma, contexto);
   },
   // Lo que se aprende es la regla, no cada frase: la regla se presenta una vez, al abrir el grupo, y las
   // frases se intentan sin verlas antes, que es lo que hay que saber hacer al hablar. Si cada frase se
   // enseñara antes de ordenarla, el ejercicio sería copiar lo que se acaba de leer.
+  destrezasDe(e) {
+    return [DESTREZA_DE_GRUPO[e.grupo]];
+  },
+  diagnosticar(ejercicio, respuesta) {
+    const frase = POR_ID.get(ejercicio.elementoId);
+    return frase ? diagnosticarConFrase(frase, ejercicio, respuesta) : [];
+  },
   presentar(e): Presentacion | null {
     if (!ABRE_GRUPO.has(e.id)) return null;
     const ejemplo = ejemploDe(e.grupo) ?? e;

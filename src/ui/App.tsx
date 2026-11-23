@@ -7,7 +7,7 @@ import { formasActivas, guardarAjustes, leerAjustes, type Ajustes as DatosAjuste
 import { opcionesDeRonda } from '../estado/ronda';
 import { useDatos } from '../estado/useDatos';
 import { useVoz } from '../estado/voz';
-import { HISTORIAL_VACIO, PROGRESO_VACIO, type Almacen, type Pista } from '../motor';
+import { dominioDe, HISTORIAL_VACIO, nivelPorDestreza, PROGRESO_VACIO, type Almacen, type Pista } from '../motor';
 import { PISTAS } from '../neerlandes/paquete';
 import { Boton } from './componentes/Boton';
 import { Ajustes } from './pantallas/Ajustes';
@@ -37,7 +37,10 @@ export function App({ almacen }: Props): ReactElement {
   const vozDelDispositivo = useVoz(true, ajustes.vozLenta);
   const voz = useVoz(ajustes.voz, ajustes.vozLenta);
   const formas = useMemo(() => formasActivas(ajustes, vozDelDispositivo.disponible), [ajustes, vozDelDispositivo.disponible]);
-  const opciones = useMemo(() => opcionesDeRonda(ajustes, formas), [ajustes, formas]);
+  const historial = datos.datos.historial;
+  const niveles = useMemo(() => nivelPorDestreza(historial), [historial]);
+  const dominio = useMemo(() => dominioDe(niveles), [niveles]);
+  const opciones = useMemo(() => opcionesDeRonda(ajustes, formas, false, dominio), [ajustes, formas, dominio]);
 
   const cambiarAjustes = useCallback((nuevos: DatosAjustes) => {
     setAjustes(nuevos);
@@ -92,6 +95,7 @@ export function App({ almacen }: Props): ReactElement {
           ajustes={ajustes}
           formas={formas}
           voz={voz}
+          dominio={dominio}
           onRespuesta={datos.responder}
           onSalir={() => {
             setRonda(null);
@@ -106,7 +110,7 @@ export function App({ almacen }: Props): ReactElement {
       <main className="app">
         {aviso}
         {pestana === 'hoy' ? <Hoy pistas={PISTAS} datos={datos.datos} opciones={opciones} onEmpezar={setRonda} /> : null}
-        {pestana === 'progreso' ? <Progreso pistas={PISTAS} datos={datos.datos} /> : null}
+        {pestana === 'progreso' ? <Progreso pistas={PISTAS} datos={datos.datos} niveles={niveles} /> : null}
         {pestana === 'ajustes' ? (
           <Ajustes
             ajustes={ajustes}

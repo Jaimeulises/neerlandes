@@ -13,6 +13,10 @@ export interface Respuesta {
   readonly c: Calificacion;
   /** Forma del ejercicio: opcion, ordenar, traducir, completar, dictado o decir. */
   readonly f: string;
+  /** Destrezas que entrenaba el ejercicio. Las respuestas antiguas no las traen. */
+  readonly d?: readonly string[];
+  /** Destrezas en las que se encontró un fallo concreto, si se falló. */
+  readonly x?: readonly string[];
 }
 
 export type Historial = readonly Respuesta[];
