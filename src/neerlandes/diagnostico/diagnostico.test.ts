@@ -8,6 +8,7 @@ import { DESTREZAS } from '../destrezas';
 import { CASOS, CASOS_SIN_EJEMPLO } from './casos';
 import { diagnosticarEjemplos, EJEMPLOS_DE_ERROR } from './ejemplos';
 import { formasDe, mismoVerbo } from './formas';
+import { sujetoDeHueco } from './index';
 import { papelesDe } from './papeles';
 import { explicarConjugacion, explicarParticipio } from './verbo';
 
@@ -453,5 +454,34 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     const hueco = verbos.crearEjercicio(maken, { ...contexto, repeticiones: 0 });
     expect(hueco.forma).toBe('completar');
     expect(verbos.diagnosticar?.(hueco, 'makte')).toEqual([]);
+  });
+
+  it('con un nombre delante del hueco, el sujeto es ese nombre y el «het» de detrás es el artículo del objeto', () => {
+    expect(sujetoDeHueco('Mijn ouders ', ' het ontbijt.')).toEqual({ sujeto: ['mijn', 'ouders'], invertido: false });
+    expect(sujetoDeHueco('Mijn zus ', ' het probleem.')).toEqual({ sujeto: ['mijn', 'zus'], invertido: false });
+    // Con otra cosa delante, el pronombre de detrás sí es el sujeto, también «het».
+    expect(sujetoDeHueco('Gisteren ', ' het erg druk in de stad.')).toEqual({ sujeto: ['het'], invertido: true });
+    expect(sujetoDeHueco('Vorige week ', ' we naar Antwerpen.')).toEqual({ sujeto: ['we'], invertido: true });
+    // Un pronombre que solo puede ser sujeto sigue mandando, aunque delante vaya un nombre con su artículo.
+    expect(sujetoDeHueco('De hele dag ', ' ik thuis.')).toEqual({ sujeto: ['ik'], invertido: true });
+    // Y en el ejercicio, la pista habla del sujeto de verdad y no pide la forma que se acaba de dar.
+    const maken = ELEMENTOS_VERBOS.find((x) => x.grupo === 'presente' && x.verbo?.inf === 'maken');
+    if (!maken) throw new Error('falta maken');
+    const hueco = (antes: string, buena: string): Ejercicio => ({
+      forma: 'completar',
+      tipo: 'verbos.presente.completar',
+      elementoId: maken.id,
+      instruccion: '',
+      antes,
+      despues: ' het ontbijt.',
+      pista: 'maken',
+      respuestas: [buena],
+    });
+    const plural = verbos.diagnosticar?.(hueco('Mijn ouders ', 'maken'), 'maakt') ?? [];
+    expect(casos(plural)).toEqual(['presente-plural']);
+    expect(plural[0]?.pista).toContain('«mijn ouders»');
+    const singular = verbos.diagnosticar?.(hueco('Mijn zus ', 'maakt'), 'maak') ?? [];
+    expect(casos(singular)).toEqual(['presente-falta-t']);
+    expect(singular[0]?.pista).toContain('«mijn zus»');
   });
 });

@@ -125,7 +125,8 @@ export function papelesDe(frase: Frase): Papeles {
   }
 }
 
-const DETERMINANTES = new Set(['mijn', 'de', 'het', 'ons', 'onze', 'je', 'jouw', 'zijn', 'haar', 'hun', 'die', 'dat', 'deze', 'dit']);
+/** Lo que va delante de un nombre: con él empieza un sujeto como «mijn ouders» o «de baby». */
+export const DETERMINANTES: ReadonlySet<string> = new Set(['mijn', 'de', 'het', 'ons', 'onze', 'je', 'jouw', 'zijn', 'haar', 'hun', 'die', 'dat', 'deze', 'dit']);
 
 /**
  * Los papeles de una frase sin fichas (las de ejemplo de los verbos), a partir del verbo conjugado. Si
