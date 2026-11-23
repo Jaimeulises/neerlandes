@@ -1,0 +1,73 @@
+/* Stap: los tokens de diseño. Azul de la bandera para lo principal y naranja
+   para los logros; verde y coral para bien y mal. Letra del sistema.
+   Contraste: todo texto, 4,5 a 1 o más sobre su fondo. */
+
+:root {
+  color-scheme: light dark;
+
+  --fondo: #f6f5f2;
+  --tarjeta: #ffffff;
+  --tarjeta-2: #eeece6;
+  --texto: #1a1d24;
+  --texto-2: #4a4f5c;
+  --texto-3: #5f6573;
+  --borde: #e2dfd7;
+
+  --primario: #21468b;
+  --primario-fuerte: #183568;
+  --primario-suave: #e3e9f5;
+  --sobre-primario: #ffffff;
+
+  --acento: #e56f00;
+  --acento-suave: #fdebd9;
+  --sobre-acento: #2a1600;
+
+  --bien: #1d8a5c;
+  --bien-texto: #12643f;
+  --bien-suave: #dcf2e7;
+  --mal: #c73e36;
+  --mal-texto: #a3302a;
+  --mal-suave: #f9e1df;
+
+  --sombra: 0 1px 2px rgb(26 29 36 / 0.05), 0 6px 20px rgb(26 29 36 / 0.06);
+
+  --radio: 18px;
+  --radio-m: 12px;
+  --radio-s: 8px;
+
+  --letra: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --seguro-arriba: env(safe-area-inset-top, 0px);
+  --seguro-abajo: env(safe-area-inset-bottom, 0px);
+  --alto-barra: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #14161c;
+    --tarjeta: #1d2029;
+    --tarjeta-2: #262a35;
+    --texto: #eef0f5;
+    --texto-2: #b9bdc9;
+    --texto-3: #9298a8;
+    --borde: #2e3341;
+
+    --primario: #8fb0ff;
+    --primario-fuerte: #b0c8ff;
+    --primario-suave: #1f2a45;
+    --sobre-primario: #0e1424;
+
+    --acento: #ffa64d;
+    --acento-suave: #3a2612;
+    --sobre-acento: #1d1003;
+
+    --bien: #4cc98f;
+    --bien-texto: #4cc98f;
+    --bien-suave: #153326;
+    --mal: #ff7b73;
+    --mal-texto: #ff8e87;
+    --mal-suave: #3f1f1d;
+
+    --sombra: none;
+  }
+}

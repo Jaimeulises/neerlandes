@@ -1,0 +1,183 @@
+// Contratos entre el motor y un paquete de idioma. El motor solo conoce estas
+// formas: qué es una pista de estudio, un elemento y un ejercicio. Lo que
+// significan para un idioma concreto lo decide el paquete.
+// Viene de Michi. Aquí cambian los ejercicios: fuera los trazos y la
+// furigana, dentro los que obligan a producir la frase (traducir, completar,
+// decir en voz alta).
+
+import type { Azar } from './azar';
+
+/** Cómo le ha ido al alumno con un elemento, en los cuatro niveles de FSRS. */
+export type Calificacion = 'otra_vez' | 'dificil' | 'bien' | 'facil';
+
+/** Lo mínimo que el motor necesita de cada cosa que se aprende. */
+export interface Elemento {
+  /** Único dentro de su pista. */
+  readonly id: string;
+  /** Grupo de desbloqueo al que pertenece. */
+  readonly grupo: string;
+}
+
+interface EjercicioBase {
+  /** Tipo con espacio de nombres del paquete, por ejemplo «verbos.presente». */
+  readonly tipo: string;
+  readonly elementoId: string;
+  /** Qué tiene que hacer el alumno, en el idioma de la interfaz. */
+  readonly instruccion: string;
+  /** Lo que se enseña al responder, se acierte o no: la regla que aplica, una nota. */
+  readonly aclaracion?: string;
+  /** Texto en el idioma que se aprende que se puede escuchar al responder. */
+  readonly audio?: string;
+}
+
+/** Opción única: se muestra un enunciado y se elige entre varias opciones. */
+export interface EjercicioOpcion extends EjercicioBase {
+  readonly forma: 'opcion';
+  readonly enunciado: string;
+  /** Si el enunciado está en el idioma que se aprende (para lang y la voz). */
+  readonly enunciadoEnIdioma: boolean;
+  /** Opciones sin repetir, ya barajadas. */
+  readonly opciones: readonly string[];
+  readonly opcionesEnIdioma: boolean;
+  /** Una de las opciones. */
+  readonly respuestaCorrecta: string;
+}
+
+/** Una ficha para ordenar: un trozo de frase. */
+export interface Ficha {
+  readonly id: number;
+  readonly texto: string;
+}
+
+/** Ordenar: se dan las fichas de una frase desordenadas y hay que ponerlas en su sitio. */
+export interface EjercicioOrdenar extends EjercicioBase {
+  readonly forma: 'ordenar';
+  /** Qué dice la frase, en el idioma de la interfaz. */
+  readonly significado: string;
+  /** Las fichas, ya barajadas. */
+  readonly fichas: readonly Ficha[];
+  /** Las frases que valen, sin importar mayúsculas ni puntuación: a veces hay más de un orden bueno. */
+  readonly validas: readonly string[];
+  /** La frase entera, con su puntuación, para enseñarla al responder. */
+  readonly frase: string;
+}
+
+/** Traducir: se ve una frase en el idioma de la interfaz y se escribe entera en el que se aprende. */
+export interface EjercicioTraducir extends EjercicioBase {
+  readonly forma: 'traducir';
+  readonly significado: string;
+  /** Una ayuda corta para que salga la estructura que se practica («empieza por Morgen»). */
+  readonly pista?: string;
+  /** Lo que vale. La primera es la que se enseña. */
+  readonly respuestas: readonly string[];
+}
+
+/** Completar: una frase con un hueco que se rellena escribiendo. */
+export interface EjercicioCompletar extends EjercicioBase {
+  readonly forma: 'completar';
+  readonly antes: string;
+  readonly despues: string;
+  /** Lo que se da para rellenar el hueco, por ejemplo el infinitivo. */
+  readonly pista: string;
+  /** Qué dice la frase, si ayuda. */
+  readonly significado?: string;
+  /** Lo que vale en el hueco. La primera es la que se enseña. */
+  readonly respuestas: readonly string[];
+}
+
+/** Dictado: suena una frase y se escribe. */
+export interface EjercicioDictado extends EjercicioBase {
+  readonly forma: 'dictado';
+  /** Lo que se lee en voz alta. */
+  readonly dictar: string;
+  readonly significado: string;
+  readonly respuestas: readonly string[];
+}
+
+/** Decir: se ve la frase en el idioma de la interfaz, se dice en voz alta y se valora uno mismo. */
+export interface EjercicioDecir extends EjercicioBase {
+  readonly forma: 'decir';
+  readonly significado: string;
+  /** La frase buena, que se enseña después de decirla. */
+  readonly texto: string;
+  readonly pista?: string;
+}
+
+export type Ejercicio = EjercicioOpcion | EjercicioOrdenar | EjercicioTraducir | EjercicioCompletar | EjercicioDictado | EjercicioDecir;
+
+/** Los ejercicios en los que se escribe la respuesta. */
+export type EjercicioEscrito = EjercicioTraducir | EjercicioCompletar | EjercicioDictado;
+
+/** Lo que se enseña de un elemento nuevo antes de preguntarlo. */
+export interface Presentacion {
+  /** Lo que se pone encima. Si no viene, «Nuevo». */
+  readonly etiqueta?: string;
+  /** Lo que se aprende, en grande. */
+  readonly principal: string;
+  /** Qué significa, en el idioma de la interfaz, si tiene significado propio. */
+  readonly significado?: string;
+  /** Pista opcional para recordarlo, en el idioma de la interfaz. */
+  readonly nota: string | null;
+  /** Texto que se puede escuchar. */
+  readonly audio?: string;
+  /** Una segunda línea, por ejemplo la regla de gramática. */
+  readonly detalle?: string;
+  /** Formas que conviene ver juntas (una conjugación), si las hay. */
+  readonly tabla?: readonly (readonly [string, string])[];
+}
+
+/** Lo que una pista sabe del alumno al crear un ejercicio. */
+export interface ContextoEjercicio {
+  readonly azar: Azar;
+  /** Elementos de la pista que el alumno ya ha visto (candidatos a distractor). */
+  readonly vistos: ReadonlySet<string>;
+  /** Cuántas veces se ha repasado el elemento. 0 si es nuevo. */
+  readonly repeticiones: number;
+  /** Formas de ejercicio que el alumno tiene activadas. */
+  readonly formas: ReadonlySet<Ejercicio['forma']>;
+  /** Variante del idioma de la interfaz, por si el paquete adapta sus textos. */
+  readonly variante?: string;
+}
+
+/**
+ * Una pista de estudio con su progreso y su repaso propios. Los grupos se
+ * desbloquean en el orden en que aparecen.
+ */
+export interface Pista<E extends Elemento = Elemento> {
+  readonly id: string;
+  readonly nombre: string;
+  /** Una línea que dice qué se aprende aquí. */
+  readonly descripcion: string;
+  readonly grupos: readonly string[];
+  /** Nombre para enseñar de cada grupo, si no basta con su id. */
+  readonly nombresDeGrupo?: Readonly<Record<string, string>>;
+  readonly elementos: readonly E[];
+  crearEjercicio(elemento: E, contexto: ContextoEjercicio): Ejercicio;
+  /**
+   * Si existe, cada elemento nuevo se presenta antes de su primer ejercicio, salvo que devuelva null:
+   * lo que sale de una regla ya presentada se intenta sin verlo antes.
+   */
+  presentar?(elemento: E, variante?: string): Presentacion | null;
+  /**
+   * Si existe, decide si un grupo puede abrirse mirando el progreso de otras
+   * pistas. Si no, solo manda el orden de los grupos.
+   */
+  grupoListo?(grupo: string, vistosPorPista: ReadonlyMap<string, ReadonlySet<string>>): boolean;
+  /** Si existe, explica un fallo en un ejercicio de opciones. null si no hay nada concreto que decir. */
+  explicarFallo?(ejercicio: Ejercicio, elegida: string, variante?: string): ExplicacionFallo | null;
+}
+
+/** Por qué una respuesta elegida no era la buena, y qué elementos conviene practicar juntos. */
+export interface ExplicacionFallo {
+  readonly texto: string;
+  /** Ids de elementos de la misma pista: el que se preguntaba y, si lo es, el que se eligió. */
+  readonly elementos: readonly string[];
+}
+
+/** Lo que un idioma entrega al motor. */
+export interface PaqueteDeIdioma {
+  /** Código del idioma, de BCP 47. */
+  readonly id: string;
+  readonly nombre: string;
+  readonly pistas: readonly Pista[];
+}
