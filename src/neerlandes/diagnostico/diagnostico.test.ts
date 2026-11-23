@@ -405,4 +405,29 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     // «omdat ik niet lekker ben» (O49): en la subordinada, «niet» va entre el sujeto y el verbo conjugado.
     expect(d[0]?.texto).toContain('en la frase principal, «niet» nunca va entre el sujeto y el verbo conjugado');
   });
+
+  it('’t kofschip solo cuando la respuesta es el participio con la otra de t o d al final', () => {
+    expect(explicarParticipio('gewerkt', 'gewerkd')?.caso).toBe('participio-kofschip');
+    expect(explicarParticipio('gereisd', 'gereist')?.caso).toBe('participio-kofschip');
+    // La raíz mal escrita, otro verbo u otro participio: la terminación ya estaba bien, o no es eso lo que falla.
+    for (const [esperado, dado] of [
+      ['gespeeld', 'gespeld'],
+      ['gewoond', 'gewond'],
+      ['gekookt', 'gekokt'],
+      ['gewerkt', 'gemaakt'],
+      ['gefietst', 'gelopen'],
+    ] as const) {
+      expect(explicarParticipio(esperado, dado), `${esperado}: ${dado}`).toBeNull();
+    }
+    // En su primer ejercicio, el hueco del participio, y en la frase entera.
+    const spelen = ELEMENTOS_VERBOS.find((x) => x.grupo === 'perfectum' && x.verbo?.inf === 'spelen');
+    const fietsen = ELEMENTOS_VERBOS.find((x) => x.grupo === 'perfectum' && x.verbo?.inf === 'fietsen');
+    if (!spelen || !fietsen) throw new Error('faltan spelen o fietsen');
+    const hueco = verbos.crearEjercicio(spelen, { ...contexto, repeticiones: 0 });
+    expect(hueco.forma).toBe('completar');
+    expect(verbos.diagnosticar?.(hueco, 'gespeld')).toEqual([]);
+    const frase = verbos.crearEjercicio(fietsen, contexto);
+    expect(frase.forma).toBe('traducir');
+    expect(verbos.diagnosticar?.(frase, 'Ik ben naar mijn werk gelopen')).toEqual([]);
+  });
 });

@@ -266,6 +266,11 @@ export function explicarParticipio(esperado: string, dado: string): DiagnosticoN
       pista: `La raíz de ${verbo} ya acaba en ${letra}. ¿Hace falta añadir otra t o d?`,
     };
   }
+  // ’t kofschip solo si es el participio con la otra de t o d al final («gewerkd», «gereist»). Con la raíz mal
+  // escrita («gespeld»), otro verbo u otro participio, la terminación no es lo que falla, y la pista la señalaría.
+  const final = esperado.at(-1);
+  const conLaOtra = final === 't' ? `${esperado.slice(0, -1)}d` : final === 'd' ? `${esperado.slice(0, -1)}t` : null;
+  if (dado !== conLaOtra) return null;
   return {
     caso: 'participio-kofschip',
     destreza: 'participio',
