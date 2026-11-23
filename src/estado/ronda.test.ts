@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { clave, crearAzar, PROGRESO_VACIO, registrarRespuesta, RONDA_POR_DEFECTO, TODAS_LAS_FORMAS, type OpcionesRonda, type Pista, type Progreso } from '../motor';
 import { PISTAS } from '../neerlandes/paquete';
+import { verbos } from '../neerlandes/verbos/pista';
 import { vocabulario } from '../neerlandes/vocabulario/pista';
 import { AJUSTES_POR_DEFECTO, NUEVOS_POR_RONDA } from './ajustes';
 import { construirRondaDe, opcionesDeRonda, preverRonda, repartir, type PasoMixto } from './ronda';
@@ -122,6 +123,30 @@ describe('la ronda de hoy', () => {
     // Si la regla está floja, vuelven las fichas.
     const floja = construirRondaDe([orden], PROGRESO_VACIO, AHORA, crearAzar(3), { ...OPCIONES, nuevosMaximo: 2, gruposAbiertos: true, sinAndamiaje: true, dominio: () => 0.2 });
     expect(new Set(floja.map((p) => p.paso.ejercicio.forma))).toEqual(new Set(['ordenar']));
+  });
+
+  it('quien pide menos ayuda empieza los verbos nuevos completando la forma, no eligiéndola, salvo que el presente esté flojo', () => {
+    /** Los tipos de ejercicio de 30 rondas de verbos sin progreso: con todos los grupos abiertos, todo es del presente. */
+    const tipos = (opciones: OpcionesRonda): string[] =>
+      Array.from({ length: 30 }, (_, i) => construirRondaDe([verbos], PROGRESO_VACIO, AHORA, crearAzar(i + 1), opciones)).flatMap((pasos) =>
+        pasos.map((p) => p.paso.ejercicio.tipo),
+      );
+    const conInterruptor = opcionesDeRonda({ ...AJUSTES_POR_DEFECTO, gruposAbiertos: true, nuevosPorRonda: 6 }, TODAS_LAS_FORMAS);
+    const nuevos = tipos(conInterruptor);
+    expect(nuevos).toHaveLength(180);
+    expect(new Set(nuevos)).toEqual(new Set(['verbos.presente.completar', 'verbos.presente.pregunta']));
+    // Se elige sin el interruptor, con el presente flojo y si completar no sale: lo nuevo nunca lleva una forma quitada.
+    expect(new Set(tipos({ ...conInterruptor, sinAndamiaje: false }))).toEqual(new Set(['verbos.presente.elegir']));
+    expect(new Set(tipos({ ...conInterruptor, dominio: () => 0.2 }))).toEqual(new Set(['verbos.presente.elegir']));
+    expect(new Set(tipos({ ...conInterruptor, formas: new Set(['opcion', 'traducir']) }))).toEqual(new Set(['verbos.presente.elegir']));
+    // En los repasos, elegir sigue saliendo de vez en cuando.
+    const azar = crearAzar(7);
+    const presente = verbos.elementos.filter((e) => e.grupo === 'presente');
+    const repasos = presente.flatMap((e) =>
+      [1, 2, 3, 4, 5].map(() => verbos.crearEjercicio(e, { azar, vistos: new Set(), repeticiones: 2, formas: TODAS_LAS_FORMAS, sinAndamiaje: true }).tipo),
+    );
+    expect(repasos).toContain('verbos.presente.elegir');
+    expect(repasos).toContain('verbos.presente.completar');
   });
 
   it('quien pide menos ayuda sigue empezando las palabras por “¿Qué significa?”: hay que reconocerlas antes de escribirlas', () => {
