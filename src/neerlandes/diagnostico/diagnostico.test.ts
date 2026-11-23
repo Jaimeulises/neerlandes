@@ -580,7 +580,7 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     // Sin auxiliar, tampoco lo que se escribe como una forma conjugada, aunque los datos no traigan ese pasado
     // («belde», «trouwden») o sea el presente («spelen»).
     const perfectumDe = (inf: string): Ejercicio => {
-      const v = ELEMENTOS_VERBOS.find((x) => x.grupo === 'perfectum' && x.verbo?.inf === inf);
+      const v = ELEMENTOS_VERBOS.find((x) => x.grupo.startsWith('perfectum') && x.verbo?.inf === inf);
       if (!v) throw new Error(`falta ${inf}`);
       return verbos.crearEjercicio(v, contexto);
     };
@@ -597,5 +597,15 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     // Con el auxiliar, o sin él pero con ge-, sí intenta ser el participio.
     expect(casos(verbos.diagnosticar?.(perfectumDe('bellen'), 'Mijn moeder heeft gisteren belt') ?? [])).toEqual(['participio-sin-ge']);
     expect(casos(verbos.diagnosticar?.(perfectumDe('bellen'), 'Mijn moeder gisteren gebelt') ?? [])).toEqual(['participio-kofschip']);
+    // Dicho en otro tiempo, ni el auxiliar está mal conjugado ni «niet» está fuera de sitio.
+    expect(verbos.diagnosticar?.(perfectumDe('begrijpen'), 'Ik begrijp het niet')).toEqual([]);
+    expect(verbos.diagnosticar?.(perfectumDe('hebben'), 'Ik had vorige week griep')).toEqual([]);
+    expect(verbos.diagnosticar?.(perfectumDe('zijn'), 'Ik was nog nooit in Groningen')).toEqual([]);
+    // Lo que no depende del tiempo, como el orden, se sigue diciendo; y con el participio, también lo demás.
+    expect(casos(verbos.diagnosticar?.(perfectumDe('hebben'), 'Vorige week ik had griep') ?? [])).toEqual(['inversion-otro-delante']);
+    expect(casos(verbos.diagnosticar?.(perfectumDe('begrijpen'), 'Ik heb niet het begrepen') ?? [])).toEqual(['niet-sitio']);
+    expect(casos(verbos.diagnosticar?.(perfectumDe('zijn'), 'Ik heb nog nooit in Groningen geweest') ?? [])).toEqual(['auxiliar-zijn']);
+    // Un participio mal formado no mueve «niet»: lo que falla es el participio.
+    expect(casos(verbos.diagnosticar?.(perfectumDe('begrijpen'), 'Ik heb het niet begrijpt') ?? [])).toEqual(['participio-irregular']);
   });
 });

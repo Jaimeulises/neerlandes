@@ -98,6 +98,10 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
   let iVerbo = -1;
   // Dónde va el primer verbo conjugado que no es el de la frase, si lo hay: entonces la ha dicho de otra manera.
   let iOtroVerbo = -1;
+  // Si es un perfectum dicho en otro tiempo: sin intentar el participio y con su verbo conjugado, en el sitio del
+  // auxiliar si lo hay («Ik begrijp het niet», «Ik had vorige week griep» por «Ik heb vorige week griep gehad»).
+  // Entonces un pasado no es un auxiliar mal conjugado, y «niet» no se puede comparar con el de la frase buena.
+  let enOtroTiempo = false;
   if (p.verbo !== '') {
     // En una subordinada delante, el verbo de la principal se busca detrás de la subordinada.
     const desde = sub?.delante ? Math.max(0, u.indexOf(sub.verbo) + 1) : 0;
@@ -127,8 +131,18 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
     // Con otro verbo conjugado delante («Ik ga vandaag thuis werken», «Vroeger heb ik … gewerkt»), lo que lleva del
     // verbo de la frase es un infinitivo, un participio o un nombre («met fiets»), no su verbo conjugado fuera de sitio.
     if (iOtroVerbo >= 0 && iOtroVerbo < iVerbo) iVerbo = -1;
+    if (p.tipoFinal === 'participio') {
+      const participio = p.finales.at(-1) ?? '';
+      // Con el auxiliar, lo que va detrás y es del verbo del participio intenta serlo («ik ben … was»); sin él, lo
+      // que no se escribe como una forma conjugada.
+      const intentaParticipio = (w: string, i: number): boolean => w === participio || (mismoVerbo(w, participio) && (iVerbo >= 0 ? i > iVerbo : !pareceConjugada(w, participio)));
+      enOtroTiempo = !u.some(intentaParticipio) && (iVerbo < 0 ? u.some((w) => pareceConjugada(w, participio)) : pareceConjugada(u[iVerbo] ?? '', participio));
+    }
     const dada = exacto < 0 ? u[iVerbo] : undefined;
-    if (dada !== undefined && !enAlgunaValida(validas, dada)) {
+    // En otro tiempo, un pasado en el sitio del auxiliar es el verbo de la frase dicha en pasado. Un presente mal
+    // conjugado («Ik nog nooit in Groningen bent») sí se explica: falla la persona, se diga en el tiempo que se diga.
+    const pasadoEnOtroTiempo = enOtroTiempo && dada !== undefined && formasDe(dada).some((f) => f.tipo === 'pasado') && !formasDe(dada).some((f) => f.tipo === 'presente' || f.tipo === 'infinitivo');
+    if (dada !== undefined && !pasadoEnOtroTiempo && !enAlgunaValida(validas, dada)) {
       const contrario = (FORMAS_HEBBEN.has(p.verbo) && FORMAS_ZIJN.has(dada)) || (FORMAS_ZIJN.has(p.verbo) && FORMAS_HEBBEN.has(dada));
       if (contrario && p.tipoFinal === 'participio') {
         anadir(explicarAuxiliar(dada, p.verbo, p.finales.at(-1) ?? '', frase));
@@ -146,7 +160,7 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
   // El participio, si lo hay. Dicha en otro tiempo («Ik werkte de hele dag», «Mijn moeder belde gisteren») o con
   // otro verbo conjugado («Ik ga de hele dag werken»), lo que lleva del verbo no intenta ser el participio. Sin
   // auxiliar, una forma que se escribe como conjugada tampoco.
-  if (p.tipoFinal === 'participio' && !otroVerboAntes(iVerbo)) {
+  if (p.tipoFinal === 'participio' && !otroVerboAntes(iVerbo) && !enOtroTiempo) {
     const participio = p.finales.at(-1) ?? '';
     if (!u.includes(participio)) {
       const otroTiempo = (w: string): boolean => iVerbo < 0 && pareceConjugada(w, participio);
@@ -366,17 +380,20 @@ export function diagnosticarFrase(p: Papeles, respuesta: string, validasTexto: r
       pista: `Mira qué niegas: ¿un sustantivo sin artículo o con ${cita('een')}, o un verbo, un adjetivo o algo definido? En neerlandés no se niegan igual.`,
     });
   } else if (modelo.includes('niet') && u.includes('niet')) {
-    // Los vecinos de niet sin contar los verbos: si el verbo está mal puesto, eso ya se dice aparte.
+    // Los vecinos de niet sin contar los verbos: si el verbo está mal puesto, eso ya se dice aparte. Un participio o un
+    // infinitivo del final mal formado cuenta como el bueno («Ik heb het niet begrijpt»): lo que falla es la forma.
     const verbos = new Set([p.verbo, u[iVerbo] ?? '', sub?.verbo ?? '', ...(sub?.verbos ?? [])].filter((x) => x !== ''));
-    const sinVerbos = (w: readonly string[]): string[] => w.filter((x) => !verbos.has(x));
+    const finalVerbal = p.tipoFinal === 'participio' || p.tipoFinal === 'infinitivo' ? p.finales : [];
+    const comoElBueno = (x: string): string => finalVerbal.find((f) => x !== f && mismoVerbo(x, f)) ?? x;
+    const sinVerbos = (w: readonly string[]): string[] => w.filter((x) => !verbos.has(x)).map(comoElBueno);
     const vecinos = (w: readonly string[]): string => {
       const i = w.indexOf('niet');
       return `${w[i - 1] ?? ''}|${w[i + 1] ?? ''}`;
     };
     const deLaRespuesta = vecinos(sinVerbos(u));
     const mismoSitio = validas.some((v) => v.includes('niet') && vecinos(sinVerbos(v)) === deLaRespuesta);
-    // Dicha con otro verbo conjugado («Morgen ga ik niet komen»), sus vecinos no se pueden comparar con los de la buena.
-    if (!mismoSitio && !otroVerboAntes(iVerbo)) {
+    // Dicha con otro verbo conjugado («Morgen ga ik niet komen») o en otro tiempo, sus vecinos no se pueden comparar con los de la buena.
+    if (!mismoSitio && !otroVerboAntes(iVerbo) && !enOtroTiempo) {
       const i = modelo.indexOf('niet');
       const antes = modelo[i - 1];
       const despues = modelo[i + 1];
