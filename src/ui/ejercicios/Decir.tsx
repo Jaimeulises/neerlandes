@@ -105,6 +105,15 @@ export function Decir({ ejercicio, repeticion, voz, tiempo = 'normal', onTermina
     decir(ejercicio.texto);
   };
 
+  // El altavoz ya está en la pausa: tocarlo la acaba, para que la frase no vuelva a sonar sola encima.
+  const escuchar: Voz = {
+    ...voz,
+    decir: (texto) => {
+      setFase('vista');
+      decir(texto);
+    },
+  };
+
   useEffect(() => {
     if (!contando || total === null) return;
     const fin = total * 1000;
@@ -145,7 +154,7 @@ export function Decir({ ejercicio, repeticion, voz, tiempo = 'normal', onTermina
         <>
           {total === null ? null : (
             // role="timer" no se anuncia cada segundo: el lector lo lee cuando se llega a él.
-            <div className="cuenta-atras" role="timer" aria-label={`Quedan ${String(quedan)} segundos`}>
+            <div className="cuenta-atras" role="timer" aria-label={quedan === 1 ? 'Queda 1 segundo' : `Quedan ${String(quedan)} segundos`}>
               <div className="cuenta-atras__barra">
                 <div style={{ width: `${String(arrancada ? Math.round((Math.max(0, quedan - 1) / total) * 100) : 100)}%` }} />
               </div>
@@ -165,7 +174,7 @@ export function Decir({ ejercicio, repeticion, voz, tiempo = 'normal', onTermina
             <p className="enunciado enunciado--nl" lang="nl">
               {ejercicio.texto}
             </p>
-            <BotonVoz voz={voz} texto={ejercicio.texto} />
+            <BotonVoz voz={escuchar} texto={ejercicio.texto} />
           </div>
           {otras.length > 0 ? <OtrasFormas otras={otras} /> : null}
           {ejercicio.aclaracion ? (

@@ -551,6 +551,7 @@ describe('decir la frase con cuenta atrás', () => {
     await montarDecir(dichas);
     expect(document.querySelector('[role="timer"]')?.getAttribute('aria-label')).toBe(`Quedan ${String(total)} segundos`);
     pasan(total - 1);
+    expect(document.querySelector('[role="timer"]')?.getAttribute('aria-label')).toBe('Queda 1 segundo');
     expect(enPantalla()).not.toContain('Vandaag werk ik thuis.');
     expect(dichas).toEqual([]);
     pasan(1);
@@ -561,6 +562,19 @@ describe('decir la frase con cuenta atrás', () => {
     expect(dichas).toEqual(['Vandaag werk ik thuis.']);
     pasan(10);
     expect(dichas).toHaveLength(1);
+  });
+
+  it('si en la pausa se toca el altavoz, suena enseguida y no vuelve a sonar al acabarse la pausa', async () => {
+    const dichas: string[] = [];
+    await montarDecir(dichas);
+    pasan(total);
+    // La pausa: la frase ya se ve, con su altavoz, pero aún no ha sonado.
+    expect(enPantalla()).toContain('Vandaag werk ik thuis.');
+    expect(dichas).toEqual([]);
+    await pulsar(boton('Escuchar'));
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
+    pasan(PAUSA_ANTES_DE_SONAR / 1000 + 5);
+    expect(dichas).toEqual(['Vandaag werk ik thuis.']);
   });
 
   it('se puede ver antes, y suena enseguida', async () => {
