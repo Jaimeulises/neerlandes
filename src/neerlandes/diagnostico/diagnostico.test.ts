@@ -433,6 +433,23 @@ describe('lo que la revisión de las pistas encontró mal diagnosticado', () => 
     expect(verbos.diagnosticar?.(frase, 'Ik ben naar mijn werk gelopen')).toEqual([]);
   });
 
+  it('en un separable con ge- en su sitio, lo que falla no es dónde va ge-', () => {
+    // «opgebelt» lleva ge- entre la partícula y el verbo: falla la d, como en «gewerkd». «thuisgekomt» es irregular.
+    expect(explicarParticipio('opgebeld', 'opgebelt')?.caso).toBe('participio-kofschip');
+    expect(explicarParticipio('thuisgekomen', 'thuisgekomt')?.caso).toBe('participio-irregular');
+    expect(explicarParticipio('opgebeld', 'opgebelld')).toBeNull();
+    expect(casos(diagnostico('Hij is om tien uur', 'Hij is om tien uur thuisgekomt'))).toEqual(['participio-irregular']);
+    // Con ge- delante de todo o sin ge-, sí falla dónde va.
+    expect(explicarParticipio('opgebeld', 'geopbeld')?.caso).toBe('participio-separable');
+    expect(explicarParticipio('opgebeld', 'opbeld')?.caso).toBe('participio-separable');
+    // En el hueco del participio de «opbellen».
+    const opbellen = ELEMENTOS_VERBOS.find((x) => x.separable?.inf === 'opbellen');
+    if (!opbellen) throw new Error('falta opbellen');
+    const hueco = verbos.crearEjercicio(opbellen, { ...contexto, formas: new Set(['completar'] as const) });
+    expect(hueco.forma).toBe('completar');
+    expect(casos(verbos.diagnosticar?.(hueco, 'opgebelt') ?? [])).toEqual(['participio-kofschip']);
+  });
+
   it('un pasado regular nunca se explica como irregular', () => {
     // La vocal mal escrita o el participio por el pasado: no se sabe qué regla falla, y llamarlo irregular es falso.
     for (const [esperada, dada, sujeto] of [

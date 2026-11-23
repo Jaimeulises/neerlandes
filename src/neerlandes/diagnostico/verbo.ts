@@ -205,6 +205,14 @@ function letraAntesDeEn(inf: string): string {
   return sinEn.endsWith('ch') ? 'ch' : sinEn.slice(-1);
 }
 
+/** La partícula de un participio separable: lo que va delante de ge- y empieza también el infinitivo («op» en «opgebeld»). */
+function particulaDe(participio: string, inf: string): string {
+  for (let i = 1; i < participio.length; i++) {
+    if (participio.startsWith('ge', i) && inf.startsWith(participio.slice(0, i))) return participio.slice(0, i);
+  }
+  return '';
+}
+
 /** Por qué un participio no es el bueno. null si no se puede decir nada concreto. */
 export function explicarParticipio(esperado: string, dado: string): DiagnosticoNl | null {
   if (esperado === dado) return null;
@@ -215,7 +223,10 @@ export function explicarParticipio(esperado: string, dado: string): DiagnosticoN
   const verbo = inf && inf !== esperado ? cita(inf) : 'este verbo';
   const Verbo = inf && inf !== esperado ? cita(inf) : 'Este verbo';
 
-  if (forma?.separable) {
+  // En un separable, si ge- va delante de todo o falta («geopbeld», «opbeld»). Con ge- en su sitio («opgebelt»,
+  // «thuisgekomt») lo que falla es otra cosa, y se mira como en los demás participios.
+  const particula = forma?.separable ? particulaDe(esperado, forma.inf) : '';
+  if (forma?.separable && (particula === '' || !dado.startsWith(`${particula}ge`))) {
     return {
       caso: 'participio-separable',
       destreza: 'separables',
